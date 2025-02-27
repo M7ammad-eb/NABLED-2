@@ -67,9 +67,6 @@ function parseCSV(csvText) {
 }
 
 
-console.log("Fetched Permissions:", permissions);
-
-
 function displayItems(items, permissions, userEmail) {
   const itemsList = document.getElementById('items-list');
   itemsList.innerHTML = ''; // Clear previous items
