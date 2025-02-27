@@ -105,12 +105,15 @@ function displayItem(item, visibleColumns) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
+  for (let i=0; i < item.length; i++) {
+    const key[i] = item[0][i];
+  }
+
   for (let i = 0; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
-      const key = i === 0 ? 'ID' : i;
       const value = item[i];
       const detail = document.createElement('p');
-      detail.innerHTML = `<strong>${key}:</strong> ${value}`;
+      detail.innerHTML = `<strong>${key[i]}:</strong> ${value}`;
       itemDetailsDiv.appendChild(detail);
     }
   }
