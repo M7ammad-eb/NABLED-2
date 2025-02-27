@@ -106,7 +106,7 @@ function displayItem(item, visibleColumns) {
   itemDetailsDiv.innerHTML = '';
 
   for (let i=0; i < item.length; i++) {
-    const key[i] = item[0][i];
+    var key[i] = item[0][i];
   }
 
   for (let i = 0; i < item.length; i++) {
