@@ -49,12 +49,6 @@ auth.onAuthStateChanged((user) => {
     .then(([data, permissions]) => {
       const dataRows = parseCSV(data);
       const permissionRows = parseCSV(permissions);
-
-      // assign columns names
-      export let columnName = [];
-      for (let i=0; i < dataRows.length; i++) {
-        columnName[i] = dataRows[0][i];
-      }
             
       displayItems(dataRows, permissionRows, user.email); // Pass user email
     })
