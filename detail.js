@@ -105,8 +105,9 @@ function displayItem(item, visibleColumns) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
+  let key = [];  
   for (let i=0; i < item.length; i++) {
-    var key[i] = item[0][i];
+    key[i] = item[0][i];
   }
 
   for (let i = 0; i < item.length; i++) {
