@@ -13,6 +13,12 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// Data sheet
+const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
+// Permissions sheet
+const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
+
+
 // Sign Out
 const signOutButton = document.getElementById('signOutButton');
 signOutButton.addEventListener('click', signOut);
@@ -35,7 +41,17 @@ auth.onAuthStateChanged((user) => {
     // User is signed in
     console.log('User is already signed in:', user);
     signOutButton.style.display = 'block'; // Show sign-out button
-    fetchAndDisplayData();
+    // Fetch both data and permissions
+    Promise.all([
+      fetch(dataSheetUrl).then(response => response.text()),
+      fetch(permissionsSheetUrl).then(response => response.text())
+    ])
+    .then(([data, permissions]) => {
+      const dataRows = parseCSV(data);
+      const permissionRows = parseCSV(permissions);
+      displayItems(dataRows, permissionRows, user.email); // Pass user email
+    })
+    .catch(error => console.error('Error fetching data:', error));
   } else {
     // No user is signed in
     console.log('No user is signed in.');
@@ -45,10 +61,38 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
+// ... (parseCSV function)
+
+function displayItems(items, permissions, userEmail) {
+  // ... (Get itemsList and clear it)
+
+  const userPermissions = getUserPermissions(permissions, userEmail);
+  const visibleColumns = userPermissions ? userPermissions.slice(2) :; // Column names start from the third column
+
+  for (let i = 1; i < items.length; i++) {
+    const item = items[i];
+    const itemId = item[0];
+    const itemName = item[item.length - 2];
+
+    const itemDiv = document.createElement('div');
+    itemDiv.innerHTML = `<a href="detail.html?id=${itemId}">${itemName} (ID: ${itemId})</a>`;
+    itemsList.appendChild(itemDiv);
+  }
+}
+
+function getUserPermissions(permissions, userEmail) {
+  for (let i = 1; i < permissions.length; i++) {
+    if (permissions[i][0] === userEmail) {
+      return permissions[i];
+    }
+  }
+  return null; // Or handle the case where no permissions are found for the user
+}
+
+// !!!!! propably not used !!!!!
 // Fetch and display data from Google Sheets
 function fetchAndDisplayData() {
-  const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv'; // Replace with your published sheet URL
-
+  
   fetch(sheetUrl)
     .then(response => response.text()) // Assuming CSV format
     .then(data => {
