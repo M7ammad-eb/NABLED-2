@@ -51,7 +51,7 @@ auth.onAuthStateChanged((user) => {
       const permissionRows = parseCSV(permissions);
 
       // assign columns names
-      let columnName = [];
+      export let columnName = [];
       for (let i=0; i < dataRows.length; i++) {
         columnName[i] = dataRows[0][i];
       }
