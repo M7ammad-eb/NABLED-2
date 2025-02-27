@@ -51,8 +51,11 @@ function displayItemDetails() {
     const item = findItemById(dataRows, itemId);
     if (item) {
       const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-      const visibleColumns = userPermissions ? userPermissions.slice(2) :;
-      displayItem(item, visibleColumns); // Pass visibleColumns
+  // Ensure visibleColumns is an array of numbers
+  const visibleColumns = userPermissions
+    ? userPermissions.slice(3).filter(val => !isNaN(val)).map(Number)
+    : [];
+        displayItem(item, visibleColumns); // Pass visibleColumns
     } else {
       // ... (Handle item not found)
       document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
@@ -62,9 +65,9 @@ function displayItemDetails() {
 }
 
 function parseCSV(csvText) {
-  const rows = csvText.split('\n');
-  return rows.map(row => row.split(','));
+  return Papa.parse(csvText, { header: false }).data;
 }
+
 
 function findItemById(items, itemId) {
   for (let i = 1; i < items.length; i++) {
@@ -76,12 +79,15 @@ function findItemById(items, itemId) {
 }
 
 function getUserPermissions(permissions, userEmail) {
+  userEmail = userEmail.trim().toLowerCase(); // Normalize user email
+  
   for (let i = 1; i < permissions.length; i++) {
-    if (permissions[i][0] === userEmail) {
+    let storedEmail = permissions[i][0].trim().toLowerCase(); // Normalize stored email
+    if (storedEmail === userEmail) {
       return permissions[i];
     }
   }
-  return null; // Or handle the case where no permissions are found for the user
+  return null;
 }
 
 function displayItem(item, visibleColumns) { // Include visibleColumns as a parameter
