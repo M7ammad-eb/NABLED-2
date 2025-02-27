@@ -66,6 +66,10 @@ function parseCSV(csvText) {
   return Papa.parse(csvText, { header: false }).data;
 }
 
+
+console.log("Fetched Permissions:", permissions);
+
+
 function displayItems(items, permissions, userEmail) {
   const itemsList = document.getElementById('items-list');
   itemsList.innerHTML = ''; // Clear previous items
@@ -74,7 +78,7 @@ function displayItems(items, permissions, userEmail) {
 
   // Ensure visibleColumns is an array of numbers
   const visibleColumns = userPermissions
-    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+    ? userPermissions.slice(3).filter(val => !isNaN(val)).map(Number)
     : [];
 
   // Check if there are visible columns for this user
@@ -105,8 +109,11 @@ function displayItems(items, permissions, userEmail) {
 }
 
 function getUserPermissions(permissions, userEmail) {
+  userEmail = userEmail.trim().toLowerCase(); // Normalize user email
+  
   for (let i = 1; i < permissions.length; i++) {
-    if (permissions[i][0] === userEmail) {
+    let storedEmail = permissions[i][0].trim().toLowerCase(); // Normalize stored email
+    if (storedEmail === userEmail) {
       return permissions[i];
     }
   }
