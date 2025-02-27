@@ -67,7 +67,11 @@ function displayItemDetails() {
       console.log("Visible Columns:", visibleColumns); // Debugging
       console.log("Item:", item); // Debugging
 
-      import { columnName, key } from './script.js';
+      // assign columns names
+      let key = [];
+      for (let i=0; i < fetch(dataSheetUrl).length; i++) {
+        key[i] = fetch(dataSheetUrl)[0][i];
+      }
       
       displayItem(item, visibleColumns, key);
     } else {
