@@ -61,7 +61,6 @@ function displayItemDetails() {
   .catch(error => console.error('Error fetching data:', error));
 }
 
-
 function parseCSV(csvText) {
   const rows = csvText.split('\n');
   return rows.map(row => row.split(','));
@@ -85,20 +84,19 @@ function getUserPermissions(permissions, userEmail) {
   return null; // Or handle the case where no permissions are found for the user
 }
 
-
-function displayItem(item) {
+function displayItem(item, visibleColumns) { // Include visibleColumns as a parameter
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = ''; // Clear previous details
 
   // Assuming the first row is the header, start from the second row
   // Display all columns as key-value pairs
   for (let i = 0; i < item.length; i++) {
-      if (visibleColumns.includes(i)) { // Check if the column is visible
-        const key = i === 0 ? 'ID' : i;
-        const value = item[i];
-        const detail = document.createElement('p');
-        detail.innerHTML = `<strong>${key}:</strong> ${value}`;
-        itemDetailsDiv.appendChild(detail);
-      }
+    if (visibleColumns.includes(i)) { // Check if the column is visible
+      const key = i === 0 ? 'ID' : i;
+      const value = item[i];
+      const detail = document.createElement('p');
+      detail.innerHTML = `<strong>${key}:</strong> ${value}`;
+      itemDetailsDiv.appendChild(detail);
     }
+  }
 }
