@@ -53,7 +53,7 @@ function displayItemDetails() {
       const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
   // Ensure visibleColumns is an array of numbers
   const visibleColumns = userPermissions
-    ? userPermissions.slice(3).filter(val => !isNaN(val)).map(Number)
+    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
     : [];
         displayItem(item, visibleColumns); // Pass visibleColumns
     } else {
