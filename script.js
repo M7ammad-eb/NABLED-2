@@ -18,7 +18,6 @@ const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vn
 // Permissions sheet
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
-
 // Sign Out
 const signOutButton = document.getElementById('signOutButton');
 signOutButton.addEventListener('click', signOut);
@@ -43,7 +42,7 @@ auth.onAuthStateChanged((user) => {
     signOutButton.style.display = 'block'; // Show sign-out button
     // Fetch both data and permissions
     Promise.all([
-      fetch(dataSheetUrl).then(response => response.text()),
+      fetch(sheetUrl).then(response => response.text()),
       fetch(permissionsSheetUrl).then(response => response.text())
     ])
     .then(([data, permissions]) => {
@@ -61,21 +60,36 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-// ... (parseCSV function)
+function parseCSV(csvText) {
+  const rows = csvText.split('\n');
+  return rows.map(row => row.split(','));
+}
 
 function displayItems(items, permissions, userEmail) {
-  // ... (Get itemsList and clear it)
+  const itemsList = document.getElementById('items-list');
+  itemsList.innerHTML = ''; // Clear previous items
 
   const userPermissions = getUserPermissions(permissions, userEmail);
   const visibleColumns = userPermissions ? userPermissions.slice(2) :; // Column names start from the third column
 
+  // Assuming the first row is the header, start from the second row
   for (let i = 1; i < items.length; i++) {
     const item = items[i];
-    const itemId = item[0];
-    const itemName = item[item.length - 2];
+    const itemId = item[0]; // Assuming ID is the first column
+    const itemName = item[item.length - 2]; // Assuming name is the second to last column
 
     const itemDiv = document.createElement('div');
-    itemDiv.innerHTML = `<a href="detail.html?id=${itemId}">${itemName} (ID: ${itemId})</a>`;
+    let itemHtml = `<a href="detail.html?id=${itemId}">`;
+
+    for (let j = 0; j < item.length; j++) {
+      if (visibleColumns.includes(j)) { // Check if the column is visible
+        const columnName = j === 0 ? 'ID' : j; // Use column index as key, or 'ID' for the first column
+        itemHtml += `${columnName}: ${item[j]} `;
+      }
+    }
+
+    itemHtml += `</a>`;
+    itemDiv.innerHTML = itemHtml;
     itemsList.appendChild(itemDiv);
   }
 }
@@ -87,38 +101,4 @@ function getUserPermissions(permissions, userEmail) {
     }
   }
   return null; // Or handle the case where no permissions are found for the user
-}
-
-// !!!!! propably not used !!!!!
-// Fetch and display data from Google Sheets
-function fetchAndDisplayData() {
-  
-  fetch(sheetUrl)
-    .then(response => response.text()) // Assuming CSV format
-    .then(data => {
-      const rows = parseCSV(data);
-      displayItems(rows);
-    })
-    .catch(error => console.error('Error fetching data:', error));
-}
-
-function parseCSV(csvText) {
-  const rows = csvText.split('\n');
-  return rows.map(row => row.split(','));
-}
-
-function displayItems(items) {
-  const itemsList = document.getElementById('items-list');
-  itemsList.innerHTML = ''; // Clear previous items
-
-  // Assuming the first row is the header, start from the second row
-  for (let i = 1; i < items.length; i++) {
-    const item = items[i];
-    const itemId = item[0]; // Assuming ID is the first column
-    const itemName = item[1]; // Assuming name is the second to last column
-
-    const itemDiv = document.createElement('div');
-    itemDiv.innerHTML = `<a href="detail.html?id=${itemId}">${itemName} (ID: ${itemId})</a>`;
-    itemsList.appendChild(itemDiv);
-  }
 }
