@@ -34,12 +34,18 @@ function signOut() {
     });
 }
 
+
 // Check for user authentication on page load
 auth.onAuthStateChanged((user) => {
   if (user) {
     // User is signed in
     console.log('User is already signed in:', user);
     signOutButton.style.display = 'block'; // Show sign-out button
+
+    // Loading message
+    const loadingMessage = document.getElementById('loading');
+    loadingMessage.style.display = 'block';
+
     // Fetch both data and permissions
     Promise.all([
       fetch(sheetUrl).then(response => response.text()),
@@ -51,6 +57,7 @@ auth.onAuthStateChanged((user) => {
       displayItems(dataRows, permissionRows, user.email); // Pass user email
     })
     .catch(error => console.error('Error fetching data:', error));
+    loadingMessage.style.display = 'none';
   } else {
     // No user is signed in
     console.log('No user is signed in.');
@@ -61,8 +68,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 function parseCSV(csvText) {
-  const rows = csvText.split('\n');
-  return rows.map(row => row.split(','));
+  return Papa.parse(csvText, { header: false }).data;
 }
 
 function displayItems(items, permissions, userEmail) {
@@ -72,7 +78,9 @@ function displayItems(items, permissions, userEmail) {
   const userPermissions = getUserPermissions(permissions, userEmail);
 
   // Ensure visibleColumns is an array of numbers
-  const visibleColumns = userPermissions ? userPermissions.slice(2).map(Number) : []; // Assign an empty array if userPermissions is falsy
+  const visibleColumns = userPermissions
+    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+    : [];
 
   // Check if there are visible columns for this user
   if (visibleColumns.length === 0) {
