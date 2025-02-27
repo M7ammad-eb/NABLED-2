@@ -67,10 +67,7 @@ function displayItemDetails() {
       console.log("Visible Columns:", visibleColumns); // Debugging
       console.log("Item:", item); // Debugging
 
-      let key = [];  
-      for (let i=0; i < item.length; i++) {
-        key[i] = item[0][i];
-      }
+      import { columnName, key } from './script.js';
       
       displayItem(item, visibleColumns, key);
     } else {
