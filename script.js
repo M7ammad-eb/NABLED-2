@@ -70,20 +70,27 @@ function displayItems(items, permissions, userEmail) {
   itemsList.innerHTML = ''; // Clear previous items
 
   const userPermissions = getUserPermissions(permissions, userEmail);
-  const visibleColumns = userPermissions ? userPermissions.slice(2).map(Number) :; // Column names start from the third column and convert them to numbers
 
-  // Assuming the first row is the header, start from the second row
+  // Ensure visibleColumns is an array of numbers
+  const visibleColumns = userPermissions ? userPermissions.slice(2).map(Number) :;
+
+  // Check if there are visible columns for this user
+  if (visibleColumns.length === 0) {
+    console.log('No visible columns for this user.');
+    return; // Exit early if no columns should be displayed
+  }
+
   for (let i = 1; i < items.length; i++) {
     const item = items[i];
-    const itemId = item[0]; // Assuming ID is the first column
-    const itemName = item[item.length - 2]; // Assuming name is the second to last column
+    const itemId = item[0];
+    const itemName = item[item.length - 2];
 
     const itemDiv = document.createElement('div');
     let itemHtml = `<a href="detail.html?id=${itemId}">`;
 
     for (let j = 0; j < item.length; j++) {
-      if (visibleColumns.includes(j)) { // Check if the column is visible
-        const columnName = j === 0 ? 'ID' : j; // Use column index as key, or 'ID' for the first column
+      if (visibleColumns.includes(j)) {
+        const columnName = j === 0 ? 'ID' : j;
         itemHtml += `${columnName}: ${item[j]} `;
       }
     }
@@ -100,5 +107,5 @@ function getUserPermissions(permissions, userEmail) {
       return permissions[i];
     }
   }
-  return null; // Or handle the case where no permissions are found for the user
+  return null;
 }
