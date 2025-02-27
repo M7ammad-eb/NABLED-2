@@ -72,7 +72,7 @@ function displayItems(items, permissions, userEmail) {
   const userPermissions = getUserPermissions(permissions, userEmail);
 
   // Ensure visibleColumns is an array of numbers
-  const visibleColumns = userPermissions ? userPermissions.slice(2).map(Number) :;
+  const visibleColumns = userPermissions ? userPermissions.slice(2).map(Number);
 
   // Check if there are visible columns for this user
   if (visibleColumns.length === 0) {
