@@ -70,7 +70,7 @@ function displayItems(items, permissions, userEmail) {
   itemsList.innerHTML = ''; // Clear previous items
 
   const userPermissions = getUserPermissions(permissions, userEmail);
-  const visibleColumns = userPermissions ? userPermissions.slice(2) :; // Column names start from the third column
+  const visibleColumns = userPermissions ? userPermissions.slice(2).map(Number) :; // Column names start from the third column and convert them to numbers
 
   // Assuming the first row is the header, start from the second row
   for (let i = 1; i < items.length; i++) {
