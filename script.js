@@ -13,26 +13,6 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// Google Sign-In
-const signInButton = document.getElementById('signInButton');
-signInButton.addEventListener('click', signInWithGoogle);
-
-function signInWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .then((result) => {
-      // User signed in successfully
-      const user = result.user;
-      console.log('User signed in:', user);
-      // You can now fetch data and display it
-      fetchAndDisplayData();
-    })
-    .catch((error) => {
-      // Handle sign-in error
-      console.error('Sign-in error:', error);
-    });
-}
-
 // Check for user authentication on page load
 auth.onAuthStateChanged((user) => {
   if (user) {
@@ -42,6 +22,8 @@ auth.onAuthStateChanged((user) => {
   } else {
     // No user is signed in
     console.log('No user is signed in.');
+    // Redirect to the sign-in page
+    window.location.href = 'signin.html';
   }
 });
 
