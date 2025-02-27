@@ -71,7 +71,7 @@ function displayItems(items) {
   for (let i = 1; i < items.length; i++) {
     const item = items[i];
     const itemId = item[0]; // Assuming ID is the first column
-    const itemName = item[item.length - 2]; // Assuming name is the second to last column
+    const itemName = item[1]; // Assuming name is the second to last column
 
     const itemDiv = document.createElement('div');
     itemDiv.innerHTML = `<a href="detail.html?id=${itemId}">${itemName} (ID: ${itemId})</a>`;
