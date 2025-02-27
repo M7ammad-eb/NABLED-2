@@ -41,8 +41,18 @@ function displayItemDetails() {
   }
 
   Promise.all([
-    fetch(dataSheetUrl).then(response => response.text()),
-    fetch(permissionsSheetUrl).then(response => response.text())
+    fetch(dataSheetUrl).then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+    }),
+    fetch(permissionsSheetUrl).then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+    })
   ])
   .then(([data, permissions]) => {
     const dataRows = parseCSV(data);
@@ -51,23 +61,25 @@ function displayItemDetails() {
     const item = findItemById(dataRows, itemId);
     if (item) {
       const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-  // Ensure visibleColumns is an array of numbers
-  const visibleColumns = userPermissions
-    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-    : [];
-        displayItem(item, visibleColumns); // Pass visibleColumns
+      const visibleColumns = userPermissions
+        ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+        : [];
+      console.log("Visible Columns:", visibleColumns); // Debugging
+      console.log("Item:", item); // Debugging
+      displayItem(item, visibleColumns);
     } else {
-      // ... (Handle item not found)
       document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
     }
   })
-  .catch(error => console.error('Error fetching data:', error));
+  .catch(error => {
+    console.error('Error fetching data:', error);
+    document.getElementById('item-details').innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+  });
 }
 
 function parseCSV(csvText) {
   return Papa.parse(csvText, { header: false }).data;
 }
-
 
 function findItemById(items, itemId) {
   for (let i = 1; i < items.length; i++) {
@@ -79,10 +91,9 @@ function findItemById(items, itemId) {
 }
 
 function getUserPermissions(permissions, userEmail) {
-  userEmail = userEmail.trim().toLowerCase(); // Normalize user email
-  
+  userEmail = userEmail.trim().toLowerCase();
   for (let i = 1; i < permissions.length; i++) {
-    let storedEmail = permissions[i][0].trim().toLowerCase(); // Normalize stored email
+    let storedEmail = permissions[i][0].trim().toLowerCase();
     if (storedEmail === userEmail) {
       return permissions[i];
     }
@@ -90,14 +101,12 @@ function getUserPermissions(permissions, userEmail) {
   return null;
 }
 
-function displayItem(item, visibleColumns) { // Include visibleColumns as a parameter
+function displayItem(item, visibleColumns) {
   const itemDetailsDiv = document.getElementById('item-details');
-  itemDetailsDiv.innerHTML = ''; // Clear previous details
+  itemDetailsDiv.innerHTML = '';
 
-  // Assuming the first row is the header, start from the second row
-  // Display all columns as key-value pairs
   for (let i = 0; i < item.length; i++) {
-    if (visibleColumns.includes(i)) { // Check if the column is visible
+    if (visibleColumns.includes(i)) {
       const key = i === 0 ? 'ID' : i;
       const value = item[i];
       const detail = document.createElement('p');
