@@ -106,7 +106,7 @@ function displayItem(item, visibleColumns) {
   itemDetailsDiv.innerHTML = '';
 
   for (let i = 0; i < item.length; i++) {
-    if (if(visibleColumns[i] === 1)) {
+    if (visibleColumns[i] === 1) {
       const key = i === 0 ? 'ID' : i;
       const value = item[i];
       const detail = document.createElement('p');
