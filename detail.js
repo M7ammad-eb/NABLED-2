@@ -66,7 +66,13 @@ function displayItemDetails() {
         : [];
       console.log("Visible Columns:", visibleColumns); // Debugging
       console.log("Item:", item); // Debugging
-      displayItem(item, visibleColumns);
+
+      let key = [];  
+      for (let i=0; i < item.length; i++) {
+        key[i] = item[0][i];
+      }
+      
+      displayItem(item, visibleColumns, key);
     } else {
       document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
     }
@@ -101,14 +107,9 @@ function getUserPermissions(permissions, userEmail) {
   return null;
 }
 
-function displayItem(item, visibleColumns) {
+function displayItem(item, visibleColumns, key) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
-
-  let key = [];  
-  for (let i=0; i < item.length; i++) {
-    key[i] = item[0][i];
-  }
 
   for (let i = 0; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
