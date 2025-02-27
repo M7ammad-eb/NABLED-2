@@ -75,7 +75,7 @@ function displayItems(items, permissions, userEmail) {
 
   // Ensure visibleColumns is an array of numbers
   const visibleColumns = userPermissions
-    ? userPermissions.slice(3).filter(val => !isNaN(val)).map(Number)
+    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
     : [];
 
   // Check if there are visible columns for this user
@@ -87,22 +87,16 @@ function displayItems(items, permissions, userEmail) {
   for (let i = 1; i < items.length; i++) {
     const item = items[i];
     const itemId = item[0];
-    const itemName = item[item.length - 2];
 
-    const itemDiv = document.createElement('div');
     let itemHtml = `<a href="detail.html?id=${itemId}">`;
 
-    for (let j = 0; j < item.length; j++) {
-      if (visibleColumns.includes(j)) {
-        const columnName = items[0][j]; // Get column name from the header row
-        itemHtml += `${columnName}: ${item[j]} `;
+    // Only add item to the list if it contains visible columns
+    if (itemHtml.includes(':')) {
+      const itemDiv = document.createElement('div');
+      itemDiv.innerHTML = itemHtml;
+      itemsList.appendChild(itemDiv);
       }
     }
-
-    itemHtml += `</a>`;
-    itemDiv.innerHTML = itemHtml;
-    itemsList.appendChild(itemDiv);
-  }
 }
 
 function getUserPermissions(permissions, userEmail) {
