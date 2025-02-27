@@ -13,6 +13,10 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// URLs for both sheets
+const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
+const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
+
 // Check for user authentication on page load
 auth.onAuthStateChanged((user) => {
   if (user) {
@@ -36,21 +40,27 @@ function displayItemDetails() {
     return;
   }
 
-  const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv'; // Replace with your published sheet URL
+  Promise.all([
+    fetch(dataSheetUrl).then(response => response.text()),
+    fetch(permissionsSheetUrl).then(response => response.text())
+  ])
+  .then(([data, permissions]) => {
+    const dataRows = parseCSV(data);
+    const permissionRows = parseCSV(permissions);
 
-  fetch(sheetUrl)
-    .then(response => response.text()) // Assuming CSV format
-    .then(data => {
-      const rows = parseCSV(data);
-      const item = findItemById(rows, itemId);
-      if (item) {
-        displayItem(item);
-      } else {
-        document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
-      }
-    })
-    .catch(error => console.error('Error fetching data:', error));
+    const item = findItemById(dataRows, itemId);
+    if (item) {
+      const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+      const visibleColumns = userPermissions ? userPermissions.slice(2) :;
+      displayItem(item, visibleColumns); // Pass visibleColumns
+    } else {
+      // ... (Handle item not found)
+      document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
+    }
+  })
+  .catch(error => console.error('Error fetching data:', error));
 }
+
 
 function parseCSV(csvText) {
   const rows = csvText.split('\n');
@@ -66,6 +76,16 @@ function findItemById(items, itemId) {
   return null;
 }
 
+function getUserPermissions(permissions, userEmail) {
+  for (let i = 1; i < permissions.length; i++) {
+    if (permissions[i][0] === userEmail) {
+      return permissions[i];
+    }
+  }
+  return null; // Or handle the case where no permissions are found for the user
+}
+
+
 function displayItem(item) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = ''; // Clear previous details
@@ -73,10 +93,12 @@ function displayItem(item) {
   // Assuming the first row is the header, start from the second row
   // Display all columns as key-value pairs
   for (let i = 0; i < item.length; i++) {
-    const key = i === 0 ? 'ID' : i; // Use column index as key, or 'ID' for the first column
-    const value = item[i];
-    const detail = document.createElement('p');
-    detail.innerHTML = `<strong>${key}:</strong> ${value}`;
-    itemDetailsDiv.appendChild(detail);
-  }
+      if (visibleColumns.includes(i)) { // Check if the column is visible
+        const key = i === 0 ? 'ID' : i;
+        const value = item[i];
+        const detail = document.createElement('p');
+        detail.innerHTML = `<strong>${key}:</strong> ${value}`;
+        itemDetailsDiv.appendChild(detail);
+      }
+    }
 }
