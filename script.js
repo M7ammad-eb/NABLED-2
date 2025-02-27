@@ -13,15 +13,33 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// Sign Out
+const signOutButton = document.getElementById('signOutButton');
+signOutButton.addEventListener('click', signOut);
+
+function signOut() {
+  auth.signOut()
+    .then(() => {
+      console.log('User signed out');
+      // Redirect to sign-in page or refresh
+      window.location.href = 'signin.html';
+    })
+    .catch((error) => {
+      console.error('Sign-out error:', error);
+    });
+}
+
 // Check for user authentication on page load
 auth.onAuthStateChanged((user) => {
   if (user) {
     // User is signed in
     console.log('User is already signed in:', user);
+    signOutButton.style.display = 'block'; // Show sign-out button
     fetchAndDisplayData();
   } else {
     // No user is signed in
     console.log('No user is signed in.');
+    signOutButton.style.display = 'none'; // Hide sign-out button
     // Redirect to the sign-in page
     window.location.href = 'signin.html';
   }
