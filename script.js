@@ -42,10 +42,6 @@ auth.onAuthStateChanged((user) => {
     console.log('User is already signed in:', user);
     signOutButton.style.display = 'block'; // Show sign-out button
 
-    // Loading message
-    const loadingMessage = document.getElementById('loading');
-    loadingMessage.style.display = 'block';
-
     // Fetch both data and permissions
     Promise.all([
       fetch(sheetUrl).then(response => response.text()),
@@ -57,7 +53,6 @@ auth.onAuthStateChanged((user) => {
       displayItems(dataRows, permissionRows, user.email); // Pass user email
     })
     .catch(error => console.error('Error fetching data:', error));
-    loadingMessage.style.display = 'none';
   } else {
     // No user is signed in
     console.log('No user is signed in.');
