@@ -119,7 +119,7 @@ function displayItem(item, visibleColumns, key) {
 
       const value = item[i];
       const detail = document.createElement('p');
-      detail.innerHTML = `<strong>${key[i]}:</strong> ${value}`;
+      detail.innerHTML = `<strong>${key}:</strong> ${value}`;
       itemDetailsDiv.appendChild(detail);
     }
   }
