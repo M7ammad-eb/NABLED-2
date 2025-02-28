@@ -114,9 +114,9 @@ function displayItem(item, visibleColumns, key) {
       .then(csvText => {
         const parsedData = parseCSV(csvText);
         console.log(parsedData[0][i]); // Access first row, column 'i'
+        const key = parsedData[0][i];
       })
 
-      const key = parsedData[0][i];
       const value = item[i];
       const detail = document.createElement('p');
       detail.innerHTML = `<strong>${key[i]}:</strong> ${value}`;
