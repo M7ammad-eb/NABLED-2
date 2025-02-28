@@ -13,56 +13,25 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// URLs for data sources
+// URLs for both sheets
 const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
-// Cache settings
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
-
-// Authenticate user on page load
-auth.onAuthStateChanged(user => {
+// Check for user authentication on page load
+auth.onAuthStateChanged(async (user) => {
   if (user) {
-    console.log('User is signed in:', user);
+    // User is signed in
+    console.log('User is already signed in:', user);
     displayItemDetails();
   } else {
-    console.log('No user signed in. Redirecting...');
+    // No user is signed in
+    console.log('No user is signed in.');
+    // Redirect to the sign-in page
     window.location.href = 'signin.html';
   }
 });
 
-// Fetch data with caching
-async function fetchDataWithCache(url, cacheKey) {
-  const cachedData = localStorage.getItem(cacheKey);
-  const cachedTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
-  
-  if (cachedData && cachedTimestamp) {
-    const age = Date.now() - parseInt(cachedTimestamp, 10);
-    if (age < CACHE_DURATION) {
-      console.log(`Loading ${cacheKey} from cache.`);
-      return JSON.parse(cachedData);
-    }
-  }
-
-  console.log(`Fetching ${cacheKey} from network.`);
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const csvText = await response.text();
-    const parsedData = parseCSV(csvText);
-    
-    localStorage.setItem(cacheKey, JSON.stringify(parsedData));
-    localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-
-    return parsedData;
-  } catch (error) {
-    console.error(`Error fetching ${cacheKey}:`, error);
-    return null;
-  }
-}
-
-// Display item details
-async function displayItemDetails() {
+function displayItemDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const itemId = urlParams.get('id');
 
@@ -71,55 +40,86 @@ async function displayItemDetails() {
     return;
   }
 
-  try {
-    const [dataRows, permissionRows] = await Promise.all([
-      fetchDataWithCache(dataSheetUrl, 'cachedData'),
-      fetchDataWithCache(permissionsSheetUrl, 'cachedPermissions')
-    ]);
-
-    if (!dataRows || !permissionRows) throw new Error('Failed to fetch required data.');
+  Promise.all([
+    fetch(dataSheetUrl).then(response => {
+        if (!response.ok) {
+            throw new Error(HTTP error! status: ${response.status});
+        }
+        return response.text();
+    }),
+    fetch(permissionsSheetUrl).then(response => {
+        if (!response.ok) {
+            throw new Error(HTTP error! status: ${response.status});
+        }
+        return response.text();
+    })
+  ])
+  .then(([data, permissions]) => {
+    const dataRows = parseCSV(data);
+    const permissionRows = parseCSV(permissions);
 
     const item = findItemById(dataRows, itemId);
     if (item) {
       const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-      const visibleColumns = userPermissions ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number) : [];
+      const visibleColumns = userPermissions
+        ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+        : [];
+      console.log("Visible Columns:", visibleColumns); // Debugging
+      console.log("Item:", item); // Debugging
 
-      displayItem(item, dataRows[0], visibleColumns);
+      displayItem(item, visibleColumns);
     } else {
       document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
     }
-  } catch (error) {
-    console.error('Error displaying item details:', error);
-    document.getElementById('item-details').innerHTML = `<p>Error fetching data: ${error.message}</p>`;
-  }
+  })
+  .catch(error => {
+    console.error('Error fetching data:', error);
+    document.getElementById('item-details').innerHTML = <p>Error fetching data: ${error.message}</p>;
+  });
 }
 
-// Parse CSV data
 function parseCSV(csvText) {
   return Papa.parse(csvText, { header: false }).data;
 }
 
-// Find item by ID
 function findItemById(items, itemId) {
-  return items.find(row => row[0] === itemId) || null;
+  for (let i = 1; i < items.length; i++) {
+    if (items[i][0] === itemId) {
+      return items[i];
+    }
+  }
+  return null;
 }
 
-// Get user permissions
 function getUserPermissions(permissions, userEmail) {
   userEmail = userEmail.trim().toLowerCase();
-  return permissions.find(row => row[0].trim().toLowerCase() === userEmail) || null;
+  for (let i = 1; i < permissions.length; i++) {
+    let storedEmail = permissions[i][0].trim().toLowerCase();
+    if (storedEmail === userEmail) {
+      return permissions[i];
+    }
+  }
+  return null;
 }
 
-// Display item details
-function displayItem(item, columnNames, visibleColumns) {
+async function displayItem(item, visibleColumns) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
-  item.forEach((value, index) => {
-    if (visibleColumns.includes(index)) {
+  // Fetch column names first
+  const response = await fetch(dataSheetUrl);
+  const csvText = await response.text();
+  const parsedData = parseCSV(csvText);
+  const columnNames = parsedData[0]; // First row contains column names
+
+  for (let i = 0; i < item.length; i++) {
+    if (visibleColumns[i] === 1) {
+      const key = columnNames[i]; // Get the column name
+      const value = item[i];
+
       const detail = document.createElement('p');
-      detail.innerHTML = `<strong>${columnNames[index]}:</strong> ${value}`;
+      detail.innerHTML = <strong>${key}:</strong> ${value};
       itemDetailsDiv.appendChild(detail);
     }
-  });
+  }
 }
