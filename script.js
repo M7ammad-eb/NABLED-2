@@ -79,8 +79,8 @@ function displayItems(items, permissions, userEmail) {
 
     for (let j = 0; j < item.length; j++) {
       if (visibleColumns.includes(j)) {
-        const columnName = items[0][j]; // Get column name from the header row
-        itemHtml += `${columnName}: ${item[j]} `;
+        //const columnName = items[0][j]; // Get column name from the header row
+        itemHtml += `${itemId}/n${item[j]} `;
 
       }
     }
