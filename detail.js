@@ -110,7 +110,7 @@ function displayItem(item, visibleColumns, key) {
     if (visibleColumns[i] === 1) {
       // assign columns names
       let key = [];
-      key[i] = fetch(dataSheetUrl)[0][i];
+      key[i] = fetch(dataSheetUrl).then(response => response.text())[0][i];
       
       const value = item[i];
       const detail = document.createElement('p');
