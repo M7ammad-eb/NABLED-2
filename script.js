@@ -34,39 +34,24 @@ function signOut() {
     });
 }
 
-// Check for user authentication on page load
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    // User is signed in
-    console.log('User is already signed in:', user);
-    signOutButton.style.display = 'block'; // Show sign-out button
-
-    // Fetch both data and permissions
-    Promise.all([
-      fetch(sheetUrl).then(response => response.text()),
-      fetch(permissionsSheetUrl).then(response => response.text())
-    ])
-    .then(([data, permissions]) => {
-      const dataRows = parseCSV(data);
-      const permissionRows = parseCSV(permissions);
-            
-      displayItems(dataRows, permissionRows, user.email); // Pass user email
-    })
-    .catch(error => console.error('Error fetching data:', error));
-  } else {
-    // No user is signed in
-    console.log('No user is signed in.');
-    signOutButton.style.display = 'none'; // Hide sign-out button
-    // Redirect to the sign-in page
-    window.location.href = 'signin.html';
-  }
+// Call loadData() and proceed
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        signOutButton.style.display = "block";
+        const { dataRows, permissionRows } = await loadData();
+        displayItems(dataRows, permissionRows, user.email);
+    } else {
+        signOutButton.style.display = "none";
+        window.location.href = "signin.html";
+    }
 });
 
+// deal with csv files
 function parseCSV(csvText) {
   return Papa.parse(csvText, { header: false }).data;
 }
 
-
+// display the items
 function displayItems(items, permissions, userEmail) {
   const itemsList = document.getElementById('items-list');
   itemsList.innerHTML = ''; // Clear previous items
@@ -116,4 +101,52 @@ function getUserPermissions(permissions, userEmail) {
     }
   }
   return null;
+}
+
+// Check if cached data exists and is recent
+function getCachedData(key) {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+        const parsed = JSON.parse(cached);
+        const now = new Date().getTime();
+        if (now - parsed.timestamp < 60 * 60 * 1000) { // 60 minutes threshold
+            console.log("Using cached data for:", key);
+            return parsed.data;
+        }
+    }
+    return null;
+}
+
+// Save data to cache with a timestamp
+function cacheData(key, data) {
+    localStorage.setItem(key, JSON.stringify({
+        data: data,
+        timestamp: new Date().getTime()
+    }));
+}
+
+// Function to load data (from cache or fetch)
+async function loadData() {
+    let dataRows = getCachedData("dataSheet");
+    let permissionRows = getCachedData("permissionsSheet");
+
+    if (!dataRows || !permissionRows) {
+        console.log("Fetching fresh data...");
+        try {
+            const [dataResponse, permissionsResponse] = await Promise.all([
+                fetch(sheetUrl).then(res => res.text()),
+                fetch(permissionsSheetUrl).then(res => res.text())
+            ]);
+            
+            dataRows = parseCSV(dataResponse);
+            permissionRows = parseCSV(permissionsResponse);
+
+            cacheData("dataSheet", dataRows);
+            cacheData("permissionsSheet", permissionRows);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }
+
+    return { dataRows, permissionRows };
 }
