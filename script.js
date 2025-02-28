@@ -127,8 +127,8 @@ function cacheData(key, data) {
 
 // Function to load data (from cache or fetch)
 async function loadData() {
-    let dataRows = getCachedData("dataSheet");
-    const permissionRows
+    let dataRows = getCachedData("dataSheet"); 
+    let permissionRows; // permissions not cached
 
     if (!dataRows) {
         console.log("Fetching fresh data...");
@@ -137,13 +137,21 @@ async function loadData() {
                 fetch(sheetUrl).then(res => res.text()),
                 fetch(permissionsSheetUrl).then(res => res.text())
             ]);
-            
-            dataRows = parseCSV(dataResponse);
-            permissionRows = parseCSV(permissionsResponse);
 
-            cacheData("dataSheet", dataRows);
+            dataRows = parseCSV(dataResponse);
+            permissionRows = parseCSV(permissionsResponse); // Always fetched fresh
+
+            cacheData("dataSheet", dataRows); // Cache only dataRows
         } catch (error) {
             console.error("Error fetching data:", error);
+        }
+    } else {
+        console.log("Using cached data for dataRows...");
+        try {
+            const permissionsResponse = await fetch(permissionsSheetUrl).then(res => res.text());
+            permissionRows = parseCSV(permissionsResponse); // Always fetch fresh permissions
+        } catch (error) {
+            console.error("Error fetching permissions data:", error);
         }
     }
 
