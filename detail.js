@@ -110,7 +110,7 @@ function displayItem(item, visibleColumns, key) {
     if (visibleColumns[i] === 1) {
       // assign columns names
       let key = [];
-      key[i] = Papa.parse(fetch(dataSheetUrl).then(response => response.text()), { header: true }).data)[0][i];
+      key[i] = Papa.parse(fetch(dataSheetUrl).then(response => response.text()), { header: true }).data[0][i];
       
       const value = item[i];
       const detail = document.createElement('p');
