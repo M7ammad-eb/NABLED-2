@@ -128,6 +128,7 @@ function cacheData(key, data) {
 // Function to load data (from cache or fetch)
 async function loadData() {
     let dataRows = getCachedData("dataSheet");
+    const permissionRows
 
     if (!dataRows) {
         console.log("Fetching fresh data...");
@@ -138,7 +139,7 @@ async function loadData() {
             ]);
             
             dataRows = parseCSV(dataResponse);
-            const permissionRows = parseCSV(permissionsResponse);
+            permissionRows = parseCSV(permissionsResponse);
 
             cacheData("dataSheet", dataRows);
         } catch (error) {
