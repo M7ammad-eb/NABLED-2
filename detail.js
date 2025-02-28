@@ -18,7 +18,7 @@ const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
 // Check for user authentication on page load
-auth.onAuthStateChanged(async (user) => {
+auth.onAuthStateChanged((user) => {
   if (user) {
     // User is signed in
     console.log('User is already signed in:', user);
@@ -43,13 +43,13 @@ function displayItemDetails() {
   Promise.all([
     fetch(dataSheetUrl).then(response => {
         if (!response.ok) {
-            throw new Error(HTTP error! status: ${response.status});
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.text();
     }),
     fetch(permissionsSheetUrl).then(response => {
         if (!response.ok) {
-            throw new Error(HTTP error! status: ${response.status});
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.text();
     })
@@ -74,7 +74,7 @@ function displayItemDetails() {
   })
   .catch(error => {
     console.error('Error fetching data:', error);
-    document.getElementById('item-details').innerHTML = <p>Error fetching data: ${error.message}</p>;
+    document.getElementById('item-details').innerHTML = `<p>Error fetching data: ${error.message}</p>`;
   });
 }
 
@@ -118,8 +118,9 @@ async function displayItem(item, visibleColumns) {
       const value = item[i];
 
       const detail = document.createElement('p');
-      detail.innerHTML = <strong>${key}:</strong> ${value};
+      detail.innerHTML = `<strong>${key}:</strong> ${value}`;
       itemDetailsDiv.appendChild(detail);
     }
   }
 }
+
