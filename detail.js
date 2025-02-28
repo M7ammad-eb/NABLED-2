@@ -102,25 +102,25 @@ function getUserPermissions(permissions, userEmail) {
   return null;
 }
 
-function displayItem(item, visibleColumns, key) {
+async function displayItem(item, visibleColumns) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
+  // Fetch column names first
+  const response = await fetch(dataSheetUrl);
+  const csvText = await response.text();
+  const parsedData = parseCSV(csvText);
+  const columnNames = parsedData[0]; // First row contains column names
+
   for (let i = 0; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
-      // assign columns names
-      fetch(dataSheetUrl)
-      .then(response => response.text())  // Convert response to text
-      .then(csvText => {
-        const parsedData = parseCSV(csvText);
-        console.log(parsedData[0][i]); // Access first row, column 'i'
-        const key = parsedData[0][i];
-      })
-
+      const key = columnNames[i]; // Get the column name
       const value = item[i];
+
       const detail = document.createElement('p');
       detail.innerHTML = `<strong>${key}:</strong> ${value}`;
       itemDetailsDiv.appendChild(detail);
     }
   }
 }
+
