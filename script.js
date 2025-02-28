@@ -77,16 +77,13 @@ function displayItems(items, permissions, userEmail) {
     const itemDiv = document.createElement('div');
     let itemHtml = `<a href="detail.html?id=${itemId}">`;
 
-
-    itemHtml += `${itemId}<br>${itemName} `;
-
-      
+    //itemHtml += `<span>${itemId}: </span><span class="item-value">${itemName}</span>; `;
+    itemHtml += `${itemId}<br>${itemName} `;      
     }
-
-    itemHtml += `</a>`;
-    itemDiv.innerHTML = itemHtml;
-    itemsList.appendChild(itemDiv);
-  }
+  
+  itemHtml += `</a>`;
+  itemDiv.innerHTML = itemHtml;
+  itemsList.appendChild(itemDiv);
 }
 
 function getUserPermissions(permissions, userEmail) {
