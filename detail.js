@@ -17,6 +17,10 @@ const auth = firebase.auth();
 const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
+// Cache for data and permissions
+let dataCache = null;
+let permissionsCache = null;
+
 // Check for user authentication on page load
 auth.onAuthStateChanged(async (user) => {
   if (user) {
@@ -31,7 +35,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-function displayItemDetails() {
+async function displayItemDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const itemId = urlParams.get('id');
 
@@ -40,27 +44,29 @@ function displayItemDetails() {
     return;
   }
 
-  Promise.all([
-    fetch(dataSheetUrl).then(response => {
-        if (!response.ok) {
-            throw new Error(HTTP error! status: ${response.status});
-        }
-        return response.text();
-    }),
-    fetch(permissionsSheetUrl).then(response => {
-        if (!response.ok) {
-            throw new Error(HTTP error! status: ${response.status});
-        }
-        return response.text();
-    })
-  ])
-  .then(([data, permissions]) => {
-    const dataRows = parseCSV(data);
-    const permissionRows = parseCSV(permissions);
+  try {
+    // Fetch and cache data if not already cached
+    if (!dataCache) {
+      const dataResponse = await fetch(dataSheetUrl);
+      if (!dataResponse.ok) {
+        throw new Error(`HTTP error! status: ${dataResponse.status}`);
+      }
+      const dataText = await dataResponse.text();
+      dataCache = parseCSV(dataText);
+    }
 
-    const item = findItemById(dataRows, itemId);
+    if (!permissionsCache) {
+      const permissionsResponse = await fetch(permissionsSheetUrl);
+      if (!permissionsResponse.ok) {
+        throw new Error(`HTTP error! status: ${permissionsResponse.status}`);
+      }
+      const permissionsText = await permissionsResponse.text();
+      permissionsCache = parseCSV(permissionsText);
+    }
+
+    const item = findItemById(dataCache, itemId);
     if (item) {
-      const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+      const userPermissions = getUserPermissions(permissionsCache, auth.currentUser.email);
       const visibleColumns = userPermissions
         ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
         : [];
@@ -71,11 +77,10 @@ function displayItemDetails() {
     } else {
       document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
     }
-  })
-  .catch(error => {
+  } catch (error) {
     console.error('Error fetching data:', error);
-    document.getElementById('item-details').innerHTML = <p>Error fetching data: ${error.message}</p>;
-  });
+    document.getElementById('item-details').innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+  }
 }
 
 function parseCSV(csvText) {
@@ -106,11 +111,8 @@ async function displayItem(item, visibleColumns) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
-  // Fetch column names first
-  const response = await fetch(dataSheetUrl);
-  const csvText = await response.text();
-  const parsedData = parseCSV(csvText);
-  const columnNames = parsedData[0]; // First row contains column names
+  // Fetch column names from cache
+  const columnNames = dataCache[0]; // First row contains column names
 
   for (let i = 0; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
@@ -118,7 +120,7 @@ async function displayItem(item, visibleColumns) {
       const value = item[i];
 
       const detail = document.createElement('p');
-      detail.innerHTML = <strong>${key}:</strong> ${value};
+      detail.innerHTML = `<strong>${key}:</strong> ${value}`;
       itemDetailsDiv.appendChild(detail);
     }
   }
