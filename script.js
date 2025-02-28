@@ -79,11 +79,10 @@ function displayItems(items, permissions, userEmail) {
 
     //itemHtml += `<span>${itemId}: </span><span class="item-value">${itemName}</span>; `;
     itemHtml += `${itemId}<br>${itemName} `;      
-    }
-  
-  itemHtml += `</a>`;
-  itemDiv.innerHTML = itemHtml;
-  itemsList.appendChild(itemDiv);
+    itemHtml += `</a>`;
+    itemDiv.innerHTML = itemHtml;
+    itemsList.appendChild(itemDiv);
+  }
 }
 
 function getUserPermissions(permissions, userEmail) {
