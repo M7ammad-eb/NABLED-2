@@ -109,8 +109,7 @@ function displayItem(item, visibleColumns, key) {
   for (let i = 0; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
       // assign columns names
-      let key = [];
-      key[i] = parseCSV(fetch(dataSheetUrl).then(response => response.text()))[0][i];
+      const key = parseCSV(fetch(dataSheetUrl).then(response => response.text()))[0][i];
       
       const value = item[i];
       const detail = document.createElement('p');
