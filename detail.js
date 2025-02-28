@@ -67,13 +67,7 @@ function displayItemDetails() {
       console.log("Visible Columns:", visibleColumns); // Debugging
       console.log("Item:", item); // Debugging
 
-      // assign columns names
-      let key = [];
-      for (let i=0; i < fetch(dataSheetUrl).length; i++) {
-        key[i] = fetch(dataSheetUrl)[0][i];
-      }
-      
-      displayItem(item, visibleColumns, key);
+      displayItem(item, visibleColumns);
     } else {
       document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
     }
@@ -114,6 +108,10 @@ function displayItem(item, visibleColumns, key) {
 
   for (let i = 0; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
+      // assign columns names
+      let key = [];
+      key[i] = fetch(dataSheetUrl)[0][i];
+      
       const value = item[i];
       const detail = document.createElement('p');
       detail.innerHTML = `<strong>${key[i]}:</strong> ${value}`;
