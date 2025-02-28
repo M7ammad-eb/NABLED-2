@@ -128,9 +128,8 @@ function cacheData(key, data) {
 // Function to load data (from cache or fetch)
 async function loadData() {
     let dataRows = getCachedData("dataSheet");
-    let permissionRows = getCachedData("permissionsSheet");
 
-    if (!dataRows || !permissionRows) {
+    if (!dataRows) {
         console.log("Fetching fresh data...");
         try {
             const [dataResponse, permissionsResponse] = await Promise.all([
@@ -142,7 +141,6 @@ async function loadData() {
             permissionRows = parseCSV(permissionsResponse);
 
             cacheData("dataSheet", dataRows);
-            cacheData("permissionsSheet", permissionRows);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
