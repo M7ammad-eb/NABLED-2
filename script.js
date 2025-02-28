@@ -138,7 +138,7 @@ async function loadData() {
             ]);
             
             dataRows = parseCSV(dataResponse);
-            permissionRows = parseCSV(permissionsResponse);
+            const permissionRows = parseCSV(permissionsResponse);
 
             cacheData("dataSheet", dataRows);
         } catch (error) {
