@@ -75,10 +75,10 @@ function displayItems(items, permissions, userEmail) {
     const itemName = item[1];
 
     const itemDiv = document.createElement('div');
-    let itemHtml = `<a href="detail.html?id=${itemId}">`;
+    let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
 
-    //itemHtml += `<span>${itemId}: </span><span class="item-value">${itemName}</span>; `;
-    itemHtml += `${itemId}<br>${itemName} `;      
+    itemHtml += `<span>${itemId}</span><br><span class="item-value">${itemName}</span>; `;
+    //itemHtml += `${itemId}<br>${itemName} `;      
     itemHtml += `</a>`;
     itemDiv.innerHTML = itemHtml;
     itemsList.appendChild(itemDiv);
