@@ -38,3 +38,7 @@ button {
 button:hover {
   background-color: #0056b3;
 }
+
+.child {
+    margin-bottom: 20px; /* Add 20px of space below each child */
+}
