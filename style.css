@@ -3,6 +3,31 @@ body {
   margin: 20px;
 }
 
+.item-row {
+    display: block; /* Make the <a> tag fill the entire row width */
+    text-decoration: none; /* Remove the default underline */
+    padding: 10px; /* Add some padding for better appearance */
+    border-bottom: 2px solid #ccc; /* Optional: Add a separator between rows */
+    cursor: pointer; /* Change the cursor to a pointer on hover */
+}
+
+.item-row:hover {
+    background-color: #f0f0f0; /* Optional: Add a hover effect */
+}
+
+/* Style for inner elements - Adjust as needed */
+.item-row > div {
+    /* Styles for the code and number container */
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Or flex-start/flex-end as needed */
+}
+.item-row > div > span{
+    margin-left: 5px; /* Example: Add spacing */
+}
+
+
+
 h1 {
   text-align: center;
 }
