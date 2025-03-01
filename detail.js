@@ -114,27 +114,27 @@ async function displayItem(item, visibleColumns) {
 
   // Display the image
   const img = document.createElement('p');
-  img.innerHTML = `<img src="${item[3]}" alt="${item[1]}" width="500" height="300">`;
+  img.innerHTML = `<img src="${item[3]}" alt="${item[1]}" height="300">`;
   itemDetailsDiv.appendChild(img);
     
   // Item Name
   const itemName = document.createElement('p');
-  itemName.innerHTML = `<h2>${item[1]}</h2>`;
+  itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
   itemDetailsDiv.appendChild(itemName);
   
   // Item ID
   const itemId = document.createElement('p');
-  itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong>`;
+  itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
   itemDetailsDiv.appendChild(itemId);
 
   // Specifications
   const specs = document.createElement('p');
-  specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong>`;
+  specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
   itemDetailsDiv.appendChild(specs);
 
   // Cataloge Link
   const catalog = document.createElement('p');
-  catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a>`;
+  catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
   itemDetailsDiv.appendChild(catalog);
   
 
@@ -144,7 +144,7 @@ async function displayItem(item, visibleColumns) {
       const value = item[i];
 
       const prices = document.createElement('p');
-      prices.innerHTML = `${key}<br><strong>${value}</strong>`;
+      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" height="20"><br>`;
       itemDetailsDiv.appendChild(prices);
     }
   }
