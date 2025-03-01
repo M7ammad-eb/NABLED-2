@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html dir="rtl">
 <head>
-  <title>My PWA App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NABLED</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
+  <style>
+  body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: white;
+        }
+    </style>
 </head>
 <body>
   <button id="signOutButton" style="display: none;">Sign Out</button>
-      <h1>Items</h1>
+      <h1>الأصناف</h1>
   <div id="items-list"></div>
 
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
