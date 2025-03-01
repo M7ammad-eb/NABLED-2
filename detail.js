@@ -112,15 +112,40 @@ async function displayItem(item, visibleColumns) {
   const parsedData = parseCSV(csvText);
   const columnNames = parsedData[0]; // First row contains column names
 
-  for (let i = 0; i < item.length; i++) {
+  // Display the image
+  const img = document.createElement('p');
+  img.innerHTML = `<img src="${item[3]}" alt="${item[1]}" width="500" height="300">`;
+  itemDetailsDiv.appendChild(img);
+    
+  // Item Name
+  const itemName = document.createElement('p');
+  itemName.innerHTML = `<h2>${item[1]}</h2>`;
+  itemDetailsDiv.appendChild(itemName);
+  
+  // Item ID
+  const itemId = document.createElement('p');
+  itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong>`;
+  itemDetailsDiv.appendChild(itemId);
+
+  // Specifications
+  const specs = document.createElement('p');
+  specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong>`;
+  itemDetailsDiv.appendChild(specs);
+
+  // Cataloge Link
+  const catalog = document.createElement('p');
+  catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a>`;
+  itemDetailsDiv.appendChild(catalog);
+  
+
+  for (let i = 5; i < item.length; i++) {
     if (visibleColumns[i] === 1) {
       const key = columnNames[i]; // Get the column name
       const value = item[i];
 
-      const detail = document.createElement('p');
-      detail.innerHTML = `<strong>${key}:</strong> ${value}`;
-      itemDetailsDiv.appendChild(detail);
+      const prices = document.createElement('p');
+      prices.innerHTML = `${key}<br><strong>${value}</strong>`;
+      itemDetailsDiv.appendChild(prices);
     }
   }
 }
-
