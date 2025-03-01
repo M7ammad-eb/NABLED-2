@@ -144,7 +144,7 @@ async function displayItem(item, visibleColumns) {
       const value = item[i];
 
       const prices = document.createElement('p');
-      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" height="20"><br>`;
+      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" height="10"><br>`;
       itemDetailsDiv.appendChild(prices);
     }
   }
