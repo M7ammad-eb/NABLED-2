@@ -3,6 +3,7 @@ body {
   margin: 0; /* Remove default body margin */
   background-color: #f5f5f5; /* Light gray background */
   display: flex;
+  flex-flow: column;
   justify-content: center;
   padding:10px;
 }
