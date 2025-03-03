@@ -5,35 +5,35 @@ body {
   display: flex;
   flex-flow: column;
   justify-content: center;
-  padding:10px;
+  padding:0px;
 }
 
 .top-bar {
     position: sticky;
     top: 0;
     background-color: #FFFFFF;
-    padding: 10px;
+    padding: 0px;
     z-index: 100; /* Ensure the top bar is above other content */
     display: flex;
+    flex-flow: row;
     justify-content: space-between;
-    align-items: center;
 }
 .search-container{
-  width: 85%;
+  width: 70%;
 }
 
 #search-input {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 7px;
+    border-radius: 5px;
     font-size: 16px;
     background-color: #EBEBEB;
 }
 buttons-container{
   display: flex;
   width: 15%;
-  align-items: center;
+  align-items: left;
   justify-content: space-evenly;
 }
 #M{
@@ -53,12 +53,11 @@ buttons-container{
     display: flex;
     flex-direction: row; /* Make sure items are displayed horizontally */
     align-items: center;
-    justify-content: space-between;
     border: 1px solid #ddd;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 5px;
+    margin: 5px;
     background-color: white;
-    border-radius: 4px;
+    border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
      width: 100%;
      box-sizing: border-box;
@@ -85,7 +84,7 @@ buttons-container{
 h1 {
   text-align: center;
 }
-
+/*
 #items-list {
   margin-top: 20px;
 }
@@ -103,7 +102,7 @@ h1 {
 #item-details p {
   margin: 5px 0;
 }
-
+*/
 button {
   padding: 10px 20px;
   background-color: #007bff;
