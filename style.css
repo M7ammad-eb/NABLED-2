@@ -4,15 +4,63 @@ body {
   background-color: #f5f5f5; /* Light gray background */
   display: flex;
   justify-content: center;
-  padding:20px;
+  padding:10px;
+}
+
+.top-bar {
+    position: sticky;
+    top: 0;
+    background-color: #0d6efd; /* Or any color you prefer */
+    padding: 10px;
+    z-index: 100; /* Ensure the top bar is above other content */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.search-container{
+  width: 85%;
+}
+
+#search-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+buttons-container{
+  display: flex;
+  width: 15%;
+  align-items: center;
+  justify-content: space-evenly;
+}
+#M{
+    background-color: orange;
+    border: none;
+    border-radius: 50%;
+    height: 30px;
+    width: 30px;
+}
+.product-list-container {
+    flex-grow: 1; /* Allow the list to take up remaining space */
+    overflow-y: auto; /* Add vertical scrolling if the content overflows */
+    padding: 20px; /* Add some padding around the list */
 }
 
 .item-row {
-  display: block; /* Make the <a> tag fill the entire row width */
-  text-decoration: none; /* Remove the default underline */
-  padding: 10px; /* Add some padding for better appearance */
-  border-bottom: 2px solid #ccc; /* Optional: Add a separator between rows */
-  cursor: pointer; /* Change the cursor to a pointer on hover */
+    display: flex;
+    flex-direction: row; /* Make sure items are displayed horizontally */
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+     width: 100%;
+     box-sizing: border-box;
+    cursor: pointer; /* Change the cursor to a pointer on hover */
 }
 
 .item-row:hover {
@@ -21,13 +69,13 @@ body {
 
 /* Style for inner elements - Adjust as needed */
 .item-row > div {
-    /* Styles for the code and number container */
     display: flex;
-    justify-content: space-between;
-    align-items: center; /* Or flex-start/flex-end as needed */
+    flex-direction: column;
+    width: 45%;
+    align-items: flex-end;
 }
 .item-row > div > span{
-    margin-left: 5px; /* Example: Add spacing */
+    font-size: small;
 }
 
 
