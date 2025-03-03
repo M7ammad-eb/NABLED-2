@@ -12,7 +12,7 @@ body {
     position: sticky;
     top: 0;
     background-color: #FFFFFF;
-    padding: 0px;
+    padding: 20px;
     z-index: 100; /* Ensure the top bar is above other content */
     display: flex;
     flex-flow: row;
@@ -84,7 +84,7 @@ buttons-container{
 h1 {
   text-align: center;
 }
-/*
+
 #items-list {
   margin-top: 20px;
 }
@@ -102,7 +102,7 @@ h1 {
 #item-details p {
   margin: 5px 0;
 }
-*/
+
 button {
   padding: 10px 20px;
   background-color: #007bff;
