@@ -77,7 +77,7 @@ function displayItems(items, permissions, userEmail) {
     const itemDiv = document.createElement('div');
     let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
 
-    itemHtml += `<span>${itemId}</span><br><span class="item-value">${itemName}</span>; `;
+    itemHtml += `<span class="item-id">${itemId}</span><br><span class="item-value">${itemName}</span>`;
     //itemHtml += `${itemId}<br>${itemName} `;      
     itemHtml += `</a>`;
     itemDiv.innerHTML = itemHtml;
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let allItems = []; // Store all item elements
 
     // --- Your CSV parsing code (modified) ---
-    Papa.parse("your-data.csv", { //  Replace 'your-data.csv'
+    Papa.parse("sheetUrl", { //  Replace 'your-data.csv'
         download: true,
         header: true,
         complete: function(results) {
