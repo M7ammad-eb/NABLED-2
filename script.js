@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let allItems = []; // Store all item elements
 
     // --- Your CSV parsing code (modified) ---
-    Papa.parse("sheetUrl", { //  Replace 'your-data.csv'
+    Papa.parse(sheetUrl, { //  Replace 'your-data.csv'
         download: true,
         header: true,
         complete: function(results) {
