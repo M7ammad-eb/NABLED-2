@@ -4,8 +4,7 @@ body {
   background-color: #f5f5f5; /* Light gray background */
   display: flex;
   flex-flow: column;
-  justify-content: center;
-  padding:0px;
+  min-height: 100vh; /* Ensure the body takes at least the full viewport height */
 }
 
 .top-bar {
@@ -17,6 +16,7 @@ body {
     display: flex;
     flex-flow: row;
     justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Add a subtle shadow */
 }
 .search-container{
   width: 70%;
@@ -34,7 +34,6 @@ buttons-container{
   display: flex;
   width: 15%;
   align-items: left;
-  justify-content: space-evenly;
 }
 #M{
     background-color: orange;
@@ -42,65 +41,59 @@ buttons-container{
     border-radius: 50%;
     height: 30px;
     width: 30px;
+    cursor: pointer; /* Add pointer cursor */
 }
 .product-list-container {
     flex-grow: 1; /* Allow the list to take up remaining space */
     overflow-y: auto; /* Add vertical scrolling if the content overflows */
-    padding: 20px; /* Add some padding around the list */
+    padding: 10px; /* Add some padding around the list */
 }
 
-.item-row {
-    display: flex;
-    flex-direction: row; /* Make sure items are displayed horizontally */
-    align-items: center;
-    border: 1px solid #ddd;
-    padding: 5px;
-    margin: 5px;
-    background-color: white;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-     width: 100%;
-     box-sizing: border-box;
-    cursor: pointer; /* Change the cursor to a pointer on hover */
-}
-
-.item-row:hover {
-    background-color: #f0f0f0; /* Optional: Add a hover effect */
-}
-
-/* Style for inner elements - Adjust as needed */
-.item-row > div {
-    display: flex;
-    flex-direction: column;
-    width: 45%;
-    align-items: flex-end;
-}
-.item-row > div > span{
-    font-size: small;
-}
-
-
-
-h1 {
-  text-align: center;
+.products-title{
+    text-align: center;
+    margin-bottom: 1rem;
 }
 
 #items-list {
-  margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Responsive grid */
+    gap: 16px; /* Spacing between grid items */
 }
 
-#items-list div {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+.item-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distribute space within the card */
+    cursor: pointer;
+    transition: transform 0.2s ease;  /* Smooth transition for hover effect */
+    text-decoration: none; /* Remove underlines from links */
+    color: inherit;        /* Inherit text color (avoid blue links) */
+
 }
 
-#items-list a {
-  text-decoration: none;
-  color: #333;
+.item-card:hover {
+    transform: translateY(-4px); /* Subtle lift effect on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
 }
-
-#item-details p {
-  margin: 5px 0;
+.item-card .item-code {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 4px; /* Space between code and description */
+}
+.item-card .item-description {
+    font-size: 1em;
+    color: #333;
+    flex-grow: 1; /* Allow description to take available space */
+}
+.item-card .item-details {
+    font-size: 0.8em;
+    color: #777;
+    margin-top: 8px; /* Space above the details */
 }
 
 button {
@@ -117,6 +110,53 @@ button:hover {
   background-color: #0056b3;
 }
 
-.child {
+
+@media DISABLED {
+  .child {
     margin-bottom: 20px; /* Add 20px of space below each child */
+  }
+  .item-row {
+      display: flex;
+      flex-direction: row; /* Make sure items are displayed horizontally */
+      align-items: center;
+      border: 1px solid #ddd;
+      padding: 5px;
+      margin: 5px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+       width: 100%;
+       box-sizing: border-box;
+      cursor: pointer; /* Change the cursor to a pointer on hover */
+  }
+  .item-row:hover {
+      background-color: #f0f0f0; /* Optional: Add a hover effect */
+  }
+  /* Style for inner elements - Adjust as needed */
+  .item-row > div {
+      display: flex;
+      flex-direction: column;
+      width: 45%;
+      align-items: flex-end;
+  }
+  .item-row > div > span{
+      font-size: small;
+  }
+  h1 {
+    text-align: center;
+  }
+  #items-list {
+    margin-top: 20px;
+  }
+  #items-list div {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  #items-list a {
+    text-decoration: none;
+    color: #333;
+  }
+  #item-details p {
+    margin: 5px 0;
+  }
 }
