@@ -152,7 +152,7 @@ async function loadData() {
     return { dataRows, permissionRows };
 }
 
-// test for search
+/* // test for search
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const itemsList = document.getElementById('items-list');
@@ -219,3 +219,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+*/
