@@ -69,20 +69,30 @@ function displayItems(items, permissions, userEmail) {
     return; // Exit early if no columns should be displayed
   }
 
-  for (let i = 1; i < items.length; i++) {
-    const item = items[i];
-    const itemId = item[0];
-    const itemName = item[1];
+  items.forEach(item => {
+    if (!item.ID) return; // Skip if ID is missing
 
-    const itemDiv = document.createElement('div');
-    let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
+     const itemCard = document.createElement('a'); // Make the whole card a link
+        itemCard.href = `detail.html?id=${item.ID}`; // Set the link
+        itemCard.classList.add('item-card');
+        itemCard.dataset.itemId = item.ID;
 
-    itemHtml += `<span class="item-id">${itemId}</span><br><span class="item-value">${itemName}</span>`;
-    //itemHtml += `${itemId}<br>${itemName} `;      
-    itemHtml += `</a>`;
-    itemDiv.innerHTML = itemHtml;
-    itemsList.appendChild(itemDiv);
-  }
+     let itemHTML = `
+            <div class="item-code">${item.ID || ''}</div>
+            <div class="item-description">${item.Description || ''}</div>
+            <div class="item-details">`;
+    // Build details based on visible columns
+     visibleColumns.forEach(colIndex => {
+        const key = Object.keys(item)[colIndex]; // Get the correct key/column name
+        if (key && item[key]) {
+          itemHTML += `<p>${item[key]}</p>`;
+        }
+    });
+    itemHTML += `</div>`;
+
+    itemCard.innerHTML = itemHTML;
+     itemsList.appendChild(itemCard);
+  });
 }
 
 function getUserPermissions(permissions, userEmail) {
