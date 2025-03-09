@@ -50,24 +50,24 @@ buttons-container{
 }
 
 .products-title{
-    text-align: center;
+    text-align: right;
     margin-bottom: 1rem;
 }
 
 #items-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Responsive grid */
-    gap: 16px; /* Spacing between grid items */
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
+    gap: 4px; /* Spacing between grid items */
 }
 
 .item-card {
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 12px;
+    padding: 7px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
-    flex-direction: row; /*column previously
+    flex-direction: column;
     /*justify-content: space-between; /* Distribute space within the card */
     cursor: pointer;
     transition: transform 0.2s ease;  /* Smooth transition for hover effect */
@@ -84,6 +84,7 @@ buttons-container{
     font-size: 0.7em;
     color: #888888;
     margin-bottom: 1px; /* Space between code and description */
+    text-align: right; /* Align code to the left */
 }
 .item-card .item-description {
     font-size: 1em;
@@ -92,8 +93,8 @@ buttons-container{
 }
 .item-card .item-details {
     font-size: 0.8em;
-    color: #777;
-    margin-top: 8px; /* Space above the details */
+    color: #000000;
+    margin-top: 3px; /* Space above the details */
 }
 
 button {
