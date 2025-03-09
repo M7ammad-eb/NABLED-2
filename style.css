@@ -67,8 +67,8 @@ buttons-container{
     padding: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Distribute space within the card */
+    flex-direction: row; /*column previously
+    /*justify-content: space-between; /* Distribute space within the card */
     cursor: pointer;
     transition: transform 0.2s ease;  /* Smooth transition for hover effect */
     text-decoration: none; /* Remove underlines from links */
@@ -81,13 +81,13 @@ buttons-container{
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
 }
 .item-card .item-code {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 4px; /* Space between code and description */
+    font-size: 0.7em;
+    color: #888888;
+    margin-bottom: 1px; /* Space between code and description */
 }
 .item-card .item-description {
     font-size: 1em;
-    color: #333;
+    color: #000000;
     flex-grow: 1; /* Allow description to take available space */
 }
 .item-card .item-details {
