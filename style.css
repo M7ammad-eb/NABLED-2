@@ -90,12 +90,11 @@ buttons-container{
 .item-card .item-description {
     font-size: 1em;
     color: #000000;
-    flex-grow: 1; /* Allow description to take available space */
+    /*flex-grow: 1; /* Allow description to take available space */
 }
 .item-card .item-details {
     font-size: 0.8em;
     color: #000000;
-    margin-top: 3px; /* Space above the details */
 }
 
 button {
@@ -141,9 +140,10 @@ button:hover {
     align-items: flex-end;
 }*/
 
-.item-row > div > span{
+/*.item-row > div > span{
     font-size: small;
-}
+}*/
+
 h1 {
   text-align: center;
 }
@@ -153,10 +153,12 @@ h1 {
 #items-list div {
   padding: 5px;
 }
-#items-list a {
+
+/*#items-list a {
   text-decoration: none;
   color: #333;
 }
+
 #item-details p {
   margin: 5px 0;
-}
+}*/
