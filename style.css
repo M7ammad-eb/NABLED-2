@@ -111,52 +111,50 @@ button:hover {
 }
 
 
-@media DISABLED {
-  .child {
-    margin-bottom: 20px; /* Add 20px of space below each child */
-  }
-  .item-row {
-      display: flex;
-      flex-direction: row; /* Make sure items are displayed horizontally */
-      align-items: center;
-      border: 1px solid #ddd;
-      padding: 5px;
-      margin: 5px;
-      background-color: white;
-      border-radius: 5px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-       width: 100%;
-       box-sizing: border-box;
-      cursor: pointer; /* Change the cursor to a pointer on hover */
-  }
-  .item-row:hover {
-      background-color: #f0f0f0; /* Optional: Add a hover effect */
-  }
-  /* Style for inner elements - Adjust as needed */
-  .item-row > div {
-      display: flex;
-      flex-direction: column;
-      width: 45%;
-      align-items: flex-end;
-  }
-  .item-row > div > span{
-      font-size: small;
-  }
-  h1 {
-    text-align: center;
-  }
-  #items-list {
-    margin-top: 20px;
-  }
-  #items-list div {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-  }
-  #items-list a {
-    text-decoration: none;
-    color: #333;
-  }
-  #item-details p {
-    margin: 5px 0;
-  }
+.child {
+  margin-bottom: 20px; /* Add 20px of space below each child */
+}
+.item-row {
+    display: flex;
+    flex-direction: row; /* Make sure items are displayed horizontally */
+    align-items: center;
+    border: 1px solid #ddd;
+    padding: 5px;
+    margin: 5px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+     width: 100%;
+     box-sizing: border-box;
+    cursor: pointer; /* Change the cursor to a pointer on hover */
+}
+.item-row:hover {
+    background-color: #f0f0f0; /* Optional: Add a hover effect */
+}
+/* Style for inner elements - Adjust as needed */
+.item-row > div {
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+    align-items: flex-end;
+}
+.item-row > div > span{
+    font-size: small;
+}
+h1 {
+  text-align: center;
+}
+#items-list {
+  margin-top: 20px;
+}
+#items-list div {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+#items-list a {
+  text-decoration: none;
+  color: #333;
+}
+#item-details p {
+  margin: 5px 0;
 }
