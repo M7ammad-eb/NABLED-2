@@ -114,7 +114,7 @@ button:hover {
 
 
 .child {
-  margin-bottom: 20px; /* Add 20px of space below each child */
+  margin-bottom: 5px; /* Add 20px of space below each child */
 }
 .item-row {
     display: flex;
@@ -134,12 +134,13 @@ button:hover {
     background-color: #f0f0f0; /* Optional: Add a hover effect */
 }
 /* Style for inner elements - Adjust as needed */
-.item-row > div {
+/*.item-row > div {
     display: flex;
     flex-direction: column;
     width: 45%;
     align-items: flex-end;
-}
+}*/
+
 .item-row > div > span{
     font-size: small;
 }
