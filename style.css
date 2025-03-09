@@ -97,6 +97,14 @@ buttons-container{
     color: #000000;
 }
 
+#item-code {
+    font-size: 0.7em;
+    color: #888888;
+    margin-bottom: 1px; /* Space between code and description */
+    text-align: left; /* Align code to the left */
+    width: 50px;
+}
+
 button {
   padding: 10px 20px;
   background-color: #007bff;
@@ -154,11 +162,10 @@ h1 {
   padding: 5px;
 }
 
-/*#items-list a {
+#items-list a {
   text-decoration: none;
-  color: #333;
 }
 
 #item-details p {
   margin: 5px 0;
-}*/
+}
