@@ -77,8 +77,8 @@ function displayItems(items, permissions, userEmail) {
     const itemDiv = document.createElement('div');
     let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
 
-    itemHtml += `<div class="item-code">${itemId || ''}</div>
-                 <div class="item-description">${itemName || ''}</div>`;
+    itemHtml += `<div class="item-code">${itemId}</div>
+                 <div class="item-description">${itemName}</div>`;
     //itemHtml += `${itemId}<br>${itemName} `;      
     itemHtml += `</a>`;
     itemDiv.innerHTML = itemHtml;
@@ -153,7 +153,7 @@ async function loadData() {
     return { dataRows, permissionRows };
 }
 
- /* // test for search
+  // test for search
  document.addEventListener('DOMContentLoaded', function() {
      const searchInput = document.getElementById('search-input');
      const itemsList = document.getElementById('items-list');
@@ -220,4 +220,4 @@ async function loadData() {
          });
      });
  });
- */
+ 
