@@ -101,7 +101,7 @@ async function displayItem(item, visibleColumns) {
 
     // Display the image
     const img = document.createElement('p');
-    img.innerHTML = `<img src="${item[3]}" alt="${item[1]}" height="300">`;
+    img.innerHTML = `<img src="${item[3]}" alt="${item[1]}" class="product-image">`;
     itemDetailsDiv.appendChild(img);
 
     // Item Name
