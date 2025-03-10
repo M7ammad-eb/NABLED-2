@@ -114,8 +114,9 @@ async function displayItem(item, visibleColumns) {
     catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
     itemDetailsDiv.appendChild(catalog);
 
+    // Display prices based on visible columns
     for (let i = 5; i < item.length; i++) {
-        if (visibleColumns[i] === 1) {
+        if (visibleColumns.includes(i)) { // Corrected check
             const key = columnNames[i];
             const value = item[i];
 
