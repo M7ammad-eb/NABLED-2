@@ -52,6 +52,10 @@ function displayItemDetails() {
         const visibleColumns = userPermissions
             ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
             : [];
+
+        console.log("Cached Item:", item);
+        console.log("Visible Columns:", visibleColumns);
+
         displayItem(item, visibleColumns);
     } else {
         document.getElementById('item-details').innerHTML = '<p>Item not found in cached data.</p>';
@@ -116,7 +120,7 @@ async function displayItem(item, visibleColumns) {
 
     // Display prices based on visible columns
     for (let i = 5; i < item.length; i++) {
-        if (visibleColumns.includes(i)) { // Corrected check
+        if (visibleColumns.includes(i)) {
             const key = columnNames[i];
             const value = item[i];
 
