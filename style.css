@@ -61,18 +61,18 @@ svg {
 .product-list-container {
     flex-grow: 1; /* Allow the list to take up remaining space */
     overflow-y: auto; /* Add vertical scrolling if the content overflows */
-    /*padding: 10px; /* Add some padding around the list */
+    padding: 5px; /* Add some padding around the list */
 }
 
 .products-title{
     text-align: left;
-    /*margin-bottom: 1rem;*/
+    margin-bottom: 1rem;
 }
 
 #items-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
-    gap: 0px; /* Spacing between grid items */
+    gap: 1px; /* Spacing between grid items */
 }
 
 .item-code {
@@ -128,10 +128,10 @@ h1 {
   text-align: center;
 }
 #items-list {
-  margin-top: 0px;
+  margin-top: 5px;
 }
 #items-list div {
-  padding: 0px;
+  padding: 3px;
 }
 
 #items-list a {
@@ -139,7 +139,7 @@ h1 {
 }
 
 #item-details p {
-  margin: 0px 0;
+  margin: 3px;
 }
 
 @media (max-width: 500px) {
