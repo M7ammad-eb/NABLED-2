@@ -11,13 +11,15 @@ body {
     bottom: 0;
     left: 0;
     width: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background-color: #f8f8f8; /* Light background */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     padding: 10px;
     text-align: center;
     display: none; /* Hide it initially */
 }
 .install-button {
   background-color: #007bff; /* Blue background color */
+  width: 100%;
   color: white;
   padding: 15px 20px;
   border: none;
