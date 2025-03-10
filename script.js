@@ -173,12 +173,23 @@ async function forceLoadData() {
 }
 
 // Refresh Button
-document.querySelector(".refresh-button").addEventListener("click", function() {
-  let icon = this.querySelector("svg");
-  icon.classList.add("rotate");
-  const { dataRows, permissionRows } = forceLoadData();
-  displayItems(dataRows, permissionRows, user.email);
+document.querySelector(".refresh-button").addEventListener("click", async function() {
+    let icon = this.querySelector("svg");
+    icon.classList.add("rotate");
+
+    // Get the current authenticated user
+    const user = auth.currentUser;
+
+    if (!user) {
+        console.error("No authenticated user found.");
+        window.location.href = "signin.html"; // Redirect if user is not signed in
+        return;
+    }
+
+    const { dataRows, permissionRows } = await forceLoadData();
+    displayItems(dataRows, permissionRows, user.email);
 });
+
 
   // test for search
  document.addEventListener('DOMContentLoaded', function() {
