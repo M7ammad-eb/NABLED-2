@@ -131,6 +131,8 @@ async function loadData() {
             dataRows = parseCSV(dataResponse);
             permissionRows = parseCSV(permissionsResponse);
             cacheData("dataSheet", dataRows);
+            cacheData("permissionRows", permissionRows);
+            console.log("cached permissionRows:", permissionRows);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
