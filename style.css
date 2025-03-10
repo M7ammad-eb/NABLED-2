@@ -8,6 +8,7 @@ body {
 }
 
 .top-bar {
+  position: sticky;
   display: flex;
   align-items: center;
   background-color: #f0f0f0; /* Light background */
@@ -149,10 +150,10 @@ h1 {
   }
   
   .item-code {
-    font-size: 0.5em;
+    font-size: 0.7em;
   }
   .item-description {
-    font-size: 0.7em;
+    font-size: 1em;
   }
   #items-list {
     display: column;
