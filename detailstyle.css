@@ -31,6 +31,7 @@ body {
 
 #item-details p {
     margin-bottom: 10px;
+    font-size: 1em;
 }
 
 #item-details strong {
@@ -55,8 +56,9 @@ body {
     }
 }
 
+/* Currency symbol image styling */
 .currency-symbol {
-    height: 1.1em; /* Adjust the height relative to the font size */
+    height: 0.8em; /* Adjust the height relative to the font size */
     width: auto;
     vertical-align: middle;
 }
