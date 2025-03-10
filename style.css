@@ -1,6 +1,6 @@
 body {
   font-family: Arial, sans-serif; /* Or a suitable Arabic font */
-  margin: 10px; /* Remove default body margin */
+  margin: 0; /* Remove default body margin */
   background-color: #f5f5f5; /* Light gray background */
   display: flex;
   flex-flow: column;
@@ -61,6 +61,7 @@ svg {
 .product-list-container {
     flex-grow: 1; /* Allow the list to take up remaining space */
     overflow-y: auto; /* Add vertical scrolling if the content overflows */
+    margin: 10px;
     padding: 5px; /* Add some padding around the list */
 }
 
@@ -72,6 +73,7 @@ svg {
 #items-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
+    margin: 10px;
     gap: 0px; /* Spacing between grid items */
 }
 
@@ -127,9 +129,11 @@ h1 {
   text-align: center;
 }
 #items-list {
+  margin: 5px;
   margin-top: 5px;
 }
 #items-list div {
+  margin: 5px;
   padding: 5px;
 }
 
@@ -157,6 +161,7 @@ h1 {
   
   #items-list {
     display: column;
+    margin: 5px;
     gap: 0px; /* Spacing between grid items */
   }
 }
