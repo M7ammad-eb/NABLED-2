@@ -57,25 +57,27 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 function showInstallPromotion() {
-    // Implement your custom prompt logic here (e.g., display a button or banner)
-    const installButton = document.createElement('button');
-    installButton.textContent = 'Install App';
+    const installContainer = document.getElementById('install-container');
+    const installButton = document.getElementById('installButton');
+
+    // Show the install container
+    installContainer.style.display = 'block';
+
     installButton.addEventListener('click', (e) => {
-        // Show the prompt
         deferredPrompt.prompt();
-        // Wait for the user to respond to the prompt
-        deferredPrompt.userChoice
-            .then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the A2HS prompt');
-                } else {
-                    console.log('User dismissed the A2HS prompt');
-                }
-                deferredPrompt = null;
-            });
+
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the A2HS prompt');
+                installContainer.style.display = 'none'; // Hide after installation
+            } else {
+                console.log('User dismissed the A2HS prompt');
+            }
+            deferredPrompt = null;
+        });
     });
-    document.body.appendChild(installButton); // Or append it to a suitable container
 }
+
 
 // Call loadData() and proceed
 auth.onAuthStateChanged(async (user) => {
