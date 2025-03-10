@@ -173,7 +173,7 @@ async function forceLoadData() {
 }
 
 // Refresh Button
-document.getElementById(".refresh-button").addEventListener("click", function() {
+document.querySelector(".refresh-button").addEventListener("click", function() {
   let icon = this.querySelector("svg");
   icon.classList.add("rotate");
   const { dataRows, permissionRows } = forceLoadData();
