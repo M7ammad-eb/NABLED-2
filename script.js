@@ -44,6 +44,7 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+/*
 // Install Prompt (add this after the service worker registration)
 let deferredPrompt; // Store the install prompt
 
@@ -77,7 +78,7 @@ function showInstallPromotion() {
         });
     });
 }
-
+*/
 
 // Call loadData() and proceed
 auth.onAuthStateChanged(async (user) => {
