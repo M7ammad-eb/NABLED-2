@@ -155,29 +155,37 @@ async function loadData() {
 
 // Function to force load data (remove cached)
 async function forceLoadData() {
-      console.log("Fetching new data...");
-      try {
-          const [dataResponse, permissionsResponse] = await Promise.all([
-              fetch(sheetUrl).then(res => res.text()),
-              fetch(permissionsSheetUrl).then(res => res.text())
-          ]);
+    console.log("Fetching new data...");
+    try {
+        const [dataResponse, permissionsResponse] = await Promise.all([
+            fetch(sheetUrl).then(res => res.text()),
+            fetch(permissionsSheetUrl).then(res => res.text())
+        ]);
 
-          dataRows = parseCSV(dataResponse);
-          permissionRows = parseCSV(permissionsResponse); // Always fetched fresh
+        dataRows = parseCSV(dataResponse);
+        permissionRows = parseCSV(permissionsResponse); // Always fetched fresh
 
-          cacheData("dataSheet", dataRows); // Cache only dataRows
-      } catch (error) {
-          console.error("Error fetching data:", error);
-      }
-    return { dataRows, permissionRows };
+        cacheData("dataSheet", dataRows); // Cache only dataRows
+        return { dataRows, permissionRows };
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        return { dataRows: null, permissionRows: null }; // Return nulls on error
+    }
 }
 
 // Refresh Button
-document.getElementById("refresh-button").addEventListener("click", function() {
-  let icon = this.querySelector("svg");
-  icon.classList.add("rotate");
-  const { dataRows, permissionRows } = forceLoadData();
-  displayItems(dataRows, permissionRows, user.email);
+document.getElementById("refresh-button").addEventListener("click", async function() {
+    let icon = this.querySelector("svg");
+    icon.classList.add("rotate");
+    const { dataRows, permissionRows } = await forceLoadData();
+
+    if (dataRows && permissionRows) { // Check if data was fetched successfully
+        displayItems(dataRows, permissionRows, user.email);
+    } else {
+        console.error("Failed to fetch data, cannot display items.");
+        icon.classList.remove("rotate"); // Remove rotate class on error
+    }
+    icon.classList.remove("rotate"); //remove rotate class after function finished.
 });
 
   // test for search
