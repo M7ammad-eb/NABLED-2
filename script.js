@@ -192,70 +192,69 @@ document.querySelector(".refresh-button").addEventListener("click", async functi
 
 
   // test for search
-document.addEventListener('DOMContentLoaded', function() {
-   const searchInput = document.querySelector('.search-input');
-   const itemsList = document.getElementById('items-list');
-   let allItems = []; // Store all item elements
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.querySelector('.search-input');
+    const itemsList = document.getElementById('items-list');
+    let allItems = []; // Store all item elements
 
-   // --- Your CSV parsing code (modified) ---
-   Papa.parse(sheetUrl, { //  Replace 'your-data.csv'
-       download: true,
-       header: true,
-       complete: function(results) {
-           // Clear any existing content
-           itemsList.innerHTML = '';
+    if (!itemsList) {
+        console.error("Error: #items-list not found in the DOM!");
+        return;
+    }
 
-           results.data.forEach(item => {
-             if(!item.ID) return;
-               const itemRow = document.createElement('div');
-               itemRow.classList.add('item-row');
-               itemRow.dataset.itemId = item.ID;
+    Papa.parse(sheetUrl, { 
+        download: true,
+        header: true,
+        complete: function (results) {
+            itemsList.innerHTML = ''; 
+            allItems = []; // Reset in case of multiple loads
 
-               const codeDiv = document.createElement('div');
-               const itemCode = document.createElement('span');
-               itemCode.textContent = item.Code || ''; // Use empty string if null/undefined
-               codeDiv.appendChild(itemCode)
+            results.data.forEach(item => {
+                if (!item.ID) return;
+                
+                const itemRow = document.createElement('div');
+                itemRow.classList.add('item-row');
+                itemRow.dataset.itemId = item.ID;
 
-               const itemTitle = document.createElement('p');
-               itemTitle.textContent = item.Description || '';
-               codeDiv.appendChild(itemTitle);
+                const codeDiv = document.createElement('div');
+                const itemCode = document.createElement('span');
+                itemCode.textContent = item.Code || ''; 
+                codeDiv.appendChild(itemCode);
 
+                const itemTitle = document.createElement('p');
+                itemTitle.textContent = item.Description || '';
+                codeDiv.appendChild(itemTitle);
 
-               itemRow.appendChild(codeDiv);
+                itemRow.appendChild(codeDiv);
 
-               // Create a div for the second part
-               const secondPartDiv = document.createElement('div');
-               const secondPart = document.createElement('p');
-               secondPart.textContent = item.SecondPart || '';
-               secondPartDiv.appendChild(secondPart);
-               itemRow.appendChild(secondPartDiv);
-               itemsList.appendChild(itemRow);
+                const secondPartDiv = document.createElement('div');
+                const secondPart = document.createElement('p');
+                secondPart.textContent = item.SecondPart || '';
+                secondPartDiv.appendChild(secondPart);
+                itemRow.appendChild(secondPartDiv);
 
-               // Store item data for searching
-               allItems.push({
-                   element: itemRow,
-                   id: item.ID.toLowerCase(), // Store lowercase for case-insensitive search
-                   description: item.Description.toLowerCase() // Store lowercase
-               });
-           });
-       }
-   });
-   // --- End of CSV parsing ---
+                itemsList.appendChild(itemRow);
 
-   // Filter function (modified)
-   searchInput.addEventListener('input', function() {
-       const searchTerm = searchInput.value.toLowerCase();
+                // Store item data for searching
+                allItems.push({
+                    element: itemRow,
+                    id: item.ID.toLowerCase(),
+                    description: item.Description.toLowerCase()
+                });
+            });
 
-       allItems.forEach(itemData => {
-           const { element, id, description } = itemData;
-
-           // Check if the search term matches either the ID or the Description
-           if (id.includes(searchTerm) || description.includes(searchTerm)) {
-               element.style.display = 'flex'; // Or 'block', depending on your layout
-           } else {
-               element.style.display = 'none';
-           }
-       });
-   });
+            // Attach search event listener after data is loaded
+            searchInput.addEventListener('input', function () {
+                const searchTerm = searchInput.value.toLowerCase();
+                allItems.forEach(itemData => {
+                    const { element, id, description } = itemData;
+                    element.style.display = (id.includes(searchTerm) || description.includes(searchTerm)) 
+                        ? 'flex' 
+                        : 'none';
+                });
+            });
+        }
+    });
 });
+
 
