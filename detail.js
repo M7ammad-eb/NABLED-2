@@ -126,7 +126,7 @@ async function displayItem(item, visibleColumns) {
 
     // Display prices based on visible columns
     for (let i = 5; i < item.length; i++) {
-        if (visibleColumns.includes(i)) {
+        if (visibleColumns[i] === 1) {
             const key = columnNames[i];
             const value = item[i];
 
