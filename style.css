@@ -72,15 +72,14 @@ svg {
 #items-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
-    gap: 1px; /* Spacing between grid items */
+    gap: 0px; /* Spacing between grid items */
 }
 
 .item-code {
     font-size: 0.7em;
     color: #888888;
     margin-bottom: 1px; /* Space between code and description */
-    text-align: left; /* Align code to the left */
-    /*width: 50px;*/
+    text-align: center; /* Align code to the left */
 }
 .item-description {
     font-size: 1em;
@@ -104,7 +103,7 @@ button:hover {
 
 
 .child {
-  margin-bottom: 5px; /* Add 20px of space below each child */
+  margin-bottom: 3px; /* Add 20px of space below each child */
 }
 .item-row {
     display: flex;
@@ -131,7 +130,7 @@ h1 {
   margin-top: 5px;
 }
 #items-list div {
-  padding: 3px;
+  padding: 5px;
 }
 
 #items-list a {
@@ -139,7 +138,7 @@ h1 {
 }
 
 #item-details p {
-  margin: 3px;
+  margin: 5px 0;
 }
 
 @media (max-width: 500px) {
