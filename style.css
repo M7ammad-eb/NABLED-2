@@ -1,6 +1,6 @@
 body {
   font-family: Arial, sans-serif; /* Or a suitable Arabic font */
-  margin: 0; /* Remove default body margin */
+  margin: 10px; /* Remove default body margin */
   background-color: #f5f5f5; /* Light gray background */
   display: flex;
   flex-flow: column;
