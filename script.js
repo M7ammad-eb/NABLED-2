@@ -176,7 +176,7 @@ async function forceLoadData() {
 document.getElementById("refresh-button").addEventListener("click", function() {
   let icon = this.querySelector("svg");
   icon.classList.add("rotate");
-  const { dataRows, permissionRows } = await forceLoadData();
+  const { dataRows, permissionRows } = forceLoadData();
   displayItems(dataRows, permissionRows, user.email);
 });
 
