@@ -154,4 +154,8 @@ h1 {
   .item-description {
     font-size: 0.7em;
   }
+  #items-list {
+    display: column;
+    gap: 0px; /* Spacing between grid items */
+  }
 }
