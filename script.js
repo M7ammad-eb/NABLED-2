@@ -1,12 +1,12 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-  apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
-  authDomain: "nab-led.firebaseapp.com",
-  projectId: "nab-led",
-  storageBucket: "nab-led.firebasestorage.app",
-  messagingSenderId: "789022171426",
-  appId: "1:789022171426:web:2d8dda594b1495be26457b",
-  measurementId: "G-W58SF16RJ6"
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    authDomain: "nab-led.firebaseapp.com",
+    projectId: "nab-led",
+    storageBucket: "nab-led.firebasestorage.app",
+    messagingSenderId: "789022171426",
+    appId: "1:789022171426:web:2d8dda594b1495be26457b",
+    measurementId: "G-W58SF16RJ6"
 };
 
 // Initialize Firebase
@@ -23,15 +23,14 @@ const signOutButton = document.getElementById('signOutButton');
 signOutButton.addEventListener('click', signOut);
 
 function signOut() {
-  auth.signOut()
-    .then(() => {
-      console.log('User signed out');
-      // Redirect to sign-in page or refresh
-      window.location.href = 'signin.html';
-    })
-    .catch((error) => {
-      console.error('Sign-out error:', error);
-    });
+    auth.signOut()
+        .then(() => {
+            console.log('User signed out');
+            window.location.href = 'signin.html';
+        })
+        .catch((error) => {
+            console.error('Sign-out error:', error);
+        });
 }
 
 // Call loadData() and proceed
@@ -40,6 +39,7 @@ auth.onAuthStateChanged(async (user) => {
         signOutButton.style.display = "block";
         const { dataRows, permissionRows } = await loadData();
         displayItems(dataRows, permissionRows, user.email);
+        setupSearch(dataRows); // Setup search after data is loaded
     } else {
         signOutButton.style.display = "none";
         window.location.href = "signin.html";
@@ -48,54 +48,50 @@ auth.onAuthStateChanged(async (user) => {
 
 // deal with csv files
 function parseCSV(csvText) {
-  return Papa.parse(csvText, { header: false }).data;
+    return Papa.parse(csvText, { header: false }).data;
 }
 
 // display the items
 function displayItems(items, permissions, userEmail) {
-  const itemsList = document.getElementById('items-list');
-  itemsList.innerHTML = ''; // Clear previous items
+    const itemsList = document.getElementById('items-list');
+    itemsList.innerHTML = ''; // Clear previous items
 
-  const userPermissions = getUserPermissions(permissions, userEmail);
+    const userPermissions = getUserPermissions(permissions, userEmail);
 
-  // Ensure visibleColumns is an array of numbers
-  const visibleColumns = userPermissions
-    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-    : [];
+    const visibleColumns = userPermissions
+        ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+        : [];
 
-  // Check if there are visible columns for this user
-  if (visibleColumns.length === 0) {
-    console.log('No visible columns for this user.');
-    return; // Exit early if no columns should be displayed
-  }
+    if (visibleColumns.length === 0) {
+        console.log('No visible columns for this user.');
+        return;
+    }
 
-  for (let i = 1; i < items.length; i++) {
-    const item = items[i];
-    const itemId = item[0];
-    const itemName = item[1];
+    for (let i = 1; i < items.length; i++) {
+        const item = items[i];
+        const itemId = item[0];
+        const itemName = item[1];
 
-    const itemDiv = document.createElement('div');
-    let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
+        const itemDiv = document.createElement('div');
+        let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
 
-    itemHtml += `<div class="item-code">${itemId}</div>
-                 <div class="item-description">${itemName}</div>`;
-    //itemHtml += `${itemId}<br>${itemName} `;      
-    itemHtml += `</a>`;
-    itemDiv.innerHTML = itemHtml;
-    itemsList.appendChild(itemDiv);
-  }
+        itemHtml += `<div class="item-code">${itemId}</div>
+                     <div class="item-description">${itemName}</div>`;
+        itemHtml += `</a>`;
+        itemDiv.innerHTML = itemHtml;
+        itemsList.appendChild(itemDiv);
+    }
 }
 
 function getUserPermissions(permissions, userEmail) {
-  userEmail = userEmail.trim().toLowerCase(); // Normalize user email
-  
-  for (let i = 1; i < permissions.length; i++) {
-    let storedEmail = permissions[i][0].trim().toLowerCase(); // Normalize stored email
-    if (storedEmail === userEmail) {
-      return permissions[i];
+    userEmail = userEmail.trim().toLowerCase();
+    for (let i = 1; i < permissions.length; i++) {
+        let storedEmail = permissions[i][0].trim().toLowerCase();
+        if (storedEmail === userEmail) {
+            return permissions[i];
+        }
     }
-  }
-  return null;
+    return null;
 }
 
 // Check if cached data exists and is recent
@@ -104,7 +100,7 @@ function getCachedData(key) {
     if (cached) {
         const parsed = JSON.parse(cached);
         const now = new Date().getTime();
-        if (now - parsed.timestamp < 60 * 60 * 1000) { // 60 minutes threshold
+        if (now - parsed.timestamp < 60 * 60 * 1000) {
             console.log("Using cached data for:", key);
             return parsed.data;
         }
@@ -122,8 +118,8 @@ function cacheData(key, data) {
 
 // Function to load data (from cache or fetch)
 async function loadData() {
-    let dataRows = getCachedData("dataSheet"); 
-    let permissionRows; // permissions not cached
+    let dataRows = getCachedData("dataSheet");
+    let permissionRows;
 
     if (!dataRows) {
         console.log("Fetching fresh data...");
@@ -132,11 +128,9 @@ async function loadData() {
                 fetch(sheetUrl).then(res => res.text()),
                 fetch(permissionsSheetUrl).then(res => res.text())
             ]);
-
             dataRows = parseCSV(dataResponse);
-            permissionRows = parseCSV(permissionsResponse); // Always fetched fresh
-
-            cacheData("dataSheet", dataRows); // Cache only dataRows
+            permissionRows = parseCSV(permissionsResponse);
+            cacheData("dataSheet", dataRows);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -144,117 +138,57 @@ async function loadData() {
         console.log("Using cached data for dataRows...");
         try {
             const permissionsResponse = await fetch(permissionsSheetUrl).then(res => res.text());
-            permissionRows = parseCSV(permissionsResponse); // Always fetch fresh permissions
+            permissionRows = parseCSV(permissionsResponse);
         } catch (error) {
             console.error("Error fetching permissions data:", error);
         }
     }
-
     return { dataRows, permissionRows };
 }
 
 // Function to force load data (refresh button)
 async function forceLoadData() {
-      console.log("Fetching new data...");
-      try {
-          const [dataResponse, permissionsResponse] = await Promise.all([
-              fetch(sheetUrl).then(res => res.text()),
-              fetch(permissionsSheetUrl).then(res => res.text())
-          ]);
-
-          dataRows = parseCSV(dataResponse);
-          permissionRows = parseCSV(permissionsResponse); // Always fetched fresh
-
-          cacheData("dataSheet", dataRows); // Cache only dataRows
-      } catch (error) {
-          console.error("Error fetching data:", error);
-      }
-    return { dataRows, permissionRows };
+    console.log("Fetching new data...");
+    try {
+        const [dataResponse, permissionsResponse] = await Promise.all([
+            fetch(sheetUrl).then(res => res.text()),
+            fetch(permissionsSheetUrl).then(res => res.text())
+        ]);
+        dataRows = parseCSV(dataResponse);
+        permissionRows = parseCSV(permissionsResponse);
+        cacheData("dataSheet", dataRows);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
+    return { dataRows, permissionRows };
 }
 
 // Refresh Button
 document.querySelector(".refresh-button").addEventListener("click", async function() {
     let icon = this.querySelector("svg");
     icon.classList.add("rotate");
-
-    // Get the current authenticated user
     const user = auth.currentUser;
-
     if (!user) {
         console.error("No authenticated user found.");
-        window.location.href = "signin.html"; // Redirect if user is not signed in
+        window.location.href = "signin.html";
         return;
     }
-
     const { dataRows, permissionRows } = await forceLoadData();
     displayItems(dataRows, permissionRows, user.email);
+    setupSearch(dataRows); // Refresh the search with new data
 });
 
-
-  // test for search
-document.addEventListener('DOMContentLoaded', function () {
+// Search functionality
+function setupSearch(items) {
     const searchInput = document.querySelector('.search-input');
     const itemsList = document.getElementById('items-list');
-    let allItems = []; // Store all item elements
 
-    if (!itemsList) {
-        console.error("Error: #items-list not found in the DOM!");
-        return;
-    }
-
-    Papa.parse(sheetUrl, { 
-        download: true,
-        header: true,
-        complete: function (results) {
-            itemsList.innerHTML = ''; 
-            allItems = []; // Reset in case of multiple loads
-
-            results.data.forEach(item => {
-                if (!item.ID) return;
-                
-                const itemRow = document.createElement('div');
-                itemRow.classList.add('item-row');
-                itemRow.dataset.itemId = item.ID;
-
-                const codeDiv = document.createElement('div');
-                const itemCode = document.createElement('span');
-                itemCode.textContent = item.Code || ''; 
-                codeDiv.appendChild(itemCode);
-
-                const itemTitle = document.createElement('p');
-                itemTitle.textContent = item.Description || '';
-                codeDiv.appendChild(itemTitle);
-
-                itemRow.appendChild(codeDiv);
-
-                const secondPartDiv = document.createElement('div');
-                const secondPart = document.createElement('p');
-                secondPart.textContent = item.SecondPart || '';
-                secondPartDiv.appendChild(secondPart);
-                itemRow.appendChild(secondPartDiv);
-
-                itemsList.appendChild(itemRow);
-
-                // Store item data for searching
-                allItems.push({
-                    element: itemRow,
-                    id: item.ID.toLowerCase(),
-                    description: item.Description.toLowerCase()
-                });
-            });
-
-            // Attach search event listener after data is loaded
-            searchInput.addEventListener('input', function () {
-                const searchTerm = searchInput.value.toLowerCase();
-                allItems.forEach(itemData => {
-                    const { element, id, description } = itemData;
-                    element.style.display = (id.includes(searchTerm) || description.includes(searchTerm)) 
-                        ? 'flex' 
-                        : 'none';
-                });
-            });
-        }
+    searchInput.addEventListener('input', function() {
+        const searchTerm = searchInput.value.toLowerCase();
+        Array.from(itemsList.children).forEach(itemElement => {
+            const itemId = itemElement.querySelector('.item-code').textContent.toLowerCase();
+            const itemDescription = itemElement.querySelector('.item-description').textContent.toLowerCase();
+            itemElement.style.display = (itemId.includes(searchTerm) || itemDescription.includes(searchTerm)) ? 'flex' : 'none';
+        });
     });
-});
-
-
+}
