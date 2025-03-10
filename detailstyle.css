@@ -54,3 +54,9 @@ body {
         margin: 10px auto;
     }
 }
+
+.currency-symbol {
+    height: 1.1em; /* Adjust the height relative to the font size */
+    width: auto;
+    vertical-align: middle;
+}
