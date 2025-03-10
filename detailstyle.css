@@ -57,7 +57,7 @@ body {
 
 /* Currency symbol image styling */
 .currency-symbol {
-    height: 0.8em; /* Adjust the height relative to the font size */
+    height: 1em; /* Adjust the height relative to the font size */
     width: auto;
     vertical-align: middle;
 }
