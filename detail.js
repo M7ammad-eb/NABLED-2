@@ -72,14 +72,20 @@ function findItemById(items, itemId) {
 }
 
 function getUserPermissions(permissions, userEmail) {
-    if (!permissions) return null;
+    if (!permissions) {
+        console.log("Permissions array is null or undefined.");
+        return null;
+    }
     userEmail = userEmail.trim().toLowerCase();
     for (let i = 1; i < permissions.length; i++) {
         let storedEmail = permissions[i][0].trim().toLowerCase();
+        console.log("Comparing:", userEmail, "with:", storedEmail); // Debugging
         if (storedEmail === userEmail) {
+            console.log("Permissions found:", permissions[i]); // Debugging
             return permissions[i];
         }
     }
+    console.log("No permissions found for:", userEmail); // Debugging
     return null;
 }
 
