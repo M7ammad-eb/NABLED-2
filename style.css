@@ -7,9 +7,11 @@ body {
   min-height: 100vh; /* Ensure the body takes at least the full viewport height */
 }
 #install-button {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
   z-index: 100;
+  width: 100%;
   background-color: #007bff; /* Blue background color */
   color: white;
   padding: 15px 20px;
