@@ -8,41 +8,37 @@ body {
 }
 
 .top-bar {
-    position: sticky;
-    top: 0;
-    background-color: #FFFFFF;
-    padding: 20px;
-    z-index: 100; /* Ensure the top bar is above other content */
-    display: flex;
-    flex-flow: row;
-    justify-content: space-between;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Add a subtle shadow */
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0; /* Light background */
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
-.search-container{
-  width: 70%;
+.refresh-button {
+  background-color: #3f51b5; /* Example button color */
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-container {
+  flex-grow: 1;
 }
 
-#search-input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    background-color: #EBEBEB;
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box; /* Include padding and border in width */
 }
-.buttons-container{
-  display: flex;
-  width: 15%;
-  align-items: left;
-}
-#M{
-    background-color: orange;
-    border: none;
-    border-radius: 50%;
-    height: 30px;
-    width: 30px;
-    cursor: pointer; /* Add pointer cursor */
-}
+
 .product-list-container {
     flex-grow: 1; /* Allow the list to take up remaining space */
     overflow-y: auto; /* Add vertical scrolling if the content overflows */
@@ -60,49 +56,12 @@ body {
     gap: 0px; /* Spacing between grid items */
 }
 
-.item-card {
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 0px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    /*justify-content: space-between; /* Distribute space within the card */
-    cursor: pointer;
-    transition: transform 0.2s ease;  /* Smooth transition for hover effect */
-    text-decoration: none; /* Remove underlines from links */
-    color: inherit;        /* Inherit text color (avoid blue links) */
-
-}
-
-.item-card:hover {
-    transform: translateY(-4px); /* Subtle lift effect on hover */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
-}
-.item-card .item-code {
-    font-size: 0.7em;
-    color: #888888;
-    margin-bottom: 1px; /* Space between code and description */
-    text-align: left; /* Align code to the left */
-    width: 50px;
-}
-.item-card .item-description {
-    font-size: 1em;
-    color: #000000;
-    /*flex-grow: 1; /* Allow description to take available space */
-}
-.item-card .item-details {
-    font-size: 0.8em;
-    color: #000000;
-}
-
 .item-code {
     font-size: 0.7em;
     color: #888888;
     margin-bottom: 1px; /* Space between code and description */
     text-align: left; /* Align code to the left */
-    width: 50px;
+    /*width: 50px;*/
 }
 .item-description {
     font-size: 1em;
@@ -173,4 +132,26 @@ h1 {
 
 #item-details p {
   margin: 5px 0;
+}
+
+@media (max-width: 500px) {
+  /* Mobile-specific styles */
+  .top-bar {
+    padding: 8px;
+  }
+
+  .refresh-button {
+    padding: 6px;
+  }
+
+  .search-input {
+    font-size: 14px;
+  }
+  
+  .item-code {
+    font-size: 0.5em;
+  }
+  .item-description {
+    font-size: 0.7em;
+  }
 }
