@@ -35,7 +35,7 @@ body {
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
 }
 
-.top-bar {
+.search-bar {
   position: sticky;
   top: 0;
   z-index: 100; /* Ensure the top bar is above other content */
@@ -175,7 +175,7 @@ h1 {
 
 @media (max-width: 500px) {
   /* Mobile-specific styles */
-  .top-bar {
+  .search-bar {
     padding: 8px;
   }
 
