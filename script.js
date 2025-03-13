@@ -25,11 +25,11 @@ signOutButton.addEventListener('click', signOut);
 function signOut() {
     auth.signOut()
         .then(() => {
-            console.log('User signed out');
+            //console.log('User signed out');
             window.location.href = 'signin.html';
         })
         .catch((error) => {
-            console.error('Sign-out error:', error);
+            //console.error('Sign-out error:', error);
         });
 }
 
@@ -38,9 +38,9 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('service-worker.js')
             .then(function(registration) {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                //console.log('ServiceWorker registration successful with scope: ', registration.scope);
             }, function(err) {
-                console.log('ServiceWorker registration failed: ', err);
+                //console.log('ServiceWorker registration failed: ', err);
             });
     });
 }
@@ -69,10 +69,10 @@ function showInstallPromotion() {
 
         deferredPrompt.userChoice.then((choiceResult) => {
             if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the A2HS prompt');
+                //console.log('User accepted the A2HS prompt');
                 installContainer.style.display = 'none'; // Hide after installation
             } else {
-                console.log('User dismissed the A2HS prompt');
+                //console.log('User dismissed the A2HS prompt');
             }
             deferredPrompt = null;
         });
@@ -110,7 +110,7 @@ function displayItems(items, permissions, userEmail) {
         : [];
 
     if (visibleColumns.length === 0) {
-        console.log('No visible columns for this user.');
+        //console.log('No visible columns for this user.');
         return;
     }
 
@@ -148,7 +148,7 @@ function getCachedData(key) {
         const parsed = JSON.parse(cached);
         const now = new Date().getTime();
         if (now - parsed.timestamp < 60 * 60 * 1000) {
-            console.log("Using cached data for:", key);
+            //console.log("Using cached data for:", key);
             return parsed.data;
         }
     }
@@ -169,7 +169,7 @@ async function loadData() {
     let permissionRows;
 
     if (!dataRows) {
-        console.log("Fetching fresh data...");
+        //console.log("Fetching fresh data...");
         try {
             const [dataResponse, permissionsResponse] = await Promise.all([
                 fetch(sheetUrl).then(res => res.text()),
@@ -179,17 +179,17 @@ async function loadData() {
             permissionRows = parseCSV(permissionsResponse);
             cacheData("dataSheet", dataRows);
             cacheData("permissionRows", permissionRows);
-            console.log("cached permissionRows:", permissionRows);
+            //console.log("cached permissionRows:", permissionRows);
         } catch (error) {
-            console.error("Error fetching data:", error);
+            //console.error("Error fetching data:", error);
         }
     } else {
-        console.log("Using cached data for dataRows...");
+        //console.log("Using cached data for dataRows...");
         try {
             const permissionsResponse = await fetch(permissionsSheetUrl).then(res => res.text());
             permissionRows = parseCSV(permissionsResponse);
         } catch (error) {
-            console.error("Error fetching permissions data:", error);
+            //console.error("Error fetching permissions data:", error);
         }
     }
     return { dataRows, permissionRows };
@@ -197,7 +197,7 @@ async function loadData() {
 
 // Function to force load data (refresh button)
 async function forceLoadData() {
-    console.log("Fetching new data...");
+    //console.log("Fetching new data...");
     try {
         const [dataResponse, permissionsResponse] = await Promise.all([
             fetch(sheetUrl).then(res => res.text()),
@@ -207,18 +207,18 @@ async function forceLoadData() {
         permissionRows = parseCSV(permissionsResponse);
         cacheData("dataSheet", dataRows);
     } catch (error) {
-        console.error("Error fetching data:", error);
+        //console.error("Error fetching data:", error);
     }
     return { dataRows, permissionRows };
 }
 
 // Refresh Button
 document.querySelector(".refresh-button").addEventListener("click", async function() {
-    let icon = this.querySelector("svg");
-    icon.classList.add("rotate");
+    //let icon = this.querySelector("svg");
+    //icon.classList.add("rotate");
     const user = auth.currentUser;
     if (!user) {
-        console.error("No authenticated user found.");
+        //console.error("No authenticated user found.");
         window.location.href = "signin.html";
         return;
     }
