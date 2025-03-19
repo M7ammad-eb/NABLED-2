@@ -5,6 +5,7 @@ body {
   display: flex;
   flex-flow: column;
   min-height: 100vh; /* Ensure the body takes at least the full viewport height */
+  overscroll-behavior-y: contain; /* Disable vertical overscroll */
 }
 .install-container {
     position: fixed;
