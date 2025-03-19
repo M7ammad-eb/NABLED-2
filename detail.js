@@ -89,19 +89,19 @@ function getUserPermissions(permissions, userEmail) {
     return null;
 }
 
-async function displayItem(item, visibleColumns) {
+// Add placeholder to image initially
+async function displayItem(item, visibleColumns) { //add column names back
     const itemDetailsDiv = document.getElementById('item-details');
     itemDetailsDiv.innerHTML = '';
+	// Fetch column names (only once)
+    const response = await fetch(dataSheetUrl);
+    const csvText = await response.text();
+    const parsedData = parseCSV(csvText);
+    const columnNames = parsedData[0];
 
-    // Fetch column names (only once)
-    const response = await fetch(dataSheetUrl);
-    const csvText = await response.text();
-    const parsedData = parseCSV(csvText);
-    const columnNames = parsedData[0];
-
-    // Display the image
+    // Display the image - INITIALLY set src to placeholder.png
     const img = document.createElement('p');
-    img.innerHTML = `<img src="${item[3]}" alt="${item[1]}" class="product-image">`;
+    img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`; // Use data-src
     itemDetailsDiv.appendChild(img);
 
     // Item Name
@@ -109,24 +109,25 @@ async function displayItem(item, visibleColumns) {
     itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
     itemDetailsDiv.appendChild(itemName);
 
-    // Item ID
-    const itemId = document.createElement('p');
-    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
-    itemDetailsDiv.appendChild(itemId);
+    // Item ID
+    const itemId = document.createElement('p');
+    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
+    itemDetailsDiv.appendChild(itemId);
 
-    // Specifications
-    const specs = document.createElement('p');
-    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
-    itemDetailsDiv.appendChild(specs);
+    // Specifications
+    const specs = document.createElement('p');
+    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
+    itemDetailsDiv.appendChild(specs);
 
-    // Cataloge Link
-    const catalog = document.createElement('p');
-    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
-    itemDetailsDiv.appendChild(catalog);
+    // Cataloge Link
+    const catalog = document.createElement('p');
+    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
+    itemDetailsDiv.appendChild(catalog);
+
 
     // Display prices based on visible columns
     for (let i = 5; i < item.length; i++) {
-        if (visibleColumns[i] === 1) {
+        if (visibleColumns.includes(i)) { // Use includes for direct index check
             const key = columnNames[i];
             const value = item[i];
 
@@ -135,6 +136,10 @@ async function displayItem(item, visibleColumns) {
             itemDetailsDiv.appendChild(prices);
         }
     }
+
+    // Lazy-load the image (after everything else is displayed)
+    const realImage = itemDetailsDiv.querySelector('.product-image');
+    realImage.src = realImage.dataset.src; // Set the src from data-src
 }
 
 function parseCSV(csvText) {
