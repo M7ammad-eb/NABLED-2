@@ -1,22 +1,23 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
-    authDomain: "nab-led.firebaseapp.com",
-    projectId: "nab-led",
-    storageBucket: "nab-led.firebasestorage.app",
-    messagingSenderId: "789022171426",
-    appId: "1:789022171426:web:2d8dda594b1495be26457b",
-    measurementId: "G-W58SF16RJ6"
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    authDomain: "nab-led.firebaseapp.com",
+    projectId: "nab-led",
+    storageBucket: "nab-led.firebasestorage.app",
+    messagingSenderId: "789022171426",
+    appId: "1:789022171426:web:2d8dda594b1495be26457b",
+    measurementId: "G-W58SF16RJ6"
 };
 
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// URLs for both sheets (used as cache keys)
 const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
-const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';//added this line
+const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
-// Check for user authentication on page load
+// Check for user authentication
 auth.onAuthStateChanged((user) => {
     if (user) {
         displayItemDetails();
@@ -35,115 +36,118 @@ async function displayItemDetails() {
     }
 
     try {
-        // 1. Try to get data from the CACHE (via the service worker)
+        // Get cached data using caches.match() and await the responses
         const dataResponse = await caches.match(dataSheetUrl);
-        const permissionsResponse = await caches.match(permissionsSheetUrl); //added this
+        const permissionsResponse = await caches.match(permissionsSheetUrl);
 
-		let dataRows;
-		let permissionRows;//added this
-        if (dataResponse) {
-          const dataCsvText = await dataResponse.text();
-          dataRows = parseCSV(dataCsvText);
+        let dataRows;
+        let permissionRows;
 
-		  const permissionsCsvText = await permissionsResponse.text();//added this
-          permissionRows = parseCSV(permissionsCsvText);//added this
+        if (dataResponse && permissionsResponse) {
+            // Parse CSV data from cached responses
+            const dataCsvText = await dataResponse.text();
+            dataRows = parseCSV(dataCsvText);
+
+            const permissionsCsvText = await permissionsResponse.text();
+            permissionRows = parseCSV(permissionsCsvText);
+
+            // Find the item and display it
+            const item = findItemById(dataRows, itemId);
+            if (item) {
+                const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+                const visibleColumns = userPermissions
+                    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+                    : [];
+                displayItem(item, visibleColumns, dataRows[0]); // Pass column names
+            } else {
+                document.getElementById('item-details').innerHTML = '<p>Item not found in cached data.</p>';
+            }
         } else {
-          // If dataResponse is null, it means we are OFFLINE and the data
-          // was NOT pre-cached.  This should almost never happen because of
-          // our service worker, but it's good to handle it.
-          throw new Error("Data not available offline.");
-        }
-
-
-        const item = findItemById(dataRows, itemId);
-        if (item) {
-            const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-            const visibleColumns = userPermissions
-                ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-                : [];
-            displayItem(item, visibleColumns, dataRows[0]); // Pass columnNames directly
-        } else {
-            document.getElementById('item-details').innerHTML = '<p>Item not found.</p>';
+            // Handle the case where data is NOT in the cache (should be rare due to pre-caching)
+            document.getElementById('item-details').innerHTML = '<p>Data not available offline. Please connect to the internet to view this item.</p>';
         }
 
     } catch (error) {
-        console.error("Error fetching data:", error);
-        // Display an OFFLINE-SPECIFIC error message.  This is the key improvement.
+        console.error("Error displaying item details:", error);
         document.getElementById('item-details').innerHTML = `
-            <p>This item is not available offline.</p>
-            <p>Please connect to the internet to view this item for the first time.</p>
+            <p>An error occurred.</p>
+            <p>Please check your network connection or try again later.</p>
             <img src="placeholder.png" alt="Placeholder Image">
-        `;
+        `; // More generic error
     }
 }
-// Keep the other functions
+
+
 function findItemById(items, itemId) {
-  for (let i = 1; i < items.length; i++) {
-    if (items[i][0] === itemId) {
-      return items[i];
+    for (let i = 1; i < items.length; i++) {
+        if (items[i][0] === itemId) {
+            return items[i];
+        }
     }
-  }
-  return null;
+    return null;
 }
+
 function getUserPermissions(permissions, userEmail) {
-    if (!permissions) {
-        console.log("Permissions array is null or undefined.");
-        return null;
-    }
-    userEmail = userEmail.trim().toLowerCase();
-    for (let i = 1; i < permissions.length; i++) {
-        let storedEmail = permissions[i][0].trim().toLowerCase();
-        if (storedEmail === userEmail) {
-            return permissions[i];
-        }
-    }
-    return null;
+    if (!permissions) {
+        console.log("Permissions array is null or undefined.");
+        return null;
+    }
+    userEmail = userEmail.trim().toLowerCase();
+    for (let i = 1; i < permissions.length; i++) {
+        let storedEmail = permissions[i][0].trim().toLowerCase();
+        if (storedEmail === userEmail) {
+            return permissions[i];
+        }
+    }
+    return null;
 }
+
 async function displayItem(item, visibleColumns, columnNames) {
-    const itemDetailsDiv = document.getElementById('item-details');
-    itemDetailsDiv.innerHTML = '';
+    const itemDetailsDiv = document.getElementById('item-details');
+    itemDetailsDiv.innerHTML = '';
 
-    // Display the image
-    const img = document.createElement('p');
-    img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`; // Use data-src
-    itemDetailsDiv.appendChild(img);
+    // Display the image
+    const img = document.createElement('p');
+    img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`;
+    itemDetailsDiv.appendChild(img);
 
-    // Item Name
-    const itemName = document.createElement('p');
-    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
-    itemDetailsDiv.appendChild(itemName);
+    // Item Name
+    const itemName = document.createElement('p');
+    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
+    itemDetailsDiv.appendChild(itemName);
 
-    // Item ID
-    const itemId = document.createElement('p');
-    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
-    itemDetailsDiv.appendChild(itemId);
+    // Item ID
+    const itemId = document.createElement('p');
+    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
+    itemDetailsDiv.appendChild(itemId);
 
-    // Specifications
-    const specs = document.createElement('p');
-    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
-    itemDetailsDiv.appendChild(specs);
+    // Specifications
+    const specs = document.createElement('p');
+    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
+    itemDetailsDiv.appendChild(specs);
 
-    // Cataloge Link
-    const catalog = document.createElement('p');
-    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
-    itemDetailsDiv.appendChild(catalog);
+    // Catalog Link
+    const catalog = document.createElement('p');
+    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
+    itemDetailsDiv.appendChild(catalog);
 
-    // Display prices based on visible columns
-    for (let i = 5; i < item.length; i++) {
-        if (visibleColumns[i] === 1) { // includes doesn't work!
-            const key = columnNames[i];
-            const value = item[i];
+    // Display prices based on visible columns
+    for (let i = 5; i < item.length; i++) {
+        if (visibleColumns.includes(i)) { // Use .includes() for direct index check
+            const key = columnNames[i];
+            const value = item[i];
 
-            const prices = document.createElement('p');
-            prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
-            itemDetailsDiv.appendChild(prices);
-        }
-    }
+            const prices = document.createElement('p');
+            prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
+            itemDetailsDiv.appendChild(prices);
+        }
+    }
 
-    // Lazy-load the image (after everything else is displayed)
-    const realImage = itemDetailsDiv.querySelector('.product-image');
-    realImage.src = realImage.dataset.src; // Set the src from data-src
+    // Lazy-load the image (after everything else is displayed)
+    const realImage = itemDetailsDiv.querySelector('.product-image');
+    realImage.src = realImage.dataset.src; // Set the src from data-src
 }
+
 function parseCSV(csvText) {
-    return Papa.parse(csvText, { header: false }).data;
+    return Papa.parse(csvText, { header: false }).data;
 }
