@@ -1,34 +1,46 @@
 // service-worker.js (REVISED)
 
-const CACHE_NAME = 'nabled-cache-v3'; // IMPORTANT: Increment version on every change!
+const CACHE_NAME = 'nabled-cache-v4'; // Increment the version!
 const STATIC_ASSETS = [
-    '/', // IMPORTANT: Cache the root URL (index.html)
+    '/',
     '/index.html',
     '/style.css',
     '/script.js',
     '/detail.html',
     '/detailstyle.css',
     '/detail.js',
-    '/logo.png',  // Cache your icon!
-    // Add other static assets here (fonts, images, etc.)
+    '/logo.png',
     'https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js',
     'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js',
     'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js',
 ];
 
-// Install: Cache static assets
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Opened cache');
-                return cache.addAll(STATIC_ASSETS);
+                // Add static assets
+                return cache.addAll(STATIC_ASSETS)
+                    .then(() => {
+                      // Pre-cache the Google Sheet data.
+                      // CRUCIAL: Return the Promises so waitUntil waits for completion.
+                      return Promise.all([
+                          fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv')
+                              .then(response => response.text())
+                              .then(data => cache.put('https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv', new Response(data))),
+                          fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv')
+                              .then(response => response.text())
+                              .then(data => cache.put('https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv', new Response(data)))
+                        ]);
+                    });
             })
             .catch((err) => {
-                console.error("Failed to cache static assets", err);
+                console.error("Failed to cache assets", err);
             })
     );
 });
+
 
 // Activate: Clean up old caches
 self.addEventListener('activate', (event) => {
