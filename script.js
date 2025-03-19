@@ -81,64 +81,127 @@ function showInstallPromotion() {
 */
 
 // Call loadData() and proceed
+// Check for user authentication
 auth.onAuthStateChanged(async (user) => {
     if (user) {
+        // User is signed in.
         signOutButton.style.display = "block";
-        const { dataRows, permissionRows } = await loadData();
-        displayItems(dataRows, permissionRows, user.email);
-        setupSearch(dataRows); // Setup search after data is loaded
+
+        // Load data into localStorage (if needed) AND THEN display items.
+        await loadDataIntoLocalStorage(); // Await data loading
+        displayItems();
+        setupSearch(); // Set up search AFTER data is loaded
+
+        // Offline indicator (Corrected placement)
+        function updateOnlineStatus() {
+            const offlineMessage = document.getElementById('offline-message');
+            if (offlineMessage) { // Check if element exists
+                if (!navigator.onLine) {
+                    offlineMessage.style.display = 'block';
+                } else {
+                    offlineMessage.style.display = 'none';
+                }
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus(); // Check initial status
     } else {
+        // User is signed out.
         signOutButton.style.display = "none";
         window.location.href = "signin.html";
     }
 });
+
+// Load data into localStorage (called on login and refresh)
+async function loadDataIntoLocalStorage() {
+    try {
+        // Fetch data ONLY if it's not already in localStorage
+        if (!localStorage.getItem('dataSheet') || !localStorage.getItem('permissionRows')) {
+            const [dataResponse, permissionsResponse] = await Promise.all([
+                fetch(sheetUrl),
+                fetch(permissionsSheetUrl)
+            ]);
+
+            if (!dataResponse.ok || !permissionsResponse.ok) {
+                throw new Error(`HTTP error! Status: ${dataResponse.status}, ${permissionsResponse.status}`);
+            }
+
+            const dataCsvText = await dataResponse.text();
+            const permissionsCsvText = await permissionsResponse.text();
+
+            const dataRows = parseCSV(dataCsvText);
+            const permissionRows = parseCSV(permissionsCsvText);
+
+            localStorage.setItem('dataSheet', JSON.stringify({ data: dataRows }));
+            localStorage.setItem('permissionRows', JSON.stringify({ data: permissionRows }));
+            console.log("Data loaded into localStorage");
+        }
+
+    } catch (error) {
+        console.error("Error fetching and storing data:", error);
+        // Consider showing an error to the user here.
+    }
+}
 
 // deal with csv files
 function parseCSV(csvText) {
     return Papa.parse(csvText, { header: false }).data;
 }
 
-// display the items
-function displayItems(items, permissions, userEmail) {
+// Display items (using localStorage data)
+function displayItems() {
     const itemsList = document.getElementById('items-list');
     itemsList.innerHTML = ''; // Clear previous items
 
-    const userPermissions = getUserPermissions(permissions, userEmail);
+    const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
+    const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
 
-    const visibleColumns = userPermissions
-        ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-        : [];
 
-    if (visibleColumns.length === 0) {
-        //console.log('No visible columns for this user.');
-        return;
-    }
+    if (cachedData && cachedData.data && cachedPermission && cachedPermission.data) {
+        const dataRows = cachedData.data;
+        const permissionRows = cachedPermission.data;
 
-    for (let i = 1; i < items.length; i++) {
-        const item = items[i];
-        const itemId = item[0];
-        const itemName = item[1];
+        const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+        const visibleColumns = userPermissions
+            ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+            : [];
 
-        const itemDiv = document.createElement('div');
-        let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
+        if (visibleColumns.length === 0) {
+            return;
+        }
 
-        itemHtml += `<div class="item-code">${itemId}</div>
-                     <div class="item-description">${itemName}</div>`;
-        itemHtml += `</a>`;
-        itemDiv.innerHTML = itemHtml;
-        itemsList.appendChild(itemDiv);
+        for (let i = 1; i < dataRows.length; i++) {
+            const item = dataRows[i];
+            const itemId = item[0];
+            const itemName = item[1];
+
+            const itemDiv = document.createElement('div');
+            let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
+            itemHtml += `<div class="item-code">${itemId}</div>`;
+            itemHtml += `<div class="item-description">${itemName}</div>`;
+            itemHtml += `</a>`;
+            itemDiv.innerHTML = itemHtml;
+            itemsList.appendChild(itemDiv);
+        }
+    } else {
+        // Handle cases where localStorage might be empty (should be rare)
+         itemsList.innerHTML = '<p>Error: Item data not found. Please refresh.</p>';
     }
 }
 
 function getUserPermissions(permissions, userEmail) {
-    userEmail = userEmail.trim().toLowerCase();
-    for (let i = 1; i < permissions.length; i++) {
-        let storedEmail = permissions[i][0].trim().toLowerCase();
-        if (storedEmail === userEmail) {
-            return permissions[i];
-        }
+  if (!permissions) {
+    return null; // Or handle the missing permissions appropriately
+  }
+  userEmail = userEmail.trim().toLowerCase(); // Normalize email
+  for (let i = 1; i < permissions.length; i++) {
+    let storedEmail = permissions[i][0].trim().toLowerCase(); //Normalize stored email
+    if (storedEmail === userEmail) {
+      return permissions[i];
     }
-    return null;
+  }
+  return null;
 }
 
 // Check if cached data exists and is recent
@@ -227,17 +290,23 @@ document.querySelector(".refresh-button").addEventListener("click", async functi
     setupSearch(dataRows); // Refresh the search with new data
 });
 
-// Search functionality
-function setupSearch(items) {
+// Search functionality (now using localStorage data)
+function setupSearch() {
     const searchInput = document.querySelector('.search-input');
     const itemsList = document.getElementById('items-list');
 
-    searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
-        Array.from(itemsList.children).forEach(itemElement => {
-            const itemId = itemElement.querySelector('.item-code').textContent.toLowerCase();
-            const itemDescription = itemElement.querySelector('.item-description').textContent.toLowerCase();
-            itemElement.style.display = (itemId.includes(searchTerm) || itemDescription.includes(searchTerm)) ? 'flex' : 'none';
-        });
+        const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
+          if (cachedData && cachedData.data) {
+            const dataRows = cachedData.data;
+
+            //Iterate over item, not the cached data
+            Array.from(itemsList.children).forEach(itemElement => {
+                const itemId = itemElement.querySelector('.item-code').textContent.toLowerCase();
+                const itemDescription = itemElement.querySelector('.item-description').textContent.toLowerCase();
+                itemElement.style.display = (itemId.includes(searchTerm) || itemDescription.includes(searchTerm)) ? 'flex' : 'none';
+            });
+        }
     });
 }
