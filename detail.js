@@ -13,10 +13,6 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// URLs for both sheets (used as cache keys)
-const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
-const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
-
 // Check for user authentication
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -35,48 +31,33 @@ async function displayItemDetails() {
         return;
     }
 
-    try {
-        // Get cached data using caches.match() and await the responses
-        const dataResponse = await caches.match(dataSheetUrl);
-        const permissionsResponse = await caches.match(permissionsSheetUrl);
+    // Get data from localStorage (populated by script.js)
+    const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
+    const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
 
-        let dataRows;
-        let permissionRows;
+    if (cachedData && cachedData.data && cachedPermission && cachedPermission.data) {
+        const dataRows = cachedData.data;
+        const permissionRows = cachedPermission.data;
 
-        if (dataResponse && permissionsResponse) {
-            // Parse CSV data from cached responses
-            const dataCsvText = await dataResponse.text();
-            dataRows = parseCSV(dataCsvText);
-
-            const permissionsCsvText = await permissionsResponse.text();
-            permissionRows = parseCSV(permissionsCsvText);
-
-            // Find the item and display it
-            const item = findItemById(dataRows, itemId);
-            if (item) {
-                const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-                const visibleColumns = userPermissions
-                    ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-                    : [];
-                displayItem(item, visibleColumns, dataRows[0]); // Pass column names
-            } else {
-                document.getElementById('item-details').innerHTML = '<p>Item not found in cached data.</p>';
-            }
+        const item = findItemById(dataRows, itemId);
+        if (item) {
+            const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+            const visibleColumns = userPermissions
+                ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+                : [];
+            displayItem(item, visibleColumns, dataRows[0]); // Pass column names
         } else {
-            // Handle the case where data is NOT in the cache (should be rare due to pre-caching)
-            document.getElementById('item-details').innerHTML = '<p>Data not available offline. Please connect to the internet to view this item.</p>';
+            document.getElementById('item-details').innerHTML = '<p>Item not found in cached data.</p>';
         }
-
-    } catch (error) {
-        console.error("Error displaying item details:", error);
+    } else {
+        // Data NOT in localStorage (very rare case)
         document.getElementById('item-details').innerHTML = `
-            <p>An error occurred.</p>
-            <p>Please check your network connection or try again later.</p>
+            <p>This item is not available offline.</p>
+            <p>Please connect to the internet to view this item for the first time.</p>
             <img src="placeholder.png" alt="Placeholder Image">
-        `; // More generic error
+        `;
     }
 }
-
 
 function findItemById(items, itemId) {
     for (let i = 1; i < items.length; i++) {
@@ -86,13 +67,11 @@ function findItemById(items, itemId) {
     }
     return null;
 }
-
 function getUserPermissions(permissions, userEmail) {
     if (!permissions) {
-        console.log("Permissions array is null or undefined.");
         return null;
     }
-    userEmail = userEmail.trim().toLowerCase();
+   userEmail = userEmail.trim().toLowerCase();
     for (let i = 1; i < permissions.length; i++) {
         let storedEmail = permissions[i][0].trim().toLowerCase();
         if (storedEmail === userEmail) {
@@ -102,11 +81,11 @@ function getUserPermissions(permissions, userEmail) {
     return null;
 }
 
-async function displayItem(item, visibleColumns, columnNames) {
+function displayItem(item, visibleColumns, columnNames) {
     const itemDetailsDiv = document.getElementById('item-details');
     itemDetailsDiv.innerHTML = '';
 
-    // Display the image
+    // Display the image (initially placeholder)
     const img = document.createElement('p');
     img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`;
     itemDetailsDiv.appendChild(img);
@@ -133,7 +112,8 @@ async function displayItem(item, visibleColumns, columnNames) {
 
     // Display prices based on visible columns
     for (let i = 5; i < item.length; i++) {
-        if (visibleColumns.includes(i)) { // Use .includes() for direct index check
+        // Correct visibility check:
+        if (visibleColumns[i] === 1) {
             const key = columnNames[i];
             const value = item[i];
 
@@ -143,9 +123,9 @@ async function displayItem(item, visibleColumns, columnNames) {
         }
     }
 
-    // Lazy-load the image (after everything else is displayed)
+    // Lazy-load the real image (after everything else is displayed)
     const realImage = itemDetailsDiv.querySelector('.product-image');
-    realImage.src = realImage.dataset.src; // Set the src from data-src
+    realImage.src = realImage.dataset.src;
 }
 
 function parseCSV(csvText) {
