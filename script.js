@@ -12,231 +12,143 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const dataSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
+const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';//added this line
 
-// Data sheet
-const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
-// Permissions sheet
-const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
+let columnNames = []; // Define columnNames at the top level
 
-// Sign Out
-const signOutButton = document.getElementById('signOutButton');
-signOutButton.addEventListener('click', signOut);
-
-function signOut() {
-    auth.signOut()
-        .then(() => {
-            //console.log('User signed out');
-            window.location.href = 'signin.html';
-        })
-        .catch((error) => {
-            //console.error('Sign-out error:', error);
-        });
-}
-
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('service-worker.js')
-            .then(function(registration) {
-                //console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function(err) {
-                //console.log('ServiceWorker registration failed: ', err);
-            });
-    });
-}
-/*
-// Install Prompt (add this after the service worker registration)
-let deferredPrompt; // Store the install prompt
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI to notify the user they can add to home screen
-    showInstallPromotion(); // Call a function to display your custom prompt
-});
-
-function showInstallPromotion() {
-    const installContainer = document.getElementById('install-container');
-    const installButton = document.getElementById('installButton');
-
-    // Show the install container
-    installContainer.style.display = 'block';
-
-    installButton.addEventListener('click', (e) => {
-        deferredPrompt.prompt();
-
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                //console.log('User accepted the A2HS prompt');
-                installContainer.style.display = 'none'; // Hide after installation
-            } else {
-                //console.log('User dismissed the A2HS prompt');
-            }
-            deferredPrompt = null;
-        });
-    });
-}
-*/
-
-// Call loadData() and proceed
-auth.onAuthStateChanged(async (user) => {
+// Check if the user is already logged in
+auth.onAuthStateChanged(async (user) => { // Make this function async
     if (user) {
-        signOutButton.style.display = "block";
-        const { dataRows, permissionRows } = await loadData();
-        displayItems(dataRows, permissionRows, user.email);
-        setupSearch(dataRows); // Setup search after data is loaded
+        // User is signed in, show content
+        document.getElementById('login-ui').style.display = 'none';
+        document.getElementById('user-content').style.display = 'block';
+        document.getElementById('sign-out-button').style.display = 'block';//added
+
+         // Fetch and store data and permissions in localStorage
+        if (!localStorage.getItem('dataSheet') || !localStorage.getItem('permissionRows')) {
+            try {
+                const dataResponse = await fetch(dataSheetUrl);
+                const dataCsvText = await dataResponse.text();
+                const dataSheet = parseCSV(dataCsvText);
+
+                const permissionsResponse = await fetch(permissionsSheetUrl);
+                const permissionsCsvText = await permissionsResponse.text();
+                const permissionRows = parseCSV(permissionsCsvText);
+
+                localStorage.setItem('dataSheet', JSON.stringify({ data: dataSheet }));
+                localStorage.setItem('permissionRows', JSON.stringify({ data: permissionRows }));
+            } catch (error) {
+                console.error("Error fetching and storing data:", error);
+            }
+        }
+
+        displayItems(); // Now call displayItems after data is potentially stored
+        setupSearch(JSON.parse(localStorage.getItem('dataSheet')).data);
+
+        //Sign out
+        document.getElementById('sign-out-button').addEventListener('click', () => {
+          auth.signOut().then(() => {
+            // Sign-out successful.
+            localStorage.clear(); // Clear
+            window.location.reload();
+          }).catch((error) => {
+            // An error happened.
+            console.error("Sign-out error:", error);
+          });
+        });
+
+        // Detect offline status and show message if needed.
+        function updateOnlineStatus() {
+            const offlineMessage = document.getElementById('offline-message');
+            if (!navigator.onLine) {
+                offlineMessage.style.display = 'block';
+            } else {
+                offlineMessage.style.display = 'none';
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus(); // Check initial status
     } else {
-        signOutButton.style.display = "none";
-        window.location.href = "signin.html";
+        // User is not signed in, redirect to login page
+        document.getElementById('login-ui').style.display = 'block';
+        document.getElementById('user-content').style.display = 'none';
+        document.getElementById('sign-out-button').style.display = 'none';//added
+
+        // Redirect to signin.html if not already there
+        if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
+            window.location.href = 'signin.html';
+        }
     }
 });
 
-// deal with csv files
-function parseCSV(csvText) {
-    return Papa.parse(csvText, { header: false }).data;
-}
+async function displayItems() {
+    const itemsContainer = document.getElementById('items-container');
+    itemsContainer.innerHTML = '';
 
-// display the items
-function displayItems(items, permissions, userEmail) {
-    const itemsList = document.getElementById('items-list');
-    itemsList.innerHTML = ''; // Clear previous items
+    try {
+      const dataSheet = JSON.parse(localStorage.getItem('dataSheet')).data;
+      const permissionRows = JSON.parse(localStorage.getItem('permissionRows')).data;
+      columnNames = dataSheet[0];
+      const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+      const visibleColumns = userPermissions
+      ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+      : [];
+      for (let i = 1; i < dataSheet.length; i++) {
+        const item = dataSheet[i];
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item';
 
-    const userPermissions = getUserPermissions(permissions, userEmail);
+        itemDiv.innerHTML = `
+        <p><img src="${item[3]}" alt="${item[1]}"></p>
+        <h2>${item[1]}</h2>
+        `;
+        // Add a click event listener to navigate to detail.html
+        itemDiv.addEventListener('click', () => {
+            window.location.href = `detail.html?id=${item[0]}`;
+        });
 
-    const visibleColumns = userPermissions
-        ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-        : [];
-
-    if (visibleColumns.length === 0) {
-        //console.log('No visible columns for this user.');
-        return;
+        itemsContainer.appendChild(itemDiv);
     }
 
-    for (let i = 1; i < items.length; i++) {
-        const item = items[i];
-        const itemId = item[0];
-        const itemName = item[1];
 
-        const itemDiv = document.createElement('div');
-        let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
-
-        itemHtml += `<div class="item-code">${itemId}</div>
-                     <div class="item-description">${itemName}</div>`;
-        itemHtml += `</a>`;
-        itemDiv.innerHTML = itemHtml;
-        itemsList.appendChild(itemDiv);
+    } catch (error) {
+        console.error("Error fetching or parsing data:", error);
+        itemsContainer.innerHTML = '<p>Error loading items.</p>';
     }
 }
 
 function getUserPermissions(permissions, userEmail) {
-    userEmail = userEmail.trim().toLowerCase();
-    for (let i = 1; i < permissions.length; i++) {
-        let storedEmail = permissions[i][0].trim().toLowerCase();
-        if (storedEmail === userEmail) {
-            return permissions[i];
-        }
+  if (!permissions) {
+    return null; // Or handle the missing permissions appropriately
+  }
+  userEmail = userEmail.trim().toLowerCase(); // Normalize email
+  for (let i = 1; i < permissions.length; i++) {
+    let storedEmail = permissions[i][0].trim().toLowerCase(); //Normalize stored email
+    if (storedEmail === userEmail) {
+      return permissions[i];
     }
-    return null;
+  }
+  return null;
 }
 
-// Check if cached data exists and is recent
-function getCachedData(key) {
-    const cached = localStorage.getItem(key);
-    if (cached) {
-        const parsed = JSON.parse(cached);
-        const now = new Date().getTime();
-        if (now - parsed.timestamp < 60 * 60 * 1000) {
-            //console.log("Using cached data for:", key);
-            return parsed.data;
-        }
-    }
-    return null;
+function parseCSV(csvText) {
+    return Papa.parse(csvText, { header: false }).data;
 }
 
-// Save data to cache with a timestamp
-function cacheData(key, data) {
-    localStorage.setItem(key, JSON.stringify({
-        data: data,
-        timestamp: new Date().getTime()
-    }));
-}
-
-// Function to load data (from cache or fetch)
-async function loadData() {
-    let dataRows = getCachedData("dataSheet");
-    let permissionRows;
-
-    if (!dataRows) {
-        //console.log("Fetching fresh data...");
-        try {
-            const [dataResponse, permissionsResponse] = await Promise.all([
-                fetch(sheetUrl).then(res => res.text()),
-                fetch(permissionsSheetUrl).then(res => res.text())
-            ]);
-            dataRows = parseCSV(dataResponse);
-            permissionRows = parseCSV(permissionsResponse);
-            cacheData("dataSheet", dataRows);
-            cacheData("permissionRows", permissionRows);
-            //console.log("cached permissionRows:", permissionRows);
-        } catch (error) {
-            //console.error("Error fetching data:", error);
-        }
-    } else {
-        //console.log("Using cached data for dataRows...");
-        try {
-            const permissionsResponse = await fetch(permissionsSheetUrl).then(res => res.text());
-            permissionRows = parseCSV(permissionsResponse);
-        } catch (error) {
-            //console.error("Error fetching permissions data:", error);
-        }
-    }
-    return { dataRows, permissionRows };
-}
-
-// Function to force load data (refresh button)
-async function forceLoadData() {
-    //console.log("Fetching new data...");
-    try {
-        const [dataResponse, permissionsResponse] = await Promise.all([
-            fetch(sheetUrl).then(res => res.text()),
-            fetch(permissionsSheetUrl).then(res => res.text())
-        ]);
-        dataRows = parseCSV(dataResponse);
-        permissionRows = parseCSV(permissionsResponse);
-        cacheData("dataSheet", dataRows);
-    } catch (error) {
-        //console.error("Error fetching data:", error);
-    }
-    return { dataRows, permissionRows };
-}
-
-// Refresh Button
-document.querySelector(".refresh-button").addEventListener("click", async function() {
-    //let icon = this.querySelector("svg");
-    //icon.classList.add("rotate");
-    const user = auth.currentUser;
-    if (!user) {
-        //console.error("No authenticated user found.");
-        window.location.href = "signin.html";
-        return;
-    }
-    const { dataRows, permissionRows } = await forceLoadData();
-    displayItems(dataRows, permissionRows, user.email);
-    setupSearch(dataRows); // Refresh the search with new data
-});
-
-// Search functionality
+// Search functionality (CORRECTED)
 function setupSearch(items) {
     const searchInput = document.querySelector('.search-input');
-    const itemsList = document.getElementById('items-list');
+    const itemsList = document.getElementById('items-list'); // Corrected ID
 
     searchInput.addEventListener('input', function() {
         const searchTerm = searchInput.value.toLowerCase();
         Array.from(itemsList.children).forEach(itemElement => {
-            const itemId = itemElement.querySelector('.item-code').textContent.toLowerCase();
-            const itemDescription = itemElement.querySelector('.item-description').textContent.toLowerCase();
+            // Get item ID and description from the cached data
+            const itemId = itemElement.querySelector('h2').previousElementSibling.querySelector('img').alt; // Get ID based on image alt
+            const itemDescription = itemElement.querySelector('h2').textContent.toLowerCase();
             itemElement.style.display = (itemId.includes(searchTerm) || itemDescription.includes(searchTerm)) ? 'flex' : 'none';
         });
     });
