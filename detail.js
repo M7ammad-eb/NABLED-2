@@ -1,3 +1,4 @@
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
   authDomain: "nab-led.firebaseapp.com",
@@ -21,7 +22,7 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-async function displayItemDetails() {
+function displayItemDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const itemId = urlParams.get('id');
 
@@ -30,7 +31,7 @@ async function displayItemDetails() {
     return;
   }
 
-  // Get data from localStorage (populated by script.js)
+  // Get data directly from localStorage (populated by script.js)
   const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
   const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
 
@@ -39,22 +40,25 @@ async function displayItemDetails() {
     const dataRows = cachedData.data;
     const permissionRows = cachedPermission.data;
 
-
     const item = findItemById(dataRows, itemId);
+
     if (item) {
-      const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+        const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
         const visibleColumns = userPermissions
-          ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-          : [];
-      // Display the item
-      displayItem(item, visibleColumns, dataRows[0]); // Pass columnNames
+            ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
+            : [];
+
+      // Display the item (using the simplified displayItem function)
+      displayItem(item, visibleColumns, dataRows[0]); //Pass column name
     } else {
-      // Item not found in data (should be very rare)
-      displayOfflineMessage(); // Use a helper function
+      document.getElementById('item-details').innerHTML = '<p>Item not found in cached data.</p>';
     }
   } else {
-    // localStorage is empty (should be very rare)
-    displayOfflineMessage(); // Use a helper function
+    // Handle the (very rare) case where localStorage is empty
+    document.getElementById('item-details').innerHTML = `
+            <p>Item details are not available offline.</p>
+            <p>Please connect to the internet to view this app.</p>
+        `;
   }
 }
 
@@ -68,17 +72,17 @@ function findItemById(items, itemId) {
 }
 
 function getUserPermissions(permissions, userEmail) {
-    if (!permissions) {
-        return null;
+  if (!permissions) {
+    return null; // Or handle the missing permissions appropriately
+  }
+  userEmail = userEmail.trim().toLowerCase(); // Normalize email
+  for (let i = 1; i < permissions.length; i++) {
+    let storedEmail = permissions[i][0].trim().toLowerCase(); //Normalize stored email
+    if (storedEmail === userEmail) {
+      return permissions[i];
     }
-    userEmail = userEmail.trim().toLowerCase();
-    for (let i = 1; i < permissions.length; i++) {
-        let storedEmail = permissions[i][0].trim().toLowerCase();
-        if (storedEmail === userEmail) {
-            return permissions[i];
-        }
-    }
-    return null;
+  }
+  return null;
 }
 
 function displayItem(item, visibleColumns, columnNames) {
@@ -90,27 +94,27 @@ function displayItem(item, visibleColumns, columnNames) {
   img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`;
   itemDetailsDiv.appendChild(img);
 
- // Item Name
-    const itemName = document.createElement('p');
-    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
-    itemDetailsDiv.appendChild(itemName);
+  // Item Name
+  const itemName = document.createElement('p');
+  itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
+  itemDetailsDiv.appendChild(itemName);
 
-    // Item ID
-    const itemId = document.createElement('p');
-    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
-    itemDetailsDiv.appendChild(itemId);
+  // Item ID
+  const itemId = document.createElement('p');
+    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
+    itemDetailsDiv.appendChild(itemId);
 
-    // Specifications
-    const specs = document.createElement('p');
-    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
-    itemDetailsDiv.appendChild(specs);
+    // Specifications
+    const specs = document.createElement('p');
+    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
+    itemDetailsDiv.appendChild(specs);
 
-    // Cataloge Link
-    const catalog = document.createElement('p');
-    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
-    itemDetailsDiv.appendChild(catalog);
+    // Cataloge Link
+    const catalog = document.createElement('p');
+    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
+    itemDetailsDiv.appendChild(catalog);
 
-  // Prices (Corrected visibility check)
+  // Prices (CORRECTED visibility check)
   for (let i = 5; i < item.length; i++) {
     if (visibleColumns[i] === 1) { // Corrected check!
       const key = columnNames[i];
@@ -124,15 +128,6 @@ function displayItem(item, visibleColumns, columnNames) {
   // Lazy-load the real image (after everything else is displayed)
   const realImage = itemDetailsDiv.querySelector('.product-image');
     realImage.src = realImage.dataset.src; // Set the src from data-src
-
-}
-//Helper function to display offline message
-function displayOfflineMessage() {
-    document.getElementById('item-details').innerHTML = `
-        <p>Item details are not available offline.</p>
-        <p>Please connect to the internet to view this item.</p>
-        <img src="placeholder.png" alt="Placeholder Image">
-    `;
 }
 
 function parseCSV(csvText) {
