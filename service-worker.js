@@ -46,7 +46,7 @@ self.addEventListener('install', (event) => {
                         cache.put('https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv', new Response(permissionsCsvText))
                     ]);
 
-                    // 3. Generate and pre-cache detail.html?id=... URLs
+                    /*// 3. Generate and pre-cache detail.html?id=... URLs
                     const dataRows = Papa.parse(dataCsvText, { header: false }).data;
                     const detailUrls = [];
                     for (let i = 1; i < dataRows.length; i++) {
@@ -55,7 +55,7 @@ self.addEventListener('install', (event) => {
                             detailUrls.push(`/detail.html?id=${itemId}`);
                         }
                     }
-                    await cache.addAll(detailUrls);
+                    await cache.addAll(detailUrls);*/
 
                 } catch (error) {
                     console.error("Failed to pre-cache data or detail URLs:", error);
@@ -84,9 +84,21 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Let Firebase Auth requests go directly to the network.
+    const url = new URL(event.request.url);
+
+    // Allow Firebase authentication requests to pass through
     if (event.request.url.includes('firebasestorage') || event.request.url.includes('firebaseio.com') || event.request.url.includes('accounts.google.com') || event.request.url.includes('identitytoolkit')) {
         event.respondWith(fetch(event.request));
+        return;
+    }
+
+    // Serve cached `detail.html` for all `detail.html?id=...` requests
+    if (url.pathname === '/detail.html' && url.searchParams.has('id')) {
+        event.respondWith(
+            caches.match('/detail.html').then((cachedResponse) => {
+                return cachedResponse || fetch(event.request);
+            })
+        );
         return;
     }
 
@@ -97,48 +109,36 @@ self.addEventListener('fetch', (event) => {
     }
 
     event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                // Cache hit - return the cached response
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
 
-                // Network request + dynamic caching (for images, primarily)
-                return fetch(event.request)
-                    .then((networkResponse) => {
-                        // Clone the response for caching
-                        const responseToCache = networkResponse.clone();
+            return fetch(event.request)
+                .then((networkResponse) => {
+                    const responseToCache = networkResponse.clone();
 
-                        // Cache images.
-                        if (event.request.url.match(/\.(jpeg|jpg|gif|png|svg)$/i)) {
-                            caches.open(CACHE_NAME)
-                                .then((cache) => {
-                                    cache.put(event.request, responseToCache);
-                                });
-                        }
-                        // Don't dynamically cache other things, we've pre-cached what we need.
-
-                        return networkResponse;
-                    })
-                    .catch((error) => {
-                        // Handle network errors gracefully.
-                        console.error('Fetch failed:', error);
-
-                        // For navigation requests, return index.html (as a fallback)
-                        if (event.request.mode === 'navigate') {
-                            return caches.match('/index.html');
-                        }
-                        // For image requests, return the placeholder.
-                        else if (event.request.url.match(/\.(jpeg|jpg|gif|png|svg)$/i)) {
-                            return caches.match('/placeholder.png');
-                        }
-                        // For other failed requests, return a 503 error.
-                        return new Response('Offline and resource not cached.', {
-                            status: 503,
-                            statusText: 'Service Unavailable',
+                    if (event.request.url.match(/\.(jpeg|jpg|gif|png|svg)$/i)) {
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
                         });
+                    }
+
+                    return networkResponse;
+                })
+                .catch(() => {
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('/index.html');
+                    }
+                    if (event.request.url.match(/\.(jpeg|jpg|gif|png|svg)$/i)) {
+                        return caches.match('/placeholder.png');
+                    }
+                    return new Response('Offline and resource not cached.', {
+                        status: 503,
+                        statusText: 'Service Unavailable',
                     });
-            })
+                });
+        })
     );
 });
+
