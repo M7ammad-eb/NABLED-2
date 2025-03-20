@@ -19,16 +19,18 @@ signInButton.addEventListener('click', signInWithGoogle);
 
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .then((result) => {
-      // User signed in successfully
-      const user = result.user;
-      console.log('User signed in:', user);
-      // Redirect to the main page after successful sign-in
-      window.location.href = 'index.html';
-    })
-    .catch((error) => {
-      // Handle sign-in error
-      console.error('Sign-in error:', error);
-    });
+  auth.signInWithRedirect(provider);
 }
+
+// Handle the redirected sign-in
+auth.getRedirectResult()
+  .then((result) => {
+    if (result.user) {
+      console.log('User signed in:', result.user);
+      window.location.href = 'index.html';
+    }
+  })
+  .catch((error) => {
+    console.error('Sign-in error:', error);
+  });
+
