@@ -19,16 +19,31 @@ signInButton.addEventListener('click', signInWithGoogle);
 
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .then((result) => {
-      // User signed in successfully
+  auth.signInWithRedirect(provider);
+}
+
+// Handle the redirect result after authentication.  This is the KEY part.
+auth.getRedirectResult()
+  .then((result) => {
+    if (result.credential) {
+      // This gives you a Google Access Token. You can use it to access the Google API.
+      // const token = result.credential.accessToken; // Not usually needed for simple sign-in
+      // The signed-in user info.
       const user = result.user;
       console.log('User signed in:', user);
-      // Redirect to the main page after successful sign-in
+      // Redirect to index.html AFTER successful sign-in
       window.location.href = 'index.html';
-    })
-    .catch((error) => {
-      // Handle sign-in error
-      console.error('Sign-in error:', error);
-    });
-}
+    } else if (result.user) {  //User ALREADY signed in
+        window.location.href = 'index.html';
+    }
+  }).catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.email;
+    // The firebase.auth.AuthCredential type that was used.
+    const credential = error.credential;
+
+    console.error('Sign-in error:', error);
+  });
