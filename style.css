@@ -194,3 +194,19 @@ h1 {
     gap: 0px; /* Spacing between grid items */
   }
 }
+
+/* for transition */
+.item-clicked {
+    transition: all 0.3s ease; /* Smooth transition */
+    opacity: 0.5; /* Fade slightly */
+    transform: scale(0.95); /* Shrink slightly */
+}
+
+.list-image {
+    width: 50px;          /* Consistent size */
+    height: 50px;
+    object-fit: cover;    /* Prevent distortion */
+    margin-right: 10px;
+    border-radius: 4px; /* Optional: Rounded corners */
+    transition: all 0.3s ease; /* Add transition for smoothness*/
+}
