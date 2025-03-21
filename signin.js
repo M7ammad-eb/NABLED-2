@@ -1,4 +1,4 @@
-// Firebase configuration (ensure API key is restricted)
+// Firebase configuration (same as before)
 const firebaseConfig = {
   apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
   authDomain: "nab-led.firebaseapp.com",
@@ -13,27 +13,26 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// Google Sign-In Button
+// Google Sign-In
 const signInButton = document.getElementById('signInButton');
-signInButton.addEventListener('click', () => {
+signInButton.addEventListener('click', signInWithGoogle);
+
+function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);  // Redirects to Google
-});
-
-// Handle Redirect Sign-In After Returning
-auth.getRedirectResult()
-  .then((result) => {
-    if (result.user) {
-      console.log("User signed in:", result.user);
-      cleanUpURL();  // Remove URL params
-      window.location.href = 'index.html';  // Redirect after login
-    }
-  })
-  .catch((error) => {
-    console.error("Sign-in error:", error);
-  });
-
-// Remove query parameters after login
-function cleanUpURL() {
-  window.history.replaceState({}, document.title, "index.html");
+  auth.signInWithRedirect(provider);  // Initiates the redirect flow
 }
+
+// Handle the result of the redirect
+auth.getRedirectResult().then((result) => {
+  if (result.user) {
+    // User signed in successfully
+    const user = result.user;
+    console.log('User signed in:', user);
+
+    // After successful login, redirect to main page
+    window.location.replace('index.html'); // Use replace to remove login page from history
+  }
+}).catch((error) => {
+  // Handle errors
+  console.error('Sign-in error:', error);
+});
