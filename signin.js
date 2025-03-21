@@ -19,19 +19,16 @@ signInButton.addEventListener('click', signInWithGoogle);
 
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);  // Use signInWithRedirect instead of signInWithPopup
+  auth.signInWithPopup(provider)
+    .then((result) => {
+      // User signed in successfully
+      const user = result.user;
+      console.log('User signed in:', user);
+      // Redirect to the main page after successful sign-in
+      window.location.href = 'index.html';
+    })
+    .catch((error) => {
+      // Handle sign-in error
+      console.error('Sign-in error:', error);
+    });
 }
-
-// Handle the redirect result after the user is redirected back
-auth.getRedirectResult().then((result) => {
-  if (result.user) {
-    // User signed in successfully
-    const user = result.user;
-    console.log('User signed in:', user);
-    // Redirect to the main page after successful sign-in
-    window.location.href = 'index.html';
-  }
-}).catch((error) => {
-  // Handle sign-in error
-  console.error('Sign-in error:', error);
-});
