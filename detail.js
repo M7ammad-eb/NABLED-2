@@ -93,7 +93,7 @@ function displayItem(item, visibleColumns, columnNames) {
     let startRect;
 
     if (transitionData && transitionData.id === item[0]) { // Check ID matches
-        startRect = transitionData.rect;
+        startRect = transitionData.imgRect;
         sessionStorage.removeItem('transition-start'); // Clear the data
     }
 
@@ -159,7 +159,7 @@ function displayItem(item, visibleColumns, columnNames) {
         imageElement.style.top = '0';
         imageElement.style.left = '0';
         imageElement.style.width = '100%'; // Or whatever your final size should be
-        imageElement.style.height = '400px';
+        imageElement.style.height = '33%';
         imageElement.style.objectFit = 'cover';
         imageElement.style.opacity = 1; // Fade in
 
