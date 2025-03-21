@@ -159,7 +159,8 @@ function displayItem(item, visibleColumns, columnNames) {
         imageElement.style.top = '0';
         imageElement.style.left = '0';
         imageElement.style.width = '100%'; // Or whatever your final size should be
-        imageElement.style.height = 'auto';
+        imageElement.style.height = '400px';
+        imageElement.style.objectFit = 'cover';
         imageElement.style.opacity = 1; // Fade in
 
         //Clean up styles
