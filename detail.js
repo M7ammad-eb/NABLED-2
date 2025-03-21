@@ -93,7 +93,7 @@ function displayItem(item, visibleColumns, columnNames) {
     let startRect;
 
     if (transitionData && transitionData.id === item[0]) { // Check ID matches
-        startRect = transitionData.imgRect;
+        startRect = transitionData.rect;
         sessionStorage.removeItem('transition-start'); // Clear the data
     }
 
