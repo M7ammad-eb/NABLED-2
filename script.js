@@ -1,17 +1,5 @@
-// Firebase configuration (replace with your actual config)
-const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
-    authDomain: "nab-led.firebaseapp.com",
-    projectId: "nab-led",
-    storageBucket: "nab-led.firebasestorage.app",
-    messagingSenderId: "789022171426",
-    appId: "1:789022171426:web:2d8dda594b1495be26457b",
-    measurementId: "G-W58SF16RJ6"
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+// script.js
+import { auth } from './auth.js'; // Import the auth object
 
 // Data sheet
 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
@@ -20,16 +8,17 @@ const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRL
 
 // Sign Out
 const signOutButton = document.getElementById('signOutButton');
-signOutButton.addEventListener('click', signOut);
+if (signOutButton) { // Best practice: Check if element exists
+    signOutButton.addEventListener('click', signOut);
+}
 
 function signOut() {
     auth.signOut()
         .then(() => {
-            //console.log('User signed out');
             window.location.href = 'signin.html';
         })
         .catch((error) => {
-            //console.error('Sign-out error:', error);
+            console.error('Sign-out error:', error);
         });
 }
 
@@ -38,77 +27,46 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('service-worker.js')
             .then(function(registration) {
-                //console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
             }, function(err) {
-                //console.log('ServiceWorker registration failed: ', err);
+                console.log('ServiceWorker registration failed: ', err);
             });
     });
 }
-/*
-// Install Prompt (add this after the service worker registration)
-let deferredPrompt; // Store the install prompt
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI to notify the user they can add to home screen
-    showInstallPromotion(); // Call a function to display your custom prompt
-});
-
-function showInstallPromotion() {
-    const installContainer = document.getElementById('install-container');
-    const installButton = document.getElementById('installButton');
-
-    // Show the install container
-    installContainer.style.display = 'block';
-
-    installButton.addEventListener('click', (e) => {
-        deferredPrompt.prompt();
-
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                //console.log('User accepted the A2HS prompt');
-                installContainer.style.display = 'none'; // Hide after installation
-            } else {
-                //console.log('User dismissed the A2HS prompt');
-            }
-            deferredPrompt = null;
-        });
-    });
-}
-*/
-
-// Call loadData() and proceed
 // Check for user authentication
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         // User is signed in.
-        signOutButton.style.display = "block";
+        if (signOutButton) {
+            signOutButton.style.display = "block";
+        }
 
         // Load data into localStorage (if needed) AND THEN display items.
         await loadDataIntoLocalStorage(); // Await data loading
-        displayItems();
+        displayItems(); // No arguments needed
         setupSearch(); // Set up search AFTER data is loaded
 
-        // Offline indicator (Corrected placement)
+        // Offline indicator
         function updateOnlineStatus() {
             const offlineMessage = document.getElementById('offline-message');
             if (offlineMessage) { // Check if element exists
-                if (!navigator.onLine) {
-                    offlineMessage.style.display = 'block';
-                } else {
-                    offlineMessage.style.display = 'none';
-                }
+              if (!navigator.onLine) {
+                offlineMessage.style.display = 'block';
+              } else {
+                offlineMessage.style.display = 'none';
+              }
             }
         }
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
         updateOnlineStatus(); // Check initial status
+
     } else {
         // User is signed out.
+      if (signOutButton) {
         signOutButton.style.display = "none";
+      }
         window.location.href = "signin.html";
     }
 });
@@ -134,15 +92,6 @@ async function loadDataIntoLocalStorage() {
             const permissionRows = parseCSV(permissionsCsvText);
 
             localStorage.setItem('dataSheet', JSON.stringify({ data: dataRows }));
-            localStorage.setItem('permissionRows', JSON.stringify({ data: permissionRows }));
-            console.log("Data loaded into localStorage");
-        }
-
-    } catch (error) {
-        console.error("Error fetching and storing data:", error);
-        // Consider showing an error to the user here.
-    }
-}
 
 // deal with csv files
 function parseCSV(csvText) {
