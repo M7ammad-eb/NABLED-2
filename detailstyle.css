@@ -16,12 +16,16 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
 }
+
+/* add transition */
 .product-image {
     max-width: 100%;
-    height: auto;
+    height: 400px;
+    object-fit: cover;
     display: block;
     margin-bottom: 20px;
     border-radius: 4px;
+    /* transition: all 0.3s ease; Add this back if NOT using shared element transition */
 }
 
 #item-details h2 {
