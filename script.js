@@ -149,14 +149,13 @@ function parseCSV(csvText) {
     return Papa.parse(csvText, { header: false }).data;
 }
 
-// Display items (using localStorage data)
+// Display items (using localStorage data) with transition and image
 function displayItems() {
     const itemsList = document.getElementById('items-list');
     itemsList.innerHTML = ''; // Clear previous items
 
     const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
     const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
-
 
     if (cachedData && cachedData.data && cachedPermission && cachedPermission.data) {
         const dataRows = cachedData.data;
@@ -175,18 +174,42 @@ function displayItems() {
             const item = dataRows[i];
             const itemId = item[0];
             const itemName = item[1];
+            const itemImage = item[3]; // Get the image URL
 
             const itemDiv = document.createElement('div');
-            let itemHtml = `<a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}">`;
-            itemHtml += `<div class="item-code">${itemId}</div>`;
-            itemHtml += `<div class="item-description">${itemName}</div>`;
-            itemHtml += `</a>`;
-            itemDiv.innerHTML = itemHtml;
+            // Use data-transition-id to link elements
+            itemDiv.innerHTML = `
+                <a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}" data-transition-id="${itemId}">
+                    <div class="item-code">${itemId}</div>
+                    <div class="item-description">${itemName}</div>
+                     <img src="${itemImage}" alt="${itemName}" class="list-image" style="width: 30px; height: 30px; object-fit: cover; margin-right: 10px;">
+
+                </a>`;
             itemsList.appendChild(itemDiv);
+
+            // Capture click event *on the link itself*
+            itemDiv.querySelector('a').addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default navigation *for now*
+
+                // 1. Store the clicked element's bounding rect
+                const rect = this.getBoundingClientRect();
+                sessionStorage.setItem('transition-start', JSON.stringify({
+                    rect: rect,
+                    id: this.dataset.transitionId,
+                    imageSrc: itemImage // Store the image URL
+                }));
+
+                // 2. Add a class for the transition
+                this.classList.add('item-clicked');
+
+                // 3. Navigate after a *short* delay (to allow animation to start)
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 50); // 50ms delay - adjust as needed
+            });
         }
     } else {
-        // Handle cases where localStorage might be empty (should be rare)
-         itemsList.innerHTML = '<p>Error: Item data not found. Please refresh.</p>';
+        itemsList.innerHTML = '<p>Error: Item data not found. Please refresh.</p>';
     }
 }
 
