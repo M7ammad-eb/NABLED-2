@@ -192,9 +192,11 @@ function displayItems() {
                 event.preventDefault(); // Prevent default navigation *for now*
 
                 // 1. Store the clicked element's bounding rect
+                const imgRect = this.querySelector('.list-image').getBoundingClientRect();
+                console.log(imgRect)
                 const rect = this.getBoundingClientRect();
                 sessionStorage.setItem('transition-start', JSON.stringify({
-                    rect: rect,
+                    rect: imgRect,
                     id: this.dataset.transitionId,
                     imageSrc: itemImage // Store the image URL
                 }));
@@ -208,7 +210,7 @@ function displayItems() {
                 // 3. Navigate after a *short* delay (to allow animation to start)
                 setTimeout(() => {
                     window.location.href = this.href;
-                }, 10); // 50ms delay - adjust as needed
+                }, 5); // 50ms delay - adjust as needed
             });
         }
     } else {
