@@ -1,61 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In</title>
+  <link rel="stylesheet" href="style.css">
 
-  <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f9;
-        }
-        .sign-in-container {
-            text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        /* Google Sign-In Button Style */
-        .g-sign-in-button {
-            display: inline-flex;
-            align-items: center;
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 3px 4px rgba(0, 0, 0, 0.25);
-        }
-            .g-sign-in-button img {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            background: white;
-            padding: 5px;
-            border-radius: 3px;
-        }
-    </style>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .sign-in-container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        /* Google Sign-In Button Style */
+        .g-sign-in-button {
+            display: inline-flex;
+            align-items: center;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 3px 4px rgba(0, 0, 0, 0.25);
+        }
+            .g-sign-in-button img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            background: white;
+            padding: 5px;
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
-  <div class="sign-in-container">
-    <h1>يرجى تسجيل الدخول للمتابعة</h1>
-    <button id="signInButton" class="g-sign-in-button">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
-      Sign In with Google
-    </button>
-  </div>
+  <div class="sign-in-container">
+    <h1>يرجى تسجيل الدخول للمتابعة</h1>
+    <button id="signInButton" class="g-sign-in-button">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
+      Sign In with Google
+    </button>
+    <div id="error-message" style="color: red; display: none;"></div>
+  </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="signin.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script type="module">
+    import { auth } from './auth.js';
+
+    const signInButton = document.getElementById('signInButton');
+    signInButton.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithRedirect(provider);
+    });
+  </script>
 </body>
 </html>
