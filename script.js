@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
@@ -42,7 +42,7 @@ const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRL
 
 // Sign Out
 const signOutButton = document.getElementById('signOutButton');
-import { signOut } from 'firebase/auth';
+import { signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js';
 
 signOutButton.addEventListener('click', () => {
     signOut(auth)
