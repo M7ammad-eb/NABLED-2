@@ -201,11 +201,14 @@ function displayItems() {
 
                 // 2. Add a class for the transition
                 this.classList.add('item-clicked');
+                setTimeout(() => {
+                    this.classList.remove('item-clicked'); // Remove the class after 1 second
+                }, 500);
 
                 // 3. Navigate after a *short* delay (to allow animation to start)
                 setTimeout(() => {
                     window.location.href = this.href;
-                }, 50); // 50ms delay - adjust as needed
+                }, 10); // 50ms delay - adjust as needed
             });
         }
     } else {
