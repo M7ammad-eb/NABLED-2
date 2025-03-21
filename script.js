@@ -1,39 +1,17 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js';
-
+// Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-  apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
-  authDomain: "nab-led.firebaseapp.com",
-  projectId: "nab-led",
-  storageBucket: "nab-led.firebasestorage.app",
-  messagingSenderId: "789022171426",
-  appId: "1:789022171426:web:2d8dda594b1495be26457b",
-  measurementId: "G-W58SF16RJ6"
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    authDomain: "nab-led.firebaseapp.com",
+    projectId: "nab-led",
+    storageBucket: "nab-led.firebasestorage.app",
+    messagingSenderId: "789022171426",
+    appId: "1:789022171426:web:2d8dda594b1495be26457b",
+    measurementId: "G-W58SF16RJ6"
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// Google Sign-In
-const signInButton = document.getElementById('signInButton');
-signInButton.addEventListener('click', signInWithGoogle);
-
-function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-        .then((result) => {
-            // User signed in successfully
-            const user = result.user;
-            console.log('User signed in:', user);
-            // Redirect to the main page after successful sign-in
-            window.location.href = 'index.html';
-        })
-        .catch((error) => {
-            console.error('Sign-in error:', error);
-        });
-}
-
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
 // Data sheet
 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vnLw_DBvdkCrZaJao7EsPBJ5hHe8-v0nv724o5Qsjh19VvcB7qZW5lvYmNGm_QvclFA/pub?output=csv';
@@ -42,18 +20,18 @@ const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRL
 
 // Sign Out
 const signOutButton = document.getElementById('signOutButton');
-import { signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js';
+signOutButton.addEventListener('click', signOut);
 
-signOutButton.addEventListener('click', () => {
-    signOut(auth)
+function signOut() {
+    auth.signOut()
         .then(() => {
+            //console.log('User signed out');
             window.location.href = 'signin.html';
         })
         .catch((error) => {
-            console.error('Sign-out error:', error);
+            //console.error('Sign-out error:', error);
         });
-});
-
+}
 
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
@@ -104,9 +82,7 @@ function showInstallPromotion() {
 
 // Call loadData() and proceed
 // Check for user authentication
-import { onAuthStateChanged } from 'firebase/auth';
-
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
     if (user) {
         // User is signed in.
         signOutButton.style.display = "block";
