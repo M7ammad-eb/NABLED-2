@@ -1,4 +1,4 @@
-// Firebase configuration (same as before)
+// Firebase configuration (replace with your actual config)
 const firebaseConfig = {
   apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
   authDomain: "nab-led.firebaseapp.com",
@@ -19,20 +19,19 @@ signInButton.addEventListener('click', signInWithGoogle);
 
 function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);  // Initiates the redirect flow
+  auth.signInWithRedirect(provider);  // Use signInWithRedirect instead of signInWithPopup
 }
 
-// Handle the result of the redirect
+// Handle the redirect result after the user is redirected back
 auth.getRedirectResult().then((result) => {
   if (result.user) {
     // User signed in successfully
     const user = result.user;
     console.log('User signed in:', user);
-
-    // After successful login, redirect to main page
-    window.location.replace('index.html'); // Use replace to remove login page from history
+    // Redirect to the main page after successful sign-in
+    window.location.href = 'index.html';
   }
 }).catch((error) => {
-  // Handle errors
+  // Handle sign-in error
   console.error('Sign-in error:', error);
 });
