@@ -87,63 +87,59 @@ function getUserPermissions(permissions, userEmail) {
 function displayItem(item, visibleColumns, columnNames) {
     const itemDetailsDiv = document.getElementById('item-details');
     itemDetailsDiv.innerHTML = '';
+    itemDetailsDiv.style.position = 'relative'; // Ensure relative positioning
 
     // --- Shared Element Transition Start ---
     const transitionData = JSON.parse(sessionStorage.getItem('transition-start'));
     let startRect;
 
-    if (transitionData && transitionData.id === item[0]) { // Check ID matches
-        startRect = transitionData.imgRect;
-        sessionStorage.removeItem('transition-start'); // Clear the data
+    if (transitionData && transitionData.id === item[0]) {
+        startRect = transitionData.rect;
+        sessionStorage.removeItem('transition-start');
     }
-
 
     // Image with data-transition-id, initially hidden
     const img = document.createElement('p');
-     img.innerHTML = `<img src="${startRect ? transitionData.imageSrc : 'placeholder.png'}" alt="${item[1]}" class="product-image" data-src="${item[3]}" data-transition-id="${item[0]}" style="opacity: ${startRect ? 1 : 0};">`; // Start with correct src
+    img.innerHTML = `<img src="${startRect ? transitionData.imageSrc : 'placeholder.png'}" alt="${item[1]}" class="product-image" data-src="${item[3]}" data-transition-id="${item[0]}" style="opacity: ${startRect ? 1 : 0};">`;
     itemDetailsDiv.appendChild(img);
-     const imageElement = img.querySelector('.product-image');
-
+    const imageElement = img.querySelector('.product-image');
 
     // ... (Rest of your displayItem function - itemName, itemId, etc.) ...
     // Item Name
-    const itemName = document.createElement('p');
-    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
-    itemDetailsDiv.appendChild(itemName);
-
-    // Item ID
-    const itemId = document.createElement('p');
-    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
-    itemDetailsDiv.appendChild(itemId);
-
-    // Specifications
-    const specs = document.createElement('p');
-    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
-    itemDetailsDiv.appendChild(specs);
-
-    // Cataloge Link
-    const catalog = document.createElement('p');
-    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
-    itemDetailsDiv.appendChild(catalog);
-
-  // Prices (Corrected visibility check)
-  for (let i = 5; i < item.length; i++) {
-    if (visibleColumns[i] === 1) { // Corrected check!
-      const key = columnNames[i];
-      const value = item[i];
-      const prices = document.createElement('p');
-      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
-      itemDetailsDiv.appendChild(prices);
-    }
-  }
-
+    const itemName = document.createElement('p');
+    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
+    itemDetailsDiv.appendChild(itemName);
+    // Item ID
+    const itemId = document.createElement('p');
+    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
+    itemDetailsDiv.appendChild(itemId);
+    // Specifications
+    const specs = document.createElement('p');
+    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
+    itemDetailsDiv.appendChild(specs);
+    // Cataloge Link
+    const catalog = document.createElement('p');
+    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
+    itemDetailsDiv.appendChild(catalog);
+    // Prices (Corrected visibility check)
+    for (let i = 5; i < item.length; i++) {
+        if (visibleColumns[i] === 1) {
+            const key = columnNames[i];
+            const value = item[i];
+            const prices = document.createElement('p');
+            prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
+            itemDetailsDiv.appendChild(prices);
+        }
+    }
 
     // --- Shared Element Transition (Positioning and Animation) ---
     if (startRect) {
-         // 1. Position the image absolutely at the *start* position
+        // 1. Position the image absolutely at the *start* position
         imageElement.style.position = 'absolute';
-        imageElement.style.top = `${startRect.top}px`;
-        imageElement.style.left = `${startRect.left}px`;
+
+        const containerRect = itemDetailsDiv.getBoundingClientRect();
+        imageElement.style.top = `${startRect.top - containerRect.top}px`;
+        imageElement.style.left = `${startRect.left - containerRect.left}px`;
         imageElement.style.width = `${startRect.width}px`;
         imageElement.style.height = `${startRect.height}px`;
         imageElement.style.opacity = 1;
@@ -165,17 +161,15 @@ function displayItem(item, visibleColumns, columnNames) {
 
         //Clean up styles
         imageElement.addEventListener('transitionend', () => {
-                imageElement.style.transition = ''; // Remove the transition
-                imageElement.style.zIndex = '';    // Reset z-index
+            imageElement.style.transition = ''; // Remove the transition
+            imageElement.style.zIndex = '';    // Reset z-index
         });
     } else {
         // If no transition data, just load the image normally
         imageElement.src = imageElement.dataset.src;
         imageElement.style.opacity = 1;
-
     }
     // --- Shared Element Transition End ---
-
 }
 
 //Helper function to display offline message
