@@ -189,21 +189,20 @@ function displayItems() {
                 event.preventDefault();
 
                 const imgRect = this.querySelector('.list-image').getBoundingClientRect();
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
-                const rect = {
-                    top: imgRect.top + scrollTop,
-                    left: imgRect.left + scrollLeft,
-                    width: imgRect.width,
-                    height: imgRect.height
-                };
-
+                const scrollY = window.scrollY;
+                const scrollX = window.scrollX;
+                
                 sessionStorage.setItem('transition-start', JSON.stringify({
-                    rect: rect,
+                    rect: { 
+                        top: imgRect.top + scrollY, 
+                        left: imgRect.left + scrollX, 
+                        width: imgRect.width, 
+                        height: imgRect.height 
+                    },
                     id: this.dataset.transitionId,
                     imageSrc: itemImage
                 }));
+
 
                 this.classList.add('item-clicked');
                 setTimeout(() => {
