@@ -194,45 +194,24 @@ function displayItems() {
 document.addEventListener("DOMContentLoaded", function () {
     const itemsList = document.getElementById("items-list");
 
-    if (itemsList) {
-        itemsList.addEventListener("click", function (event) {
-            const itemDiv = event.target.closest("div");
-            if (!itemDiv) return;
+    itemsList.addEventListener("click", function (event) {
+        const link = event.target.closest("a");
+        if (!link) return;
 
-            const link = itemDiv.querySelector('a');
-            if (link) {
-                event.preventDefault();
+        event.preventDefault(); // Prevent instant navigation
 
-                const imgElement = itemDiv.querySelector('.list-image');
-                if(!imgElement) return;
-                const imgRect = imgElement.getBoundingClientRect();
-                const scrollY = window.scrollY;
-                const scrollX = window.scrollX;
-                const itemImage = imgElement.src;
+        // Store navigation state
+        sessionStorage.setItem("navigate-forward", "true");
 
-                sessionStorage.setItem('transition-start', JSON.stringify({
-                    rect: {
-                        top: imgRect.top + scrollY,
-                        left: imgRect.left + scrollX,
-                        width: imgRect.width,
-                        height: imgRect.height
-                    },
-                    id: link.dataset.transitionId,
-                    imageSrc: itemImage
-                }));
+        // Add a slide-in effect before navigating
+        document.body.classList.add("prepare-slide");
 
-                link.classList.add('item-clicked');
-                setTimeout(() => {
-                    link.classList.remove('item-clicked');
-                }, 500);
-
-                setTimeout(() => {
-                    window.location.href = link.href;
-                }, 5);
-            }
-        });
-    }
+        setTimeout(() => {
+            window.location.href = link.href;
+        }, 25); // Short delay before navigating
+    });
 });
+
 
 function getUserPermissions(permissions, userEmail) {
   if (!permissions) {
