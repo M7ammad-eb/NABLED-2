@@ -131,46 +131,39 @@ function displayItem(item, visibleColumns, columnNames) {
             itemDetailsDiv.appendChild(prices);
         }
     }
-
-    // --- Shared Element Transition (Positioning and Animation) ---
-    if (startRect) {
-        const img = new Image();
-        img.src = transitionData.imageSrc;
-        img.onload = () => {
-            // 1. Set the initial position of the image
-            imageElement.style.position = 'fixed'; // Use fixed to maintain position during scroll
-            imageElement.style.top = `${startRect.top}px`;
-            imageElement.style.left = `${startRect.left}px`;
-            imageElement.style.width = `${startRect.width}px`;
-            imageElement.style.height = `${startRect.height}px`;
-            imageElement.style.opacity = 1;
-            imageElement.style.transition = 'none'; // Temporarily disable transition
-            imageElement.style.zIndex = 1000; // Bring it to the front
-        
-            // 2. **Force a reflow to ensure styles take effect**
-            void imageElement.offsetWidth;  // Forces a reflow
-        
-            // 3. Apply the final transition to the new position
-            imageElement.style.transition = 'all 0.3s ease';
-            imageElement.style.position = 'relative'; // Move back to normal layout
-            imageElement.style.top = '0';
-            imageElement.style.left = '0';
-            imageElement.style.width = '100%';
-            imageElement.style.height = '400px';
-            imageElement.style.objectFit = 'cover';
-            imageElement.style.opacity = 1; // Fade in smoothly
-        
-            // 4. Cleanup after animation
-            imageElement.addEventListener('transitionend', () => {
-                imageElement.style.transition = ''; // Remove transition styles
-                imageElement.style.zIndex = ''; // Reset z-index
-            });
-        };
-    } else {
-        imageElement.src = imageElement.dataset.src;
-        imageElement.style.opacity = 1;
-    }
 }
+
+// slide-in & out
+document.addEventListener("DOMContentLoaded", function () {
+    // Check if we came from index.html
+    if (sessionStorage.getItem("navigate-forward") === "true") {
+        document.body.classList.add("slide-in");
+        sessionStorage.removeItem("navigate-forward"); // Clear flag
+    }
+
+    // Handle Back Button (Slide Out)
+    window.addEventListener("popstate", function () {
+        document.body.classList.add("slide-out");
+
+        setTimeout(() => {
+            history.back(); // Navigate back after animation
+        }, 300); // Match animation duration
+    });
+
+    // Handle Back Button via Custom Button (if exists)
+    const backButton = document.getElementById("back-button");
+    if (backButton) {
+        backButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            document.body.classList.add("slide-out");
+
+            setTimeout(() => {
+                window.history.back();
+            }, 300);
+        });
+    }
+});
+
 
 //Helper function to display offline message
 function displayOfflineMessage() {
