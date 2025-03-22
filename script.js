@@ -151,6 +151,7 @@ function parseCSV(csvText) {
 
 // Display items (using localStorage data) with transition and image
 function displayItems() {
+    function displayItems() {
     const itemsList = document.getElementById('items-list');
     itemsList.innerHTML = ''; // Clear previous items
 
@@ -177,46 +178,50 @@ function displayItems() {
             const itemImage = item[3]; // Get the image URL
 
             const itemDiv = document.createElement('div');
-            // Use data-transition-id to link elements
             itemDiv.innerHTML = `
                 <a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}" data-transition-id="${itemId}">
                     <div class="item-code">${itemId}</div>
                     <div class="item-description">${itemName}</div>
-                     <img src="${itemImage}" alt="${itemName}" class="list-image" style="width: 30px; height: 30px; object-fit: cover; margin-right: 10px;">
-
+                    <img src="${itemImage}" alt="${itemName}" class="list-image" style="width: 30px; height: 30px; object-fit: cover; margin-right: 10px;">
                 </a>`;
             itemsList.appendChild(itemDiv);
 
-            // Capture click event *on the link itself*
             itemDiv.querySelector('a').addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default navigation *for now*
+                event.preventDefault();
 
-                // 1. Store the clicked element's bounding rect
                 const imgRect = this.querySelector('.list-image').getBoundingClientRect();
-                console.log(imgRect)
-                const rect = this.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+                const rect = {
+                    top: imgRect.top + scrollTop,
+                    left: imgRect.left + scrollLeft,
+                    width: imgRect.width,
+                    height: imgRect.height
+                };
+
                 sessionStorage.setItem('transition-start', JSON.stringify({
-                    rect: imgRect,
+                    rect: rect,
                     id: this.dataset.transitionId,
-                    imageSrc: itemImage // Store the image URL
+                    imageSrc: itemImage
                 }));
 
-                // 2. Add a class for the transition
                 this.classList.add('item-clicked');
                 setTimeout(() => {
-                    this.classList.remove('item-clicked'); // Remove the class after 1 second
+                    this.classList.remove('item-clicked');
                 }, 500);
 
-                // 3. Navigate after a *short* delay (to allow animation to start)
                 setTimeout(() => {
                     window.location.href = this.href;
-                }, 5); // 50ms delay - adjust as needed
+                }, 5);
             });
         }
     } else {
         itemsList.innerHTML = '<p>Error: Item data not found. Please refresh.</p>';
     }
 }
+
+
 
 function getUserPermissions(permissions, userEmail) {
   if (!permissions) {
