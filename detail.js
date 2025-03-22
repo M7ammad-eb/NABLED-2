@@ -131,7 +131,7 @@ function displayItem(item, visibleColumns, columnNames) {
 }
 
 // slide-in & out
-/*document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
     function slideIn() {
         document.body.classList.remove("slide-out");
         document.body.classList.add("slide-in");
@@ -188,7 +188,7 @@ function displayItem(item, visibleColumns, columnNames) {
             }, 300);
         });
     }
-});*/
+});
 
 
 
