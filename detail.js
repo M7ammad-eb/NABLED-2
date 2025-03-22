@@ -132,7 +132,7 @@ function displayItem(item, visibleColumns, columnNames) {
 
 // slide-in & out
 document.addEventListener("DOMContentLoaded", function () {
-    // Check if we came from index.html (or any other condition that sets this flag)
+    // Check if we came from index.html
     if (sessionStorage.getItem("navigate-forward") === "true") {
         document.body.classList.add("slide-in");
         sessionStorage.removeItem("navigate-forward"); // Clear flag
@@ -140,36 +140,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Handle Back Button (Slide Out)
     window.addEventListener("popstate", function () {
+        // Trigger the slide-out animation
         document.body.classList.add("slide-out");
 
+        // After the slide-out animation, go back in history
         setTimeout(() => {
             history.back(); // Navigate back after animation
-        }, 300); // Match animation duration
+        }, 300); // Adjust this duration to match the animation
     });
 
-    // Track navigation forward to manipulate history state
-    history.pushState(null, null, location.href); // Create a new history state
-    window.onpopstate = function () {
-        document.body.classList.add("slide-out");
-        setTimeout(() => {
-            history.go(1); // Go forward again after slide-out animation
-        }, 300); // Match animation duration
-    };
+    // Push state to ensure popstate is triggered when the user navigates forward
+    if (window.history.state === null) {
+        history.pushState({}, document.title, location.href);
+    }
 
     // Handle Back Button via Custom Button (if exists)
     const backButton = document.getElementById("back-button");
     if (backButton) {
         backButton.addEventListener("click", function (event) {
             event.preventDefault();
+
+            // Trigger the slide-out animation
             document.body.classList.add("slide-out");
 
+            // After the animation, go back in history
             setTimeout(() => {
                 window.history.back();
             }, 300);
         });
     }
 });
-
 
 
 //Helper function to display offline message
