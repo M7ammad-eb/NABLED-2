@@ -44,41 +44,6 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-/*
-// Install Prompt (add this after the service worker registration)
-let deferredPrompt; // Store the install prompt
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI to notify the user they can add to home screen
-    showInstallPromotion(); // Call a function to display your custom prompt
-});
-
-function showInstallPromotion() {
-    const installContainer = document.getElementById('install-container');
-    const installButton = document.getElementById('installButton');
-
-    // Show the install container
-    installContainer.style.display = 'block';
-
-    installButton.addEventListener('click', (e) => {
-        deferredPrompt.prompt();
-
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                //console.log('User accepted the A2HS prompt');
-                installContainer.style.display = 'none'; // Hide after installation
-            } else {
-                //console.log('User dismissed the A2HS prompt');
-            }
-            deferredPrompt = null;
-        });
-    });
-}
-*/
 
 // Call loadData() and proceed
 // Check for user authentication
@@ -190,28 +155,6 @@ function displayItems() {
     }
 }
 
-// animation when clicking
-document.addEventListener("DOMContentLoaded", function () {
-    const itemsList = document.getElementById("items-list");
-
-    itemsList.addEventListener("click", function (event) {
-        const link = event.target.closest("a");
-        if (!link) return;
-
-        event.preventDefault(); // Prevent instant navigation
-
-        // Store navigation state
-        sessionStorage.setItem("navigate-forward", "true");
-
-        // Add a slide-in effect before navigating
-        document.body.classList.add("prepare-slide");
-
-        setTimeout(() => {
-            window.location.href = link.href;
-        }, 25); // Short delay before navigating
-    });
-});
-
 
 function getUserPermissions(permissions, userEmail) {
   if (!permissions) {
@@ -281,36 +224,16 @@ async function loadData() {
     return { dataRows, permissionRows };
 }
 
-// Function to force load data (refresh button)
-async function forceLoadData() {
-    //console.log("Fetching new data...");
-    try {
-        const [dataResponse, permissionsResponse] = await Promise.all([
-            fetch(sheetUrl).then(res => res.text()),
-            fetch(permissionsSheetUrl).then(res => res.text())
-        ]);
-        dataRows = parseCSV(dataResponse);
-        permissionRows = parseCSV(permissionsResponse);
-        cacheData("dataSheet", dataRows);
-    } catch (error) {
-        //console.error("Error fetching data:", error);
-    }
-    return { dataRows, permissionRows };
-}
-
 // Refresh Button
 document.querySelector(".refresh-button").addEventListener("click", async function() {
-    //let icon = this.querySelector("svg");
-    //icon.classList.add("rotate");
-    const user = auth.currentUser;
-    if (!user) {
-        //console.error("No authenticated user found.");
-        window.location.href = "signin.html";
-        return;
-    }
-    const { dataRows, permissionRows } = await forceLoadData();
-    displayItems(dataRows, permissionRows, user.email);
-    setupSearch(dataRows); // Refresh the search with new data
+    // Clear localStorage
+    localStorage.removeItem('dataSheet');
+    localStorage.removeItem('permissionRows');
+
+    // Optionally, redisplay items (which will now fetch fresh data)
+    await loadDataIntoLocalStorage(); // Make sure new data is loaded
+    displayItems();
+    setupSearch();
 });
 
 // Search functionality (now using localStorage data)
