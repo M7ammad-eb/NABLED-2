@@ -85,52 +85,49 @@ function getUserPermissions(permissions, userEmail) {
 
 // add transition
 function displayItem(item, visibleColumns, columnNames) {
-    const itemDetailsDiv = document.getElementById('item-details');
-    itemDetailsDiv.innerHTML = '';
-    itemDetailsDiv.style.position = 'relative'; // Ensure relative positioning
+  const itemDetailsDiv = document.getElementById('item-details');
+  itemDetailsDiv.innerHTML = '';
 
-    // --- Shared Element Transition Start ---
-    const transitionData = JSON.parse(sessionStorage.getItem('transition-start'));
-    let startRect;
+  // Image (Placeholder initially, will be dynamically loaded)
+  const img = document.createElement('p');
+  img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`;
+  itemDetailsDiv.appendChild(img);
 
-    if (transitionData && transitionData.id === item[0]) {
-        startRect = transitionData.rect;
-        sessionStorage.removeItem('transition-start');
+ // Item Name
+    const itemName = document.createElement('p');
+    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
+    itemDetailsDiv.appendChild(itemName);
+
+    // Item ID
+    const itemId = document.createElement('p');
+    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
+    itemDetailsDiv.appendChild(itemId);
+
+    // Specifications
+    const specs = document.createElement('p');
+    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
+    itemDetailsDiv.appendChild(specs);
+
+    // Cataloge Link
+    const catalog = document.createElement('p');
+    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
+    itemDetailsDiv.appendChild(catalog);
+
+  // Prices (Corrected visibility check)
+  for (let i = 5; i < item.length; i++) {
+    if (visibleColumns[i] === 1) { // Corrected check!
+      const key = columnNames[i];
+      const value = item[i];
+      const prices = document.createElement('p');
+      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
+      itemDetailsDiv.appendChild(prices);
     }
+  }
 
-    // Image with data-transition-id, initially hidden
-    const img = document.createElement('p');
-    img.innerHTML = `<img src="${startRect ? transitionData.imageSrc : 'placeholder.png'}" alt="${item[1]}" class="product-image" data-src="${item[3]}" data-transition-id="${item[0]}" style="opacity: ${startRect ? 1 : 0};">`;
-    itemDetailsDiv.appendChild(img);
-    const imageElement = img.querySelector('.product-image');
+  // Lazy-load the real image (after everything else is displayed)
+  const realImage = itemDetailsDiv.querySelector('.product-image');
+    realImage.src = realImage.dataset.src; // Set the src from data-src
 
-    // ... (Rest of your displayItem function - itemName, itemId, etc.) ...
-    // Item Name
-    const itemName = document.createElement('p');
-    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
-    itemDetailsDiv.appendChild(itemName);
-    // Item ID
-    const itemId = document.createElement('p');
-    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
-    itemDetailsDiv.appendChild(itemId);
-    // Specifications
-    const specs = document.createElement('p');
-    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
-    itemDetailsDiv.appendChild(specs);
-    // Cataloge Link
-    const catalog = document.createElement('p');
-    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
-    itemDetailsDiv.appendChild(catalog);
-    // Prices (Corrected visibility check)
-    for (let i = 5; i < item.length; i++) {
-        if (visibleColumns[i] === 1) {
-            const key = columnNames[i];
-            const value = item[i];
-            const prices = document.createElement('p');
-            prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
-            itemDetailsDiv.appendChild(prices);
-        }
-    }
 }
 
 // slide-in & out
