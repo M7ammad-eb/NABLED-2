@@ -132,7 +132,7 @@ function displayItem(item, visibleColumns, columnNames) {
 
 // slide-in & out
 document.addEventListener("DOMContentLoaded", function () {
-    // Check if we came from index.html
+    // Check if we came from index.html (or any other condition that sets this flag)
     if (sessionStorage.getItem("navigate-forward") === "true") {
         document.body.classList.add("slide-in");
         sessionStorage.removeItem("navigate-forward"); // Clear flag
@@ -147,6 +147,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 300); // Match animation duration
     });
 
+    // Track navigation forward to manipulate history state
+    history.pushState(null, null, location.href); // Create a new history state
+    window.onpopstate = function () {
+        document.body.classList.add("slide-out");
+        setTimeout(() => {
+            history.go(1); // Go forward again after slide-out animation
+        }, 300); // Match animation duration
+    };
+
     // Handle Back Button via Custom Button (if exists)
     const backButton = document.getElementById("back-button");
     if (backButton) {
@@ -160,6 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
 
 
 //Helper function to display offline message
