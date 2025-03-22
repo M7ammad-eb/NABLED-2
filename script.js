@@ -190,7 +190,10 @@ function displayItems() {
     }
 }
 
+// animation when clicking
 document.addEventListener("DOMContentLoaded", function () {
+    const itemsList = document.getElementById("items-list");
+    
     itemDiv.querySelector('a').addEventListener('click', function(event) {
         event.preventDefault();
     
@@ -219,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = this.href;
         }, 5);
     });
-}
+});
 
 function getUserPermissions(permissions, userEmail) {
   if (!permissions) {
