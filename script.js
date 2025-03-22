@@ -193,37 +193,45 @@ function displayItems() {
 // animation when clicking
 document.addEventListener("DOMContentLoaded", function () {
     const itemsList = document.getElementById("items-list");
-    const itemDiv = event.target.closest("div");
-    if (!itemDiv) return;
-    
-    itemDiv.querySelector('a').addEventListener('click', function(event) {        
-        event.preventDefault();
-    
-        const imgRect = this.querySelector('.list-image').getBoundingClientRect();
-        const scrollY = window.scrollY;
-        const scrollX = window.scrollX;
-        
-        sessionStorage.setItem('transition-start', JSON.stringify({
-            rect: { 
-                top: imgRect.top + scrollY, 
-                left: imgRect.left + scrollX, 
-                width: imgRect.width, 
-                height: imgRect.height 
-            },
-            id: this.dataset.transitionId,
-            imageSrc: itemImage
-        }));
-    
-    
-        this.classList.add('item-clicked');
-        setTimeout(() => {
-            this.classList.remove('item-clicked');
-        }, 500);
-    
-        setTimeout(() => {
-            window.location.href = this.href;
-        }, 5);
-    });
+
+    if (itemsList) {
+        itemsList.addEventListener("click", function (event) {
+            const itemDiv = event.target.closest("div");
+            if (!itemDiv) return;
+
+            const link = itemDiv.querySelector('a');
+            if (link) {
+                event.preventDefault();
+
+                const imgElement = itemDiv.querySelector('.list-image');
+                if(!imgElement) return;
+                const imgRect = imgElement.getBoundingClientRect();
+                const scrollY = window.scrollY;
+                const scrollX = window.scrollX;
+                const itemImage = imgElement.src;
+
+                sessionStorage.setItem('transition-start', JSON.stringify({
+                    rect: {
+                        top: imgRect.top + scrollY,
+                        left: imgRect.left + scrollX,
+                        width: imgRect.width,
+                        height: imgRect.height
+                    },
+                    id: link.dataset.transitionId,
+                    imageSrc: itemImage
+                }));
+
+                link.classList.add('item-clicked');
+                setTimeout(() => {
+                    link.classList.remove('item-clicked');
+                }, 500);
+
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 5);
+            }
+        });
+    }
 });
 
 function getUserPermissions(permissions, userEmail) {
