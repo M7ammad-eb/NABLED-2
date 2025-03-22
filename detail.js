@@ -120,17 +120,17 @@ function displayItem(item, visibleColumns, columnNames) {
   itemDetailsDiv.appendChild(catalog);
 
 
-  // Prices (Corrected visibility check and handle undefined values)
+  // Prices (Corrected visibility check)
   for (let i = 5; i < item.length; i++) {
-    if (visibleColumns[i] === 1) {
-      const key = columnNames[i] || ""; // Handle undefined column name
-      const value = item[i] || "";     // Handle undefined item value
+    if (visibleColumns[i] === 1) { // Corrected check!
+      const key = columnNames[i];
+      const value = item[i];
       const prices = document.createElement('p');
-      // Added currency symbol styling.  Good to have it as a separate span.
-      prices.innerHTML = `${key}<br><strong>${value}</strong> <span class="currency-symbol"><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" alt="SAR"></span><br>`;
+      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
       itemDetailsDiv.appendChild(prices);
     }
   }
+
 
   // Lazy-load the real image (after everything else is displayed)
   //  Use an Image() object for preloading and error handling
