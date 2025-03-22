@@ -151,7 +151,6 @@ function parseCSV(csvText) {
 
 // Display items (using localStorage data) with transition and image
 function displayItems() {
-    function displayItems() {
     const itemsList = document.getElementById('items-list');
     itemsList.innerHTML = ''; // Clear previous items
 
