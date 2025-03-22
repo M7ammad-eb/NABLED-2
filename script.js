@@ -114,7 +114,7 @@ function parseCSV(csvText) {
     return Papa.parse(csvText, { header: false }).data;
 }
 
-// Display items (using localStorage data) with transition and image
+// Display items (using localStorage data) with transition, image, and placeholder
 function displayItems() {
     const itemsList = document.getElementById('items-list');
     itemsList.innerHTML = ''; // Clear previous items
@@ -142,12 +142,16 @@ function displayItems() {
             const itemImage = item[3]; // Get the image URL
 
             const itemDiv = document.createElement('div');
+
+            // Use a ternary operator to check if itemImage is valid
+            const imageSrc = itemImage && itemImage.trim() !== "" ? itemImage : "placeholder.png";
+
             itemDiv.innerHTML = `
                 <a href="detail.html?id=${itemId}" class="item-row" data-item-id="${itemId}" data-transition-id="${itemId}">
                     <div class="item-code">${itemId}</div>
                     <div class="item-description">${itemName}</div>
-                    <img src="${itemImage}" alt="${itemName}" class="list-image" style="width: 30px; height: 30px; object-fit: cover; margin-right: 10px;">
-                </a>`;
+                    <img src="${imageSrc}" alt="${itemName}" class="list-image" style="width: 30px; height: 30px; object-fit: cover; margin-right: 10px;">
+                </a>`;  // Use imageSrc here
             itemsList.appendChild(itemDiv);
         }
     } else {
