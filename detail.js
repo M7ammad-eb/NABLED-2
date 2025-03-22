@@ -134,42 +134,38 @@ function displayItem(item, visibleColumns, columnNames) {
 
     // --- Shared Element Transition (Positioning and Animation) ---
     if (startRect) {
-        // 1. Position the image absolutely at the *start* position
-        imageElement.style.position = 'relative';
+        const img = new Image();
+        img.src = transitionData.imageSrc;
+        img.onload = () => {
+            imageElement.style.position = 'absolute';
+            imageElement.style.top = `${startRect.top}px`;
+            imageElement.style.left = `${startRect.left}px`;
+            imageElement.style.width = `${startRect.width}px`;
+            imageElement.style.height = `${startRect.height}px`;
+            imageElement.style.opacity = 1;
+            imageElement.style.transition = 'none';
+            imageElement.style.zIndex = 1000;
 
-        const containerRect = itemDetailsDiv.getBoundingClientRect();
-        imageElement.style.top = `${startRect.top + containerRect.top}px`;
-        imageElement.style.left = `${startRect.left + containerRect.left}px`;
-        imageElement.style.width = `${startRect.width}px`;
-        imageElement.style.height = `${startRect.height}px`;
-        imageElement.style.opacity = 1;
-        imageElement.style.transition = 'none'; // Disable transitions *initially*
-        imageElement.style.zIndex = 1000;     // Ensure it's on top
+            void imageElement.offsetWidth;
 
-        // 2. Force a reflow (necessary for the transition to work)
-        void imageElement.offsetWidth;
+            imageElement.style.transition = 'all 0.3s ease';
+            imageElement.style.position = 'relative';
+            imageElement.style.top = '0';
+            imageElement.style.left = '0';
+            imageElement.style.width = '100%';
+            imageElement.style.height = '33%';
+            imageElement.style.objectFit = 'cover';
+            imageElement.style.opacity = 1;
 
-        // 3. Set the final position/size (relative to its parent) and animate
-        imageElement.style.transition = 'all 0.3s ease'; // Enable transitions
-        imageElement.style.position = 'relative'; // Back to normal positioning
-        imageElement.style.top = '0';
-        imageElement.style.left = '0';
-        imageElement.style.width = '100%'; // Or whatever your final size should be
-        imageElement.style.height = '33%';
-        imageElement.style.objectFit = 'cover';
-        imageElement.style.opacity = 1; // Fade in
-
-        //Clean up styles
-        imageElement.addEventListener('transitionend', () => {
-            imageElement.style.transition = ''; // Remove the transition
-            imageElement.style.zIndex = '';    // Reset z-index
-        });
+            imageElement.addEventListener('transitionend', () => {
+                imageElement.style.transition = '';
+                imageElement.style.zIndex = '';
+            });
+        };
     } else {
-        // If no transition data, just load the image normally
         imageElement.src = imageElement.dataset.src;
         imageElement.style.opacity = 1;
     }
-    // --- Shared Element Transition End ---
 }
 
 //Helper function to display offline message
