@@ -193,6 +193,7 @@ function displayItems() {
 // animation when clicking
 document.addEventListener("DOMContentLoaded", function () {
     const itemsList = document.getElementById("items-list");
+    const itemDiv = event.target.closest("div");
     
     itemDiv.querySelector('a').addEventListener('click', function(event) {
         event.preventDefault();
