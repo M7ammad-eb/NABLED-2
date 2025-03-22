@@ -135,11 +135,11 @@ function displayItem(item, visibleColumns, columnNames) {
     // --- Shared Element Transition (Positioning and Animation) ---
     if (startRect) {
         // 1. Position the image absolutely at the *start* position
-        imageElement.style.position = 'absolute';
+        imageElement.style.position = 'relative';
 
         const containerRect = itemDetailsDiv.getBoundingClientRect();
-        imageElement.style.top = `${startRect.top}px`;
-        imageElement.style.right = `${startRect.left}px`;
+        imageElement.style.top = `${startRect.top + containerRect.top}px`;
+        imageElement.style.left = `${startRect.left + containerRect.left}px`;
         imageElement.style.width = `${startRect.width}px`;
         imageElement.style.height = `${startRect.height}px`;
         imageElement.style.opacity = 1;
