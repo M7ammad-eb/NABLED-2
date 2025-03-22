@@ -132,40 +132,58 @@ function displayItem(item, visibleColumns, columnNames) {
 
 // slide-in & out
 document.addEventListener("DOMContentLoaded", function () {
-    // Check if we came from index.html
-    if (sessionStorage.getItem("navigate-forward") === "true") {
+    // Function to apply slide-in
+    function slideIn() {
+        document.body.classList.remove("slide-out"); // Remove slide-out first
         document.body.classList.add("slide-in");
-        sessionStorage.removeItem("navigate-forward"); // Clear flag
+        setTimeout(() => { //Remove slide-in class, once it has been completed
+            document.body.classList.remove("slide-in");
+        }, 300); //match time with CSS
+
     }
 
-    // Handle Back Button (Slide Out)
-    window.addEventListener("popstate", function () {
-        // Trigger the slide-out animation
+    // Function to apply slide-out
+    function slideOut() {
         document.body.classList.add("slide-out");
+    }
+    
+    //Push state on initial page load
+    if (window.history.state === null) {
+        history.pushState({ initialLoad: true }, document.title, location.href);
+    }
 
-        // Optionally, you might want to remove the slide-out class after the animation completes
-        // to reset the state for future navigations. This depends on your CSS implementation.
-        // Example:
-        // setTimeout(() => {
-        //     document.body.classList.remove("slide-out");
-        // }, 300); // Adjust duration to match animation
+    // Check if we came from index.html using a better approach (pageshow)
+    window.addEventListener("pageshow", function(event) {
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            // Page was loaded from cache (back/forward navigation)
+            slideIn(); // Apply slide-in
+        } else if (sessionStorage.getItem("navigate-forward") === "true")
+        {
+           slideIn();
+           sessionStorage.removeItem("navigate-forward"); // Clear flag
+        }
     });
 
-    // Push state to ensure popstate is triggered when the user navigates forward
-    if (window.history.state === null) {
-        history.pushState({}, document.title, location.href);
-    }
+    // Handle Back Button (Slide Out)
+    window.addEventListener("popstate", function (event) {
+        if (event.state && event.state.initialLoad){
+             //if initial load, ignore this event
+            return;
+        }
+        slideOut();
 
-    // Handle Back Button via Custom Button (if exists)
+        // After slide-out animation, we need to actually go back.
+        setTimeout(() => {
+            history.back();
+        }, 300); // Match this duration with your CSS animation
+    });
+
+    // Handle Back Button via Custom Button (if exists) -  This part is correct, keep it as is
     const backButton = document.getElementById("back-button");
     if (backButton) {
         backButton.addEventListener("click", function (event) {
             event.preventDefault();
-
-            // Trigger the slide-out animation
-            document.body.classList.add("slide-out");
-
-            // After the animation, go back in history
+            slideOut();
             setTimeout(() => {
                 window.history.back();
             }, 300);
