@@ -143,10 +143,12 @@ document.addEventListener("DOMContentLoaded", function () {
         // Trigger the slide-out animation
         document.body.classList.add("slide-out");
 
-        // After the slide-out animation, go back in history
-        setTimeout(() => {
-            history.back(); // Navigate back after animation
-        }, 300); // Adjust this duration to match the animation
+        // Optionally, you might want to remove the slide-out class after the animation completes
+        // to reset the state for future navigations. This depends on your CSS implementation.
+        // Example:
+        // setTimeout(() => {
+        //     document.body.classList.remove("slide-out");
+        // }, 300); // Adjust duration to match animation
     });
 
     // Push state to ensure popstate is triggered when the user navigates forward
