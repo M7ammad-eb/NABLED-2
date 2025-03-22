@@ -184,42 +184,42 @@ function displayItems() {
                     <img src="${itemImage}" alt="${itemName}" class="list-image" style="width: 30px; height: 30px; object-fit: cover; margin-right: 10px;">
                 </a>`;
             itemsList.appendChild(itemDiv);
-
-            itemDiv.querySelector('a').addEventListener('click', function(event) {
-                event.preventDefault();
-
-                const imgRect = this.querySelector('.list-image').getBoundingClientRect();
-                const scrollY = window.scrollY;
-                const scrollX = window.scrollX;
-                
-                sessionStorage.setItem('transition-start', JSON.stringify({
-                    rect: { 
-                        top: imgRect.top + scrollY, 
-                        left: imgRect.left + scrollX, 
-                        width: imgRect.width, 
-                        height: imgRect.height 
-                    },
-                    id: this.dataset.transitionId,
-                    imageSrc: itemImage
-                }));
-
-
-                this.classList.add('item-clicked');
-                setTimeout(() => {
-                    this.classList.remove('item-clicked');
-                }, 500);
-
-                setTimeout(() => {
-                    window.location.href = this.href;
-                }, 5);
-            });
         }
     } else {
         itemsList.innerHTML = '<p>Error: Item data not found. Please refresh.</p>';
     }
 }
 
-
+document.addEventListener("DOMContentLoaded", function () {
+    itemDiv.querySelector('a').addEventListener('click', function(event) {
+        event.preventDefault();
+    
+        const imgRect = this.querySelector('.list-image').getBoundingClientRect();
+        const scrollY = window.scrollY;
+        const scrollX = window.scrollX;
+        
+        sessionStorage.setItem('transition-start', JSON.stringify({
+            rect: { 
+                top: imgRect.top + scrollY, 
+                left: imgRect.left + scrollX, 
+                width: imgRect.width, 
+                height: imgRect.height 
+            },
+            id: this.dataset.transitionId,
+            imageSrc: itemImage
+        }));
+    
+    
+        this.classList.add('item-clicked');
+        setTimeout(() => {
+            this.classList.remove('item-clicked');
+        }, 500);
+    
+        setTimeout(() => {
+            window.location.href = this.href;
+        }, 5);
+    });
+}
 
 function getUserPermissions(permissions, userEmail) {
   if (!permissions) {
