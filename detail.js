@@ -132,44 +132,53 @@ function displayItem(item, visibleColumns, columnNames) {
 
 // slide-in & out
 document.addEventListener("DOMContentLoaded", function () {
+    // Function to apply slide-in
     function slideIn() {
-        document.body.classList.remove("slide-out");
+        document.body.classList.remove("slide-out"); // Remove slide-out first
         document.body.classList.add("slide-in");
-        setTimeout(() => {
+        setTimeout(() => { //Remove slide-in class, once it has been completed
             document.body.classList.remove("slide-in");
-        }, 300);
+        }, 300); //match time with CSS
+
     }
 
+    // Function to apply slide-out
     function slideOut() {
         document.body.classList.add("slide-out");
     }
-
+    
+    //Push state on initial page load
     if (window.history.state === null) {
-        history.replaceState({ initialLoad: true }, document.title, location.href);
+        history.pushState({ initialLoad: true }, document.title, location.href);
     }
 
-    window.addEventListener("pageshow", function (event) {
+    // Check if we came from index.html using a better approach (pageshow)
+    window.addEventListener("pageshow", function(event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            slideIn();
-        } else if (sessionStorage.getItem("navigate-forward") === "true") {
-            slideIn();
-            sessionStorage.removeItem("navigate-forward");
+            // Page was loaded from cache (back/forward navigation)
+            slideIn(); // Apply slide-in
+        } else if (sessionStorage.getItem("navigate-forward") === "true")
+        {
+           slideIn();
+           sessionStorage.removeItem("navigate-forward"); // Clear flag
         }
     });
 
-    let isNavigatingBack = false; // Prevent multiple back calls
-
+    // Handle Back Button (Slide Out)
     window.addEventListener("popstate", function (event) {
-        if (isNavigatingBack || (event.state && event.state.initialLoad)) {
+        if (event.state && event.state.initialLoad){
+             //if initial load, ignore this event
             return;
         }
-        isNavigatingBack = true; // Prevent multiple executions
         slideOut();
+
+        // After slide-out animation, we need to actually go back.
         setTimeout(() => {
             history.back();
-        }, 300);
+        }, 300); // Match this duration with your CSS animation
     });
 
+    // Handle Back Button via Custom Button (if exists) -  This part is correct, keep it as is
     const backButton = document.getElementById("back-button");
     if (backButton) {
         backButton.addEventListener("click", function (event) {
@@ -181,7 +190,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
 
 
 //Helper function to display offline message
