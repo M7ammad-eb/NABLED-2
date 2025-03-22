@@ -6,7 +6,7 @@ body {
     color: #333;
     line-height: 1.6;
     overscroll-behavior-y: contain; /* Disable vertical overscroll */
-    overflow: visible !important;
+    /*overflow: visible !important;*/
     pointer-events: auto !important;
 }
 
