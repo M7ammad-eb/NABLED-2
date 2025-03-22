@@ -6,6 +6,45 @@ body {
     color: #333;
     line-height: 1.6;
     overscroll-behavior-y: contain; /* Disable vertical overscroll */
+    overflow: hidden; /* Hide pages initially to avoid flash */
+}
+
+/* Slide In from Right */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0.8;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Slide Out to Right */
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Apply Animation Classes */
+.slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.slide-out {
+    animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Prepare Slide-In Before Navigation */
+.prepare-slide {
+    opacity: 0;
 }
 
 #item-details {
