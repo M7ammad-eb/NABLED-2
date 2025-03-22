@@ -132,76 +132,56 @@ function displayItem(item, visibleColumns, columnNames) {
 
 // slide-in & out
 document.addEventListener("DOMContentLoaded", function () {
-    // Function to apply slide-in
     function slideIn() {
-        document.body.classList.remove("slide-out"); // Remove slide-out first
+        document.body.classList.remove("slide-out");
         document.body.classList.add("slide-in");
         setTimeout(() => {
             document.body.classList.remove("slide-in");
-        }, 300); // Match time with CSS
+        }, 300);
     }
 
-    // Function to apply slide-out
     function slideOut() {
         document.body.classList.add("slide-out");
     }
 
-    // Push state on initial page load (Correct)
     if (window.history.state === null) {
-        history.pushState({ initialLoad: true }, document.title, location.href);
+        history.replaceState({ initialLoad: true }, document.title, location.href);
     }
 
-    // Check if we came from index.html or back/forward navigation (Correct)
     window.addEventListener("pageshow", function (event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            // Page was loaded from cache (back/forward navigation)
-            slideIn(); // Apply slide-in
+            slideIn();
         } else if (sessionStorage.getItem("navigate-forward") === "true") {
             slideIn();
-            sessionStorage.removeItem("navigate-forward"); // Clear flag
+            sessionStorage.removeItem("navigate-forward");
         }
     });
 
-    // Handle Back Button (Slide Out) - CORRECTED
+    let isNavigatingBack = false; // Prevent multiple back calls
+
     window.addEventListener("popstate", function (event) {
-        if (event.state && event.state.initialLoad) {
-            // If initial load, ignore this event
+        if (isNavigatingBack || (event.state && event.state.initialLoad)) {
             return;
         }
-        slideOut(); // Start the slide-out animation
-
-        // NO MORE history.back() HERE!  popstate handles it.
+        isNavigatingBack = true; // Prevent multiple executions
+        slideOut();
+        setTimeout(() => {
+            history.back();
+        }, 300);
     });
 
-    // Handle Back Button via Custom Button (if exists) - CORRECTED
     const backButton = document.getElementById("back-button");
     if (backButton) {
         backButton.addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent default link behavior
-            slideOut(); // Start the slide-out animation
-
-            // NO MORE history.back() HERE!  We'll simulate popstate.
-            window.history.back(); //go one step back
-        });
-    }
-
-    //Simulate links click to other pages inside this page
-    document.querySelectorAll('a:not(#back-button)').forEach(anchor => { //Select all anchor links except the back button
-        anchor.addEventListener('click', function (event) {
-            event.preventDefault(); // Prevent the default link behavior
-            const href = this.getAttribute('href'); // Get the link's href
-
-            //set a flag in the session storage
-            sessionStorage.setItem("navigate-forward", "true");
-
-            slideOut(); //animation
-            //After animation
+            event.preventDefault();
+            slideOut();
             setTimeout(() => {
-                window.location.href = href;  //Navigate
+                window.history.back();
             }, 300);
         });
-    });
+    }
 });
+
 
 
 //Helper function to display offline message
