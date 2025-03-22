@@ -136,59 +136,71 @@ document.addEventListener("DOMContentLoaded", function () {
     function slideIn() {
         document.body.classList.remove("slide-out"); // Remove slide-out first
         document.body.classList.add("slide-in");
-        setTimeout(() => { //Remove slide-in class, once it has been completed
+        setTimeout(() => {
             document.body.classList.remove("slide-in");
-        }, 300); //match time with CSS
-
+        }, 300); // Match time with CSS
     }
 
     // Function to apply slide-out
     function slideOut() {
         document.body.classList.add("slide-out");
     }
-    
-    //Push state on initial page load
+
+    // Push state on initial page load (Correct)
     if (window.history.state === null) {
         history.pushState({ initialLoad: true }, document.title, location.href);
     }
 
-    // Check if we came from index.html using a better approach (pageshow)
-    window.addEventListener("pageshow", function(event) {
+    // Check if we came from index.html or back/forward navigation (Correct)
+    window.addEventListener("pageshow", function (event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             // Page was loaded from cache (back/forward navigation)
             slideIn(); // Apply slide-in
-        } else if (sessionStorage.getItem("navigate-forward") === "true")
-        {
-           slideIn();
-           sessionStorage.removeItem("navigate-forward"); // Clear flag
+        } else if (sessionStorage.getItem("navigate-forward") === "true") {
+            slideIn();
+            sessionStorage.removeItem("navigate-forward"); // Clear flag
         }
     });
 
-    // Handle Back Button (Slide Out)
+    // Handle Back Button (Slide Out) - CORRECTED
     window.addEventListener("popstate", function (event) {
-        if (event.state && event.state.initialLoad){
-             //if initial load, ignore this event
+        if (event.state && event.state.initialLoad) {
+            // If initial load, ignore this event
             return;
         }
-        slideOut();
+        slideOut(); // Start the slide-out animation
 
-        // After slide-out animation, we need to actually go back.
-        setTimeout(() => {
-            history.back();
-        }, 300); // Match this duration with your CSS animation
+        // NO MORE history.back() HERE!  popstate handles it.
     });
 
-    // Handle Back Button via Custom Button (if exists) -  This part is correct, keep it as is
+    // Handle Back Button via Custom Button (if exists) - CORRECTED
     const backButton = document.getElementById("back-button");
     if (backButton) {
         backButton.addEventListener("click", function (event) {
-            event.preventDefault();
-            slideOut();
-            setTimeout(() => {
-                window.history.back();
-            }, 300);
+            event.preventDefault(); // Prevent default link behavior
+            slideOut(); // Start the slide-out animation
+
+            // NO MORE history.back() HERE!  We'll simulate popstate.
+            window.history.back(); //go one step back
         });
     }
+
+    //Simulate links click to other pages inside this page
+    document.querySelectorAll('a:not(#back-button)').forEach(anchor => { //Select all anchor links except the back button
+        anchor.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default link behavior
+            const href = this.getAttribute('href'); // Get the link's href
+
+            //set a flag in the session storage
+            sessionStorage.setItem("navigate-forward", "true");
+
+            slideOut(); //animation
+            //After animation
+            setTimeout(() => {
+                window.location.href = href;  //Navigate
+            }, 300);
+        });
+    });
 });
 
 
