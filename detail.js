@@ -157,20 +157,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    let isNavigatingBack = false; // Prevent multiple back calls
+
     window.addEventListener("popstate", function (event) {
-        if (event.state && event.state.initialLoad) {
+        if (isNavigatingBack || (event.state && event.state.initialLoad)) {
             return;
         }
+        isNavigatingBack = true; // Prevent multiple executions
         slideOut();
-
-        // Store navigation intent before actually navigating
-        sessionStorage.setItem("pending-back", "true");
-
         setTimeout(() => {
-            if (sessionStorage.getItem("pending-back") === "true") {
-                sessionStorage.removeItem("pending-back");
-                history.back();
-            }
+            history.back();
         }, 300);
     });
 
@@ -179,17 +175,12 @@ document.addEventListener("DOMContentLoaded", function () {
         backButton.addEventListener("click", function (event) {
             event.preventDefault();
             slideOut();
-            sessionStorage.setItem("pending-back", "true");
             setTimeout(() => {
-                if (sessionStorage.getItem("pending-back") === "true") {
-                    sessionStorage.removeItem("pending-back");
-                    window.history.back();
-                }
+                window.history.back();
             }, 300);
         });
     }
 });
-
 
 
 
