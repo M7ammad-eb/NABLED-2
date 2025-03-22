@@ -89,119 +89,68 @@ function displayItem(item, visibleColumns, columnNames) {
   itemDetailsDiv.innerHTML = '';
 
   // Image (Placeholder initially, will be dynamically loaded)
-  const img = document.createElement('p');
-  img.innerHTML = `<img src="placeholder.png" alt="${item[1]}" class="product-image" data-src="${item[3]}">`;
+  const img = document.createElement('img'); // Create an <img> element directly
+  img.src = "placeholder.png";  // Set the placeholder image initially
+  img.alt = item[1] || "Product Image"; // Use a default alt text if item[1] is undefined
+  img.classList.add('product-image');
+  img.dataset.src = item[3] || ""; // Store the real image URL (or empty string if it doesn't exist).  CRUCIAL for handling missing images
+
   itemDetailsDiv.appendChild(img);
 
- // Item Name
-    const itemName = document.createElement('p');
-    itemName.innerHTML = `<h2>${item[1]}</h2><br>`;
-    itemDetailsDiv.appendChild(itemName);
 
-    // Item ID
-    const itemId = document.createElement('p');
-    itemId.innerHTML = `${columnNames[0]}<br><strong>${item[0]}</strong><br>`;
-    itemDetailsDiv.appendChild(itemId);
+  // Item Name
+  const itemName = document.createElement('p');
+  itemName.innerHTML = `<h2>${item[1] || ""}</h2><br>`; // Use empty string if item[1] is undefined.  Good practice for ALL data.
+  itemDetailsDiv.appendChild(itemName);
 
-    // Specifications
-    const specs = document.createElement('p');
-    specs.innerHTML = `${columnNames[2]}<br><strong>${item[2]}</strong><br>`;
-    itemDetailsDiv.appendChild(specs);
+  // Item ID
+  const itemId = document.createElement('p');
+  itemId.innerHTML = `${columnNames[0] || ""} <br><strong>${item[0] || ""}</strong><br>`; // Handle potential undefined values.
+  itemDetailsDiv.appendChild(itemId);
 
-    // Cataloge Link
-    const catalog = document.createElement('p');
-    catalog.innerHTML = `<a href="${item[4]}">${columnNames[4]}</a><br>`;
-    itemDetailsDiv.appendChild(catalog);
+  // Specifications
+  const specs = document.createElement('p');
+  specs.innerHTML = `${columnNames[2] || ""} <br><strong>${item[2] || ""}</strong><br>`; // Handle potential undefined values.
+  itemDetailsDiv.appendChild(specs);
 
-  // Prices (Corrected visibility check)
+  // Cataloge Link
+  const catalog = document.createElement('p');
+  const catalogLink = item[4] ? `<a href="${item[4]}">${columnNames[4] || ""}</a>` : (columnNames[4] || ""); // Make link conditional.  Handle undefined columnNames[4] too
+  catalog.innerHTML = `${catalogLink}<br>`;
+  itemDetailsDiv.appendChild(catalog);
+
+
+  // Prices (Corrected visibility check and handle undefined values)
   for (let i = 5; i < item.length; i++) {
-    if (visibleColumns[i] === 1) { // Corrected check!
-      const key = columnNames[i];
-      const value = item[i];
+    if (visibleColumns[i] === 1) {
+      const key = columnNames[i] || ""; // Handle undefined column name
+      const value = item[i] || "";     // Handle undefined item value
       const prices = document.createElement('p');
-      prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
+      // Added currency symbol styling.  Good to have it as a separate span.
+      prices.innerHTML = `${key}<br><strong>${value}</strong> <span class="currency-symbol"><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" alt="SAR"></span><br>`;
       itemDetailsDiv.appendChild(prices);
     }
   }
 
   // Lazy-load the real image (after everything else is displayed)
-  const realImage = itemDetailsDiv.querySelector('.product-image');
-    realImage.src = realImage.dataset.src; // Set the src from data-src
+  //  Use an Image() object for preloading and error handling
+  if (img.dataset.src) { // Only attempt to load if a data-src exists
+    const realImageLoader = new Image();
+    realImageLoader.src = img.dataset.src;
 
+    realImageLoader.onload = () => {
+        img.src = realImageLoader.src; // Set the src to the loaded image
+    };
+
+    realImageLoader.onerror = () => {
+        // Optionally, you could change the placeholder here to a different
+        // "image not found" image, or add a class to style it differently.
+        // img.src = "image-not-found.png"; 
+        console.error("Image failed to load:", img.dataset.src);  // Good for debugging
+    };
+
+  }
 }
-
-// slide-in & out
-document.addEventListener("DOMContentLoaded", function () {
-    // Function to apply slide-in
-    function slideIn() {
-        document.body.classList.remove("slide-out"); // Remove slide-out first
-        document.body.classList.add("slide-in");
-        setTimeout(() => {
-            document.body.classList.remove("slide-in");
-        }, 300); // Match time with CSS
-    }
-
-    // Function to apply slide-out
-    function slideOut() {
-        document.body.classList.add("slide-out");
-    }
-
-    // Push state on initial page load (Correct)
-    if (window.history.state === null) {
-        history.pushState({ initialLoad: true }, document.title, location.href);
-    }
-
-    // Check if we came from index.html or back/forward navigation (Correct)
-    window.addEventListener("pageshow", function (event) {
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            // Page was loaded from cache (back/forward navigation)
-            slideIn(); // Apply slide-in
-        } else if (sessionStorage.getItem("navigate-forward") === "true") {
-            slideIn();
-            sessionStorage.removeItem("navigate-forward"); // Clear flag
-        }
-    });
-
-    // Handle Back Button (Slide Out) - CORRECTED
-    window.addEventListener("popstate", function (event) {
-        if (event.state && event.state.initialLoad) {
-            // If initial load, ignore this event
-            return;
-        }
-        slideOut(); // Start the slide-out animation
-
-        // NO MORE history.back() HERE!  popstate handles it.
-    });
-
-    // Handle Back Button via Custom Button (if exists) - CORRECTED
-    const backButton = document.getElementById("back-button");
-    if (backButton) {
-        backButton.addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent default link behavior
-            slideOut(); // Start the slide-out animation
-
-            // NO MORE history.back() HERE!  We'll simulate popstate.
-            window.history.back(); //go one step back
-        });
-    }
-
-    //Simulate links click to other pages inside this page
-    document.querySelectorAll('a:not(#back-button)').forEach(anchor => { //Select all anchor links except the back button
-        anchor.addEventListener('click', function (event) {
-            event.preventDefault(); // Prevent the default link behavior
-            const href = this.getAttribute('href'); // Get the link's href
-
-            //set a flag in the session storage
-            sessionStorage.setItem("navigate-forward", "true");
-
-            slideOut(); //animation
-            //After animation
-            setTimeout(() => {
-                window.location.href = href;  //Navigate
-            }, 300);
-        });
-    });
-});
 
 
 //Helper function to display offline message
