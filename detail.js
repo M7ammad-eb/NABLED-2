@@ -138,8 +138,8 @@ function displayItem(item, visibleColumns, columnNames) {
         imageElement.style.position = 'absolute';
 
         const containerRect = itemDetailsDiv.getBoundingClientRect();
-        imageElement.style.top = `${startRect.top - containerRect.top}px`;
-        imageElement.style.right = `${startRect.left - containerRect.left}px`;
+        imageElement.style.top = `${startRect.top}px`;
+        imageElement.style.left = `${startRect.left}px`;
         imageElement.style.width = `${startRect.width}px`;
         imageElement.style.height = `${startRect.height}px`;
         imageElement.style.opacity = 1;
