@@ -1,3 +1,5 @@
+/* [2025-02-25] Rewriting the whole code block, restoring item spacing */
+
 body {
   font-family: Arial, sans-serif; /* Or a suitable Arabic font */
   margin: 0; /* Remove default body margin */
@@ -53,11 +55,11 @@ body {
   border: none;
   padding: 10px;
   border-radius: 50%;
-  /* cursor: pointer; (Handled by :enabled/:disabled below) */
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.3s;
+  margin-right: 10px; /* Add some space between refresh and search */
 }
 .refresh-button:hover:enabled { /* Apply hover only when enabled */
   background: #218838;
@@ -68,26 +70,23 @@ svg {
   fill: white;
   width: 24px;
   height: 24px;
-  /* Removed transition: transform, as animation handles it when loading */
 }
 
-/* === Refresh Button Loading/Disabled Styles (NEW) === */
+/* === Refresh Button Loading/Disabled Styles === */
 .refresh-button:disabled {
   cursor: not-allowed; /* Show a 'not allowed' cursor when disabled */
-  /* Optional: Slightly reduce opacity when loading/disabled */
-  /* opacity: 0.8; */
 }
 
 .refresh-button:enabled {
   cursor: pointer; /* Ensure pointer cursor when enabled */
 }
 
-/* Apply animation to the SVG inside the button when it has the 'loading' class (NEW) */
+/* Apply animation to the SVG inside the button when it has the 'loading' class */
 .refresh-button.loading svg {
-  animation: spin 1s linear infinite; /* Adjust duration as needed */
+  animation: spin 1s linear infinite;
 }
 
-/* Define the spinning animation keyframes (NEW) */
+/* Define the spinning animation keyframes */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -127,23 +126,31 @@ svg {
 #items-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
-    margin: 10px;
-    gap: 0px; /* Spacing between grid items */
+    /* Removed margin here, handled by .item-container */
+    gap: 0px; /* Use gap for spacing between grid items if needed, or rely on item margins */
 }
 
-/* === Item Row Styles === */
+/* === Item Container Styles (FIXED - Restores Spacing) === */
+/* This styles the div that WRAPS each item's <a> tag */
+.item-container {
+   margin: 5px; /* Add margin around each item container */
+   /* Removed padding here, padding is on .item-row (the link itself) */
+}
+
+
+/* === Item Row Styles (the <a> tag) === */
 .item-row {
     display: flex;
     flex-direction: row; /* Make sure items are displayed horizontally */
     align-items: center;
     border: 1px solid #ddd;
-    padding: 5px;
-    margin: 5px;
+    padding: 5px; /* Padding inside the clickable area */
+    /* Removed margin here, handled by .item-container */
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      box-sizing: border-box;
+    width: 100%;
+    box-sizing: border-box;
     cursor: pointer; /* Change the cursor to a pointer on hover */
     text-decoration: none; /* Ensure links don't have default underline */
     color: inherit; /* Inherit text color */
@@ -156,12 +163,17 @@ svg {
     font-size: 0.7em;
     color: #888888;
     margin-bottom: 1px; /* Space between code and description */
-    text-align: center; /* Align code to the left */
+    /* text-align: center; Reconsider if left align is better */
+    text-align: left;
+    margin-left: 5px; /* Add space after image */
 }
 .item-description {
     font-size: 1em;
     color: #000000;
     flex-grow: 1; /* Allow description to take available space */
+    text-align: left;
+    margin-left: 5px; /* Add space after code */
+
 }
 
 /* General Button Style (falls back if no specific class matches) */
@@ -179,18 +191,7 @@ button:hover {
   background-color: #0056b3;
 }
 
-
-.child {
-  margin-bottom: 3px; /* Add space below each child */
-}
-
-/* Redundant #items-list rules removed - handled above */
-/* Redundant #items-list div rule removed - handled by .item-row */
-/* Redundant #items-list a rule removed - handled by .item-row */
-
-#item-details p {
-  margin: 5px 0;
-}
+/* Redundant .child rule removed */
 
 /* === Media Query for Smaller Screens === */
 @media (max-width: 500px) {
@@ -210,14 +211,18 @@ button:hover {
   #items-list {
     /* Changed display to block for single column layout on mobile */
     display: block;
-    margin: 5px;
-    gap: 0px; /* Gap less relevant in single column */
-    grid-template-columns: 1fr; /* Ensure it takes full width */
+    /* Removed grid-template-columns as it's irrelevant for display: block */
+    /* Removed gap as it's less relevant */
   }
 
-  /* Ensure item rows still work in block layout */
+  /* Ensure item containers stack vertically with margin */
+  .item-container {
+     margin: 5px 0; /* Vertical margin only for stacking */
+  }
+
+  /* Item rows take full width */
   .item-row {
-      margin: 5px 0; /* Adjust margin for vertical stacking */
+      /* No changes needed here, should work fine */
   }
 }
 
@@ -231,10 +236,11 @@ button:hover {
 
 /* Style for images within item rows */
 .list-image {
-    width: 50px;        /* Consistent size */
-    height: 50px;
+    width: 40px;        /* Slightly smaller image for potentially tighter rows */
+    height: 40px;
     object-fit: cover;    /* Prevent distortion */
-    margin-right: 10px;
+    margin-right: 8px; /* Adjust spacing */
     border-radius: 4px; /* Optional: Rounded corners */
     transition: all 0.3s ease; /* Add transition for smoothness*/
+    flex-shrink: 0; /* Prevent image from shrinking if text is long */
 }
