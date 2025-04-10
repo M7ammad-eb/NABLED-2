@@ -46,34 +46,58 @@ body {
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
+
+/* === Refresh Button Base Styles === */
 .refresh-button {
   background: #28a745;
   border: none;
   padding: 10px;
   border-radius: 50%;
-  cursor: pointer;
+  /* cursor: pointer; (Handled by :enabled/:disabled below) */
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.3s;
 }
-.refresh-button:hover {
+.refresh-button:hover:enabled { /* Apply hover only when enabled */
   background: #218838;
 }
+
+/* === Base SVG Style (inside refresh button or elsewhere) === */
 svg {
   fill: white;
   width: 24px;
   height: 24px;
-  transition: transform 0.3s ease-in-out;
+  /* Removed transition: transform, as animation handles it when loading */
 }
-/*.rotate {
-  animation: spin 0.6s linear;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}*/
 
+/* === Refresh Button Loading/Disabled Styles (NEW) === */
+.refresh-button:disabled {
+  cursor: not-allowed; /* Show a 'not allowed' cursor when disabled */
+  /* Optional: Slightly reduce opacity when loading/disabled */
+  /* opacity: 0.8; */
+}
+
+.refresh-button:enabled {
+  cursor: pointer; /* Ensure pointer cursor when enabled */
+}
+
+/* Apply animation to the SVG inside the button when it has the 'loading' class (NEW) */
+.refresh-button.loading svg {
+  animation: spin 1s linear infinite; /* Adjust duration as needed */
+}
+
+/* Define the spinning animation keyframes (NEW) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Search Input Styles === */
 .search-container {
   flex-grow: 1;
 }
@@ -87,6 +111,7 @@ svg {
   box-sizing: border-box; /* Include padding and border in width */
 }
 
+/* === Product List Styles === */
 .product-list-container {
     flex-grow: 1; /* Allow the list to take up remaining space */
     overflow-y: auto; /* Add vertical scrolling if the content overflows */
@@ -106,6 +131,27 @@ svg {
     gap: 0px; /* Spacing between grid items */
 }
 
+/* === Item Row Styles === */
+.item-row {
+    display: flex;
+    flex-direction: row; /* Make sure items are displayed horizontally */
+    align-items: center;
+    border: 1px solid #ddd;
+    padding: 5px;
+    margin: 5px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      box-sizing: border-box;
+    cursor: pointer; /* Change the cursor to a pointer on hover */
+    text-decoration: none; /* Ensure links don't have default underline */
+    color: inherit; /* Inherit text color */
+}
+.item-row:hover {
+    background-color: #f0f0f0; /* Optional: Add a hover effect */
+}
+
 .item-code {
     font-size: 0.7em;
     color: #888888;
@@ -118,6 +164,7 @@ svg {
     flex-grow: 1; /* Allow description to take available space */
 }
 
+/* General Button Style (falls back if no specific class matches) */
 button {
   padding: 10px 20px;
   background-color: #007bff;
@@ -134,46 +181,18 @@ button:hover {
 
 
 .child {
-  margin-bottom: 3px; /* Add 20px of space below each child */
-}
-.item-row {
-    display: flex;
-    flex-direction: row; /* Make sure items are displayed horizontally */
-    align-items: center;
-    border: 1px solid #ddd;
-    padding: 5px;
-    margin: 5px;
-    background-color: white;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-     width: 100%;
-     box-sizing: border-box;
-    cursor: pointer; /* Change the cursor to a pointer on hover */
-}
-.item-row:hover {
-    background-color: #f0f0f0; /* Optional: Add a hover effect */
+  margin-bottom: 3px; /* Add space below each child */
 }
 
-h1 {
-  text-align: center;
-}
-#items-list {
-  margin: 5px;
-  margin-top: 5px;
-}
-#items-list div {
-  margin: 5px;
-  padding: 5px;
-}
-
-#items-list a {
-  text-decoration: none;
-}
+/* Redundant #items-list rules removed - handled above */
+/* Redundant #items-list div rule removed - handled by .item-row */
+/* Redundant #items-list a rule removed - handled by .item-row */
 
 #item-details p {
   margin: 5px 0;
 }
 
+/* === Media Query for Smaller Screens === */
 @media (max-width: 500px) {
   /* Mobile-specific styles */
   .search-bar {
@@ -181,29 +200,38 @@ h1 {
   }
 
   .refresh-button {
-    padding: 6px;
+    padding: 6px; /* Adjust padding for smaller button */
   }
 
   .search-input {
     font-size: 14px;
   }
-  
+
   #items-list {
-    display: column;
+    /* Changed display to block for single column layout on mobile */
+    display: block;
     margin: 5px;
-    gap: 0px; /* Spacing between grid items */
+    gap: 0px; /* Gap less relevant in single column */
+    grid-template-columns: 1fr; /* Ensure it takes full width */
+  }
+
+  /* Ensure item rows still work in block layout */
+  .item-row {
+      margin: 5px 0; /* Adjust margin for vertical stacking */
   }
 }
 
-/* for transition */
+/* === Transition Styles === */
+/* for item click transition */
 .item-clicked {
     transition: all 0.3s ease; /* Smooth transition */
     opacity: 0.5; /* Fade slightly */
     transform: scale(0.95); /* Shrink slightly */
 }
 
+/* Style for images within item rows */
 .list-image {
-    width: 50px;          /* Consistent size */
+    width: 50px;        /* Consistent size */
     height: 50px;
     object-fit: cover;    /* Prevent distortion */
     margin-right: 10px;
