@@ -88,7 +88,7 @@ function displayItem(item, visibleColumns, columnNames) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
-  // Image (Placeholder initially, will be dynamically loaded)
+  /*// Image (Placeholder initially, will be dynamically loaded)
   const img = document.createElement('img'); // Create an <img> element directly
   img.src = "placeholder.png";  // Set the placeholder image initially
   img.alt = item[1] || "Product Image"; // Use a default alt text if item[1] is undefined
@@ -96,7 +96,65 @@ function displayItem(item, visibleColumns, columnNames) {
   img.dataset.src = item[3] || ""; // Store the real image URL (or empty string if it doesn't exist).  CRUCIAL for handling missing images
 
   itemDetailsDiv.appendChild(img);
+  */
 
+  // New Image show up to 3 images
+  // Create carousel container
+  const carouselContainer = document.createElement('div');
+  carouselContainer.className = 'carousel-container';
+
+  const images = [item[3], item[4], item[5]].filter(Boolean); // Adjust according to your CSV image indices
+
+  const slidesWrapper = document.createElement('div');
+  slidesWrapper.className = 'slides-wrapper';
+
+  images.forEach((src, index) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    if (index === 0) slide.classList.add('active');
+
+    const img = document.createElement('img');
+    img.src = "placeholder.png";
+    img.alt = item[1] || "Product Image";
+    img.classList.add('carousel-image');
+    img.dataset.src = src;
+
+    slide.appendChild(img);
+    slidesWrapper.appendChild(slide);
+
+    // Lazy-load
+    if (src) {
+      const realImageLoader = new Image();
+      realImageLoader.src = src;
+      realImageLoader.onload = () => { img.src = realImageLoader.src; };
+    }
+  });
+
+  carouselContainer.appendChild(slidesWrapper);
+
+  // Arrows
+  const leftArrow = document.createElement('div');
+  leftArrow.className = 'carousel-arrow left';
+  leftArrow.innerHTML = '&#10094;';
+  const rightArrow = document.createElement('div');
+  rightArrow.className = 'carousel-arrow right';
+  rightArrow.innerHTML = '&#10095;';
+  carouselContainer.appendChild(leftArrow);
+  carouselContainer.appendChild(rightArrow);
+
+  // Dots
+  if (images.length > 1) {
+    const dots = document.createElement('div');
+    dots.className = 'carousel-dots';
+    images.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dots.appendChild(dot);
+    });
+    carouselContainer.appendChild(dots);
+  }
+
+  itemDetailsDiv.appendChild(carouselContainer);
 
   // Item Name
   const itemName = document.createElement('p');
@@ -115,13 +173,13 @@ function displayItem(item, visibleColumns, columnNames) {
 
   // Cataloge Link
   const catalog = document.createElement('p');
-  const catalogLink = item[4] ? `<a href="${item[4]}">${columnNames[4] || ""}</a>` : (columnNames[4] || ""); // Make link conditional.  Handle undefined columnNames[4] too
+  const catalogLink = item[6] ? `<a href="${item[6]}">${columnNames[6] || ""}</a>` : (columnNames[6] || ""); // Make link conditional.  Handle undefined columnNames[6] too
   catalog.innerHTML = `${catalogLink}<br>`;
   itemDetailsDiv.appendChild(catalog);
 
 
   // Prices (Corrected visibility check)
-  for (let i = 5; i < item.length; i++) {
+  for (let i = 7; i < item.length; i++) {
     if (visibleColumns[i] === 1) { // Corrected check!
       const key = columnNames[i];
       const value = item[i];
@@ -150,6 +208,39 @@ function displayItem(item, visibleColumns, columnNames) {
     };
 
   }
+  addCarouselFunctionality();
+}
+
+// Rest for showing up to 3 images
+function addCarouselFunctionality() {
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+
+  function showSlide(index) {
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    slides[index].classList.add('active');
+    if (dots[index]) dots[index].classList.add('active');
+    currentSlide = index;
+  }
+
+  document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
+  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));
+  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+
+  // Swipe support
+  const wrapper = document.querySelector('.slides-wrapper');
+  let touchStartX = 0;
+
+  wrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+  wrapper.addEventListener('touchend', e => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (diff > 50) showSlide(currentSlide - 1);
+    else if (diff < -50) showSlide(currentSlide + 1);
+  });
 }
 
 
