@@ -237,12 +237,14 @@ function getUserPermissions(permissions, userEmail) {
 // async function loadData() { ... }
 
 
-// Refresh Button (Updated to call loadDataIntoLocalStorage with force=true)
+// Refresh Button (Updated to use CSS for visual feedback)
 document.querySelector(".refresh-button").addEventListener("click", async function() {
     console.log("Refresh button clicked");
-    // Add a visual indicator that refresh is starting
-    this.disabled = true; // Disable button to prevent double clicks
-    this.textContent = 'Refreshing...'; // Change text
+    // --- Visual feedback starts ---
+    this.disabled = true; // Disable button (CSS will handle visual style)
+
+    // --- NO MORE textContent changes ---
+    // this.textContent = 'Refreshing...'; // REMOVED
 
     // Clear previous data from localStorage
     localStorage.removeItem('dataSheet');
@@ -255,11 +257,11 @@ document.querySelector(".refresh-button").addEventListener("click", async functi
     // Redisplay items with the newly fetched data
     displayItems();
     // Re-setup search on the new items
-    setupSearch(); // Make sure setupSearch is robust enough to be called multiple times
+    setupSearch();
 
-    // Re-enable button and restore text
-    this.disabled = false;
-    this.textContent = 'Refresh'; // Or use an icon/original text
+    // --- Visual feedback ends ---
+    this.disabled = false; // Re-enable button (CSS will restore style)
+    // this.textContent = 'Refresh'; // REMOVED
 
     console.log("Refresh complete.");
 });
