@@ -88,10 +88,11 @@ svg {
     overflow-y: auto; /* Add vertical scrolling if the content overflows */
     margin: 10px;
     padding: 5px; /* Add some padding around the list */
+    background-color: #ffffff;
 }
 
 .products-title{
-    text-align: left;
+    text-align: right;
     margin-bottom: 1rem;
 }
 
@@ -99,7 +100,7 @@ svg {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
     margin: 5px
-    gap: 0px; /* Use gap for spacing between grid items if needed, or rely on item margins */
+    gap: 2px; /* Use gap for spacing between grid items if needed, or rely on item margins */
 }
 
 /* === Item Container Styles (FIXED - Restores Spacing) === */
