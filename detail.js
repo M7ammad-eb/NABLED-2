@@ -83,79 +83,68 @@ function getUserPermissions(permissions, userEmail) {
     return null;
 }
 
-// add transition
+
 function displayItem(item, visibleColumns, columnNames) {
   const itemDetailsDiv = document.getElementById('item-details');
   itemDetailsDiv.innerHTML = '';
 
-  /*// Image (Placeholder initially, will be dynamically loaded)
-  const img = document.createElement('img'); // Create an <img> element directly
-  img.src = "placeholder.png";  // Set the placeholder image initially
-  img.alt = item[1] || "Product Image"; // Use a default alt text if item[1] is undefined
-  img.classList.add('product-image');
-  img.dataset.src = item[3] || ""; // Store the real image URL (or empty string if it doesn't exist).  CRUCIAL for handling missing images
+  // === 1. IMAGE CAROUSEL ===
+  const carouselContainer = document.createElement('div');
+  carouselContainer.className = 'carousel-container';
 
-  itemDetailsDiv.appendChild(img);
-  */
+  const images = [item[3], item[4], item[5]].filter(Boolean); 
 
-  // New Image show up to 3 images
-  // Create carousel container
-  const carouselContainer = document.createElement('div');
-  carouselContainer.className = 'carousel-container';
+  const slidesWrapper = document.createElement('div');
+  slidesWrapper.className = 'slides-wrapper';
 
-  const images = [item[3], item[4], item[5]].filter(Boolean); // Adjust according to your CSV image indices
+  images.forEach((src, index) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    if (index === 0) slide.classList.add('active');
 
-  const slidesWrapper = document.createElement('div');
-  slidesWrapper.className = 'slides-wrapper';
+    const img = document.createElement('img');
+    img.src = 'placeholder.png'; // initial placeholder
+    img.alt = item[1] || 'Product Image';
+    img.classList.add('carousel-image');
+    img.dataset.src = src;
 
-  images.forEach((src, index) => {
-    const slide = document.createElement('div');
-    slide.className = 'slide';
-    if (index === 0) slide.classList.add('active');
+    slide.appendChild(img);
+    slidesWrapper.appendChild(slide);
 
-    const img = document.createElement('img');
-    img.src = "placeholder.png";
-    img.alt = item[1] || "Product Image";
-    img.classList.add('carousel-image');
-    img.dataset.src = src;
+    if (src) {
+      const realImageLoader = new Image();
+      realImageLoader.src = src;
+      realImageLoader.onload = () => { img.src = realImageLoader.src; };
+    }
+  });
 
-    slide.appendChild(img);
-    slidesWrapper.appendChild(slide);
+  carouselContainer.appendChild(slidesWrapper);
 
-    // Lazy-load
-    if (src) {
-      const realImageLoader = new Image();
-      realImageLoader.src = src;
-      realImageLoader.onload = () => { img.src = realImageLoader.src; };
-    }
-  });
+  // Arrows
+  const leftArrow = document.createElement('div');
+  leftArrow.className = 'carousel-arrow left';
+  leftArrow.innerHTML = '&#10094;';
+  const rightArrow = document.createElement('div');
+  rightArrow.className = 'carousel-arrow right';
+  rightArrow.innerHTML = '&#10095;';
+  carouselContainer.appendChild(leftArrow);
+  carouselContainer.appendChild(rightArrow);
 
-  carouselContainer.appendChild(slidesWrapper);
+  // Dots
+  if (images.length > 1) {
+    const dots = document.createElement('div');
+    dots.className = 'carousel-dots';
+    images.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dots.appendChild(dot);
+    });
+    carouselContainer.appendChild(dots);
+  }
 
-  // Arrows
-  const leftArrow = document.createElement('div');
-  leftArrow.className = 'carousel-arrow left';
-  leftArrow.innerHTML = '&#10094;';
-  const rightArrow = document.createElement('div');
-  rightArrow.className = 'carousel-arrow right';
-  rightArrow.innerHTML = '&#10095;';
-  carouselContainer.appendChild(leftArrow);
-  carouselContainer.appendChild(rightArrow);
+  itemDetailsDiv.appendChild(carouselContainer);
 
-  // Dots
-  if (images.length > 1) {
-    const dots = document.createElement('div');
-    dots.className = 'carousel-dots';
-    images.forEach((_, i) => {
-      const dot = document.createElement('span');
-      dot.className = 'dot' + (i === 0 ? ' active' : '');
-      dots.appendChild(dot);
-    });
-    carouselContainer.appendChild(dots);
-  }
-
-  itemDetailsDiv.appendChild(carouselContainer);
-
+  // === 2. ITEM DATA  ===
   // Item Name
   const itemName = document.createElement('p');
   itemName.innerHTML = `<h2>${item[1] || ""}</h2><br>`; // Use empty string if item[1] is undefined.  Good practice for ALL data.
@@ -180,67 +169,15 @@ function displayItem(item, visibleColumns, columnNames) {
 
   // Prices (Corrected visibility check)
   for (let i = 7; i < item.length; i++) {
-    if (visibleColumns[i] === 1) { // Corrected check!
+    if (visibleColumns[i+2] === 1) { // Corrected check!
       const key = columnNames[i];
       const value = item[i];
       const prices = document.createElement('p');
       prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
       itemDetailsDiv.appendChild(prices);
-    }
-  }
 
-
-  // Lazy-load the real image (after everything else is displayed)
-  //  Use an Image() object for preloading and error handling
-  if (img.dataset.src) { // Only attempt to load if a data-src exists
-    const realImageLoader = new Image();
-    realImageLoader.src = img.dataset.src;
-
-    realImageLoader.onload = () => {
-        img.src = realImageLoader.src; // Set the src to the loaded image
-    };
-
-    realImageLoader.onerror = () => {
-        // Optionally, you could change the placeholder here to a different
-        // "image not found" image, or add a class to style it differently.
-        // img.src = "image-not-found.png"; 
-        console.error("Image failed to load:", img.dataset.src);  // Good for debugging
-    };
-
-  }
+  // === 3. CAROUSEL LOGIC ===
   addCarouselFunctionality();
-}
-
-// Rest for showing up to 3 images
-function addCarouselFunctionality() {
-  let currentSlide = 0;
-  const slides = document.querySelectorAll('.slide');
-  const dots = document.querySelectorAll('.dot');
-
-  function showSlide(index) {
-    if (index < 0) index = slides.length - 1;
-    if (index >= slides.length) index = 0;
-    slides.forEach(s => s.classList.remove('active'));
-    dots.forEach(d => d.classList.remove('active'));
-    slides[index].classList.add('active');
-    if (dots[index]) dots[index].classList.add('active');
-    currentSlide = index;
-  }
-
-  document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
-  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));
-  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
-
-  // Swipe support
-  const wrapper = document.querySelector('.slides-wrapper');
-  let touchStartX = 0;
-
-  wrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-  wrapper.addEventListener('touchend', e => {
-    const diff = e.changedTouches[0].clientX - touchStartX;
-    if (diff > 50) showSlide(currentSlide - 1);
-    else if (diff < -50) showSlide(currentSlide + 1);
-  });
 }
 
 
@@ -256,3 +193,35 @@ function displayOfflineMessage() {
 function parseCSV(csvText) {
     return Papa.parse(csvText, { header: false }).data;
 }
+
+function addCarouselFunctionality() {
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+
+  function showSlide(index) {
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    slides[index].classList.add('active');
+    if (dots[index]) dots[index].classList.add('active');
+    currentSlide = index;
+  }
+
+  document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
+  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));
+  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+
+  // Swipe support
+  const wrapper = document.querySelector('.slides-wrapper');
+  let touchStartX = 0;
+
+  wrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+  wrapper.addEventListener('touchend', e => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (diff > 50) showSlide(currentSlide - 1);
+    else if (diff < -50) showSlide(currentSlide + 1);
+  });
+}
+
