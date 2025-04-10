@@ -100,7 +100,6 @@ svg {
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
     margin: 5px
     gap: 0px; /* Use gap for spacing between grid items if needed, or rely on item margins */
-    background-color: #ffffff;
 }
 
 /* === Item Container Styles (FIXED - Restores Spacing) === */
