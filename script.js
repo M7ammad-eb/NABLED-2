@@ -237,33 +237,41 @@ function getUserPermissions(permissions, userEmail) {
 // async function loadData() { ... }
 
 
-// Refresh Button (Updated to use CSS for visual feedback)
+// [2025-02-25] Rewriting the relevant code block as requested.
+// Refresh Button (Updated to use CSS class and animation for visual feedback)
 document.querySelector(".refresh-button").addEventListener("click", async function() {
+    const button = this; // Keep reference to the button
     console.log("Refresh button clicked");
+
     // --- Visual feedback starts ---
-    this.disabled = true; // Disable button (CSS will handle visual style)
+    button.disabled = true; // Disable button
+    button.classList.add('loading'); // Add 'loading' class for animation
 
     // --- NO MORE textContent changes ---
-    // this.textContent = 'Refreshing...'; // REMOVED
 
-    // Clear previous data from localStorage
-    localStorage.removeItem('dataSheet');
-    localStorage.removeItem('permissionRows');
-    console.log("Cleared localStorage for data/permissions.");
+    try { // Added try...finally for robustness
+        // Clear previous data from localStorage
+        localStorage.removeItem('dataSheet');
+        localStorage.removeItem('permissionRows');
+        console.log("Cleared localStorage for data/permissions.");
 
-    // Force fetch fresh data using cache-busting
-    await loadDataIntoLocalStorage(true); // Pass true to force refresh
+        // Force fetch fresh data using cache-busting
+        await loadDataIntoLocalStorage(true); // Pass true to force refresh
 
-    // Redisplay items with the newly fetched data
-    displayItems();
-    // Re-setup search on the new items
-    setupSearch();
+        // Redisplay items with the newly fetched data
+        displayItems();
+        // Re-setup search on the new items
+        setupSearch();
 
-    // --- Visual feedback ends ---
-    this.disabled = false; // Re-enable button (CSS will restore style)
-    // this.textContent = 'Refresh'; // REMOVED
-
-    console.log("Refresh complete.");
+    } catch (error) {
+        console.error("Error during refresh process:", error);
+        // Optionally show error to user
+    } finally {
+        // --- Visual feedback ends ---
+        button.disabled = false; // Re-enable button
+        button.classList.remove('loading'); // Remove 'loading' class
+        console.log("Refresh complete.");
+    }
 });
 
 // Search functionality (now using localStorage data)
