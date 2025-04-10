@@ -126,7 +126,7 @@ svg {
 #items-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
-    /* Removed margin here, handled by .item-container */
+    margin: 5px
     gap: 0px; /* Use gap for spacing between grid items if needed, or rely on item margins */
 }
 
@@ -145,7 +145,7 @@ svg {
     align-items: center;
     border: 1px solid #ddd;
     padding: 5px; /* Padding inside the clickable area */
-    /* Removed margin here, handled by .item-container */
+    margin: 5px
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -162,17 +162,17 @@ svg {
 .item-code {
     font-size: 0.7em;
     color: #888888;
-    margin-bottom: 1px; /* Space between code and description */
+    margin-bottom: 2px; /* Space between code and description */
     /* text-align: center; Reconsider if left align is better */
-    text-align: left;
-    margin-left: 5px; /* Add space after image */
+    text-align: right;
+    margin-right: 5px; /* Add space after image */
 }
 .item-description {
     font-size: 1em;
     color: #000000;
     flex-grow: 1; /* Allow description to take available space */
-    text-align: left;
-    margin-left: 5px; /* Add space after code */
+    text-align: right;
+    margin-right: 5px; /* Add space after code */
 
 }
 
