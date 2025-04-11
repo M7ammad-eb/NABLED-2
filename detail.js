@@ -214,7 +214,7 @@ function addCarouselFunctionality() {
     if (dots[index]) dots[index].classList.add('active');
 
     // Slide the wrapper by translating it
-    slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+    slidesWrapper.style.transform = `translateX(${index * 100}%)`;
 
     currentSlide = index;
   }
@@ -228,7 +228,7 @@ function addCarouselFunctionality() {
   slidesWrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
   slidesWrapper.addEventListener('touchend', e => {
     const diff = e.changedTouches[0].clientX - touchStartX;
-    if (diff > 50) showSlide(currentSlide + 1);
-    else if (diff < -50) showSlide(currentSlide - 1);
+    if (diff > 30) showSlide(currentSlide + 1);
+    else if (diff < -30) showSlide(currentSlide - 1);
   });
 }
