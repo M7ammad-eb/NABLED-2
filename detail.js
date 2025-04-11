@@ -120,16 +120,17 @@ function displayItem(item, visibleColumns, columnNames) {
 
   carouselContainer.appendChild(slidesWrapper);
 
-  // Arrows
-  const leftArrow = document.createElement('div');
-  leftArrow.className = 'carousel-arrow left';
-  leftArrow.innerHTML = '&#10094;';
-  const rightArrow = document.createElement('div');
-  rightArrow.className = 'carousel-arrow right';
-  rightArrow.innerHTML = '&#10095;';
-  carouselContainer.appendChild(leftArrow);
-  carouselContainer.appendChild(rightArrow);
-
+    /* // Arrows
+    const leftArrow = document.createElement('div');
+    leftArrow.className = 'carousel-arrow left';
+    leftArrow.innerHTML = '&#10094;';
+    const rightArrow = document.createElement('div');
+    rightArrow.className = 'carousel-arrow right';
+    rightArrow.innerHTML = '&#10095;';
+    carouselContainer.appendChild(leftArrow);
+    carouselContainer.appendChild(rightArrow);
+    */
+    
   // Dots
   if (images.length > 1) {
     const dots = document.createElement('div');
@@ -218,8 +219,8 @@ function addCarouselFunctionality() {
     currentSlide = index;
   }
 
-  document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
-  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));
+  /*document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
+  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));*/
   dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
   // Swipe support
@@ -227,7 +228,7 @@ function addCarouselFunctionality() {
   slidesWrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
   slidesWrapper.addEventListener('touchend', e => {
     const diff = e.changedTouches[0].clientX - touchStartX;
-    if (diff > 50) showSlide(currentSlide - 1);
-    else if (diff < -50) showSlide(currentSlide + 1);
+    if (diff > 50) showSlide(currentSlide + 1);
+    else if (diff < -50) showSlide(currentSlide - 1);
   });
 }
