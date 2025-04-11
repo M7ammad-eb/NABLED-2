@@ -182,7 +182,7 @@ function displayItems() {
             itemDiv.classList.add('item-container'); // Add a class for potential styling
 
             // Use a ternary operator to check if itemImage is valid and not just whitespace
-            const imageSrc = itemImage[1] && String(itemImage[1]).trim() !== "" ? String(itemImage[1]).trim() : "placeholder.png";
+            const imageSrc = itemImage[0] && String(itemImage[0]).trim() !== "" ? String(itemImage[0]).trim() : "placeholder.png";
 
             itemDiv.innerHTML = `
                 <a href="detail.html?id=${encodeURIComponent(itemId)}" class="item-row" data-item-id="${itemId}" data-transition-id="${itemId}">
