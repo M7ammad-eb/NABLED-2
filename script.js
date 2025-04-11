@@ -176,13 +176,13 @@ function displayItems() {
 
             const itemId = item[0] || ''; // Default to empty string if undefined
             const itemName = item[1] || 'No Name'; // Default name
-            const itemImage = item[3]; // Get the image URL (index 3)
+            const itemImage = [item[3], item[4], item[5]].filter(Boolean); // Get the image URL (index 3)
 
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('item-container'); // Add a class for potential styling
 
             // Use a ternary operator to check if itemImage is valid and not just whitespace
-            const imageSrc = itemImage && String(itemImage).trim() !== "" ? String(itemImage).trim() : "placeholder.png";
+            const imageSrc = itemImage[1] && String(itemImage[1]).trim() !== "" ? String(itemImage[1]).trim() : "placeholder.png";
 
             itemDiv.innerHTML = `
                 <a href="detail.html?id=${encodeURIComponent(itemId)}" class="item-row" data-item-id="${itemId}" data-transition-id="${itemId}">
