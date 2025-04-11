@@ -197,32 +197,37 @@ function parseCSV(csvText) {
 }
 
 function addCarouselFunctionality() {
-  let currentSlide = 0;
-  const slides = document.querySelectorAll('.slide');
-  const dots = document.querySelectorAll('.dot');
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+  const slidesWrapper = document.querySelector('.slides-wrapper');
 
-  function showSlide(index) {
-    if (index < 0) index = slides.length - 1;
-    if (index >= slides.length) index = 0;
-    slides.forEach(s => s.classList.remove('active'));
-    dots.forEach(d => d.classList.remove('active'));
-    slides[index].classList.add('active');
-    if (dots[index]) dots[index].classList.add('active');
-    currentSlide = index;
-  }
+  function showSlide(index) {
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
 
-  document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
-  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));
-  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+    // Update the active slide and dot
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    slides[index].classList.add('active');
+    if (dots[index]) dots[index].classList.add('active');
 
-  // Swipe support
-  const wrapper = document.querySelector('.slides-wrapper');
-  let touchStartX = 0;
+    // Slide the wrapper by translating it
+    slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
 
-  wrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-  wrapper.addEventListener('touchend', e => {
-    const diff = e.changedTouches[0].clientX - touchStartX;
-    if (diff > 50) showSlide(currentSlide - 1);
-    else if (diff < -50) showSlide(currentSlide + 1);
-  });
+    currentSlide = index;
+  }
+
+  document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
+  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));
+  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+
+  // Swipe support
+  let touchStartX = 0;
+  slidesWrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+  slidesWrapper.addEventListener('touchend', e => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (diff > 50) showSlide(currentSlide - 1);
+    else if (diff < -50) showSlide(currentSlide + 1);
+  });
 }
