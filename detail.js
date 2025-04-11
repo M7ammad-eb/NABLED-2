@@ -176,8 +176,10 @@ function displayItem(item, visibleColumns, columnNames) {
       prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
       itemDetailsDiv.appendChild(prices);
 
-  // === 3. CAROUSEL LOGIC ===
-  addCarouselFunctionality();
+      // === 3. CAROUSEL LOGIC ===
+      addCarouselFunctionality();
+      }
+  }
 }
 
 
@@ -224,4 +226,3 @@ function addCarouselFunctionality() {
     else if (diff < -50) showSlide(currentSlide + 1);
   });
 }
-
