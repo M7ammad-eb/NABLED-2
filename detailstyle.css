@@ -1,95 +1,110 @@
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4; /* Light background */
-    color: #333;
-    line-height: 1.6;
-    overscroll-behavior-y: contain; /* Disable vertical overscroll */
-    overflow: visible !important;
-    pointer-events: auto !important;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4; /* Light background */
+    color: #333;
+    line-height: 1.6;
+    overscroll-behavior-y: contain; /* Disable vertical overscroll */
+    overflow: visible !important;
+    pointer-events: auto !important;
 }
 
 /* Slide In from Right */
 @keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0.8;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    from {
+        transform: translateX(100%);
+        opacity: 0.8;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* Slide Out to Right */
 @keyframes slideOut {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 
 /* Apply Animation Classes */
 .slide-in {
-    animation: slideIn 0.3s ease-out forwards;
+    animation: slideIn 0.3s ease-out forwards;
 }
 
 .slide-out {
-    animation: slideOut 0.3s ease-in forwards;
+    animation: slideOut 0.3s ease-in forwards;
 }
 
 /* Prepare Slide-In Before Navigation */
 .prepare-slide {
-    opacity: 0;
+    opacity: 0;
 }
 
 #item-details {
-    max-width: 600px; /* Limit content width on larger screens */
-    margin: 20px auto;
-    padding: 20px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    max-width: 600px; /* Limit content width on larger screens */
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
 }
 
 /* add transition */
 .product-image {
-    width: 100%;
-    height: 400px;
-    object-fit: cover;
-    display: block;
-    margin-bottom: 20px;
-    border-radius: 7px;
-    /* transition: all 0.3s ease; Add this back if NOT using shared element transition */
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 20px;
+    border-radius: 7px;
+    /* transition: all 0.3s ease; Add this back if NOT using shared element transition */
 }
 
 #item-details h2 {
-    color: #007bff; /* Primary color */
-    margin-bottom: 10px;
+    color: #007bff; /* Primary color */
+    margin-bottom: 10px;
 }
 
 #item-details p {
-    margin-bottom: 10px;
-    font-size: 1em;
+    margin-bottom: 10px;
+    font-size: 1em;
 }
 
 #item-details strong {
-    font-weight: 600;
-    color: #555;
+    font-weight: 600;
+    color: #555;
 }
 
 #item-details a {
-    color: #007bff;
-    text-decoration: none;
+    color: #007bff;
+    text-decoration: none;
 }
 
 #item-details a:hover {
-    text-decoration: underline;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    #item-details {
+        padding: 15px;
+        margin: 10px auto;
+    }
+}
+
+/* Currency symbol image styling */
+.currency-symbol {
+    height: 1em; /* Adjust the height relative to the font size */
+    width: auto;
+    vertical-align: middle;
 }
 
 .carousel-container {
@@ -165,20 +180,4 @@ body {
 
 .dot.active {
   background-color: white;
-}
-
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-    #item-details {
-        padding: 15px;
-        margin: 10px auto;
-    }
-}
-
-/* Currency symbol image styling */
-.currency-symbol {
-    height: 1em; /* Adjust the height relative to the font size */
-    width: auto;
-    vertical-align: middle;
 }
