@@ -3,7 +3,7 @@
 body {
   font-family: Arial, sans-serif; /* Or a suitable Arabic font */
   margin: 0; /* Remove default body margin */
-  background-color: #ffffff; /* #f5f5f5 Light gray background */
+  background-color: #f5f5f5; /* Light gray background */
   display: flex;
   flex-flow: column;
   min-height: 100vh; /* Ensure the body takes at least the full viewport height */
@@ -107,6 +107,7 @@ svg {
 /* This styles the div that WRAPS each item's <a> tag */
 .item-container {
    margin: 5px; /* Add margin around each item container */
+   background-color: #ffffff;
    /* Removed padding here, padding is on .item-row (the link itself) */
 }
 
