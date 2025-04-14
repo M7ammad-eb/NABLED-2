@@ -1,216 +1,326 @@
-/* [2025-02-25] Rewriting the whole code block, restoring item spacing */
-
+/* Base styles */
 body {
-  font-family: Arial, sans-serif; /* Or a suitable Arabic font */
-  margin: 0; /* Remove default body margin */
-  background-color: #f5f5f5; /* Light gray background */
+  font-family: Arial, sans-serif; /* Consider a more suitable Arabic font like 'Tajawal', 'Cairo' */
+  margin: 0;
+  background-color: #f5f5f5;
   display: flex;
-  flex-flow: column;
-  min-height: 100vh; /* Ensure the body takes at least the full viewport height */
-  overscroll-behavior-y: contain; /* Disable vertical overscroll */
+  flex-direction: column; /* Arrange children vertically */
+  min-height: 100vh; /* Ensure body takes full viewport height */
+  overscroll-behavior-y: contain; /* Prevent pull-to-refresh on body */
 }
 
+/* Search Bar Styles */
 .search-bar {
-  position: sticky;
+  position: sticky; /* Keep it at the top */
   top: 0;
-  z-index: 100; /* Ensure the top bar is above other content */
-  display: flex;
+  z-index: 100;
+  display: flex; /* Use flex for alignment */
   align-items: center;
-  background-color: #f8f8f8; /* Light background */
+  background-color: #f8f8f8;
   padding: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  /* display: none; /* Initially hidden, controlled by JS */
 }
 
-/* === Refresh Button Base Styles === */
+/* Refresh Button Styles */
 .refresh-button {
-  background: #28a745;
+  background: #28a745; /* Green background */
   border: none;
   padding: 10px;
-  border-radius: 50%;
+  border-radius: 50%; /* Circular */
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.3s;
-  margin-right: 10px; /* Add some space between refresh and search */
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  margin-left: 10px; /* RTL: space is on the left */
 }
-.refresh-button:hover:enabled { /* Apply hover only when enabled */
-  background: #218838;
+.refresh-button:hover:enabled {
+  background: #218838; /* Darker green on hover */
 }
-
-/* === Base SVG Style (inside refresh button or elsewhere) === */
-svg {
+.refresh-button:disabled {
+  cursor: not-allowed;
+  background: #cccccc; /* Grey out when disabled */
+}
+.refresh-button svg {
   fill: white;
   width: 24px;
   height: 24px;
+  transition: transform 0.5s linear; /* Smooth rotation */
 }
-
-/* === Refresh Button Loading/Disabled Styles === */
-.refresh-button:disabled {
-  cursor: not-allowed; /* Show a 'not allowed' cursor when disabled */
-}
-
-.refresh-button:enabled {
-  cursor: pointer; /* Ensure pointer cursor when enabled */
-}
-
-/* Apply animation to the SVG inside the button when it has the 'loading' class */
+/* Loading animation for refresh button */
 .refresh-button.loading svg {
   animation: spin 1s linear infinite;
 }
-
-/* Define the spinning animation keyframes */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* === Search Input Styles === */
+/* Search Input Styles */
 .search-container {
-  flex-grow: 1;
+  flex-grow: 1; /* Take remaining space */
 }
-
 .search-input {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
-  box-sizing: border-box; /* Include padding and border in width */
+  box-sizing: border-box;
+  direction: rtl; /* Ensure text input is RTL */
 }
 
-/* === Product List Styles === */
-.product-list-container {
-    flex-grow: 1; /* Allow the list to take up remaining space */
-    overflow-y: auto; /* Add vertical scrolling if the content overflows */
-    margin: 10px;
-    padding: 5px; /* Add some padding around the list */
-}
-
-.products-title{
-    text-align: right;
-    margin-bottom: 1rem;
-}
-
-#items-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Responsive grid */
-    margin: 5px
-    gap: 2px; /* Use gap for spacing between grid items if needed, or rely on item margins */
-}
-
-/* === Item Container Styles (FIXED - Restores Spacing) === */
-/* This styles the div that WRAPS each item's <a> tag */
-.item-container {
-   margin: 5px; /* Add margin around each item container */
-   /* Removed padding here, padding is on .item-row (the link itself) */
-}
-
-
-/* === Item Row Styles (the <a> tag) === */
-.item-row {
-    display: flex;
-    flex-direction: row; /* Make sure items are displayed horizontally */
-    align-items: center;
-    border: 1px solid #ddd;
-    padding: 5px; /* Padding inside the clickable area */
-    margin: 5px;
-    background-color: #ffffff;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    box-sizing: border-box;
-    cursor: pointer; /* Change the cursor to a pointer on hover */
-    text-decoration: none; /* Ensure links don't have default underline */
-    color: inherit; /* Inherit text color */
-}
-.item-row:hover {
-    background-color: #f0f0f0; /* Optional: Add a hover effect */
-}
-
-.item-code {
-    font-size: 0.7em;
-    color: #888888;
-    margin-bottom: 2px; /* Space between code and description */
-    /* text-align: center; Reconsider if left align is better */
-    text-align: right;
-    margin-right: 5px; /* Add space after image */
-}
-.item-description {
-    font-size: 1em;
-    color: #000000;
-    flex-grow: 1; /* Allow description to take available space */
-    text-align: right;
-    margin-right: 5px; /* Add space after code */
-
-}
-
-/* General Button Style (falls back if no specific class matches) */
-button {
-  padding: 10px 20px;
-  background-color: #007bff;
+/* Sign Out Button */
+#signOutButton {
+  position: absolute; /* Position relative to body or a container */
+  top: 15px; /* Adjust as needed */
+  left: 15px; /* Adjust as needed for RTL */
+  padding: 8px 15px;
+  background-color: #dc3545; /* Red color */
   color: white;
   border: none;
-  cursor: pointer;
   border-radius: 5px;
-  margin: 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  z-index: 101; /* Above search bar */
+}
+#signOutButton:hover {
+  background-color: #c82333;
 }
 
-button:hover {
-  background-color: #0056b3;
+
+/* Main Content Area */
+.main-content {
+  flex-grow: 1; /* Allow this area to fill available vertical space */
+  overflow-y: auto; /* Enable vertical scrolling ONLY for this container */
+  padding: 10px; /* Add some padding around the content */
+  padding-bottom: 70px; /* Space for the fixed tab bar (adjust if tab bar height changes) */
 }
 
-/* === Media Query for Smaller Screens === */
-@media (max-width: 500px) {
-  /* Mobile-specific styles */
-  .search-bar {
-    padding: 8px;
-  }
-
-  .refresh-button {
-    padding: 6px; /* Adjust padding for smaller button */
-  }
-
-  .search-input {
-    font-size: 14px;
-  }
-
-  #items-list {
-    /* Changed display to block for single column layout on mobile */
-    display: block;
-    /* Removed grid-template-columns as it's irrelevant for display: block */
-    /* Removed gap as it's less relevant */
-  }
-
-  /* Ensure item containers stack vertically with margin */
-  .item-container {
-     margin: 5px 0; /* Vertical margin only for stacking */
-  }
-
-  /* Item rows take full width */
-  .item-row {
-      /* No changes needed here, should work fine */
-  }
+/* View Title Styles (for "Categories" and Item List Title) */
+.view-title {
+  padding: 10px 15px;
+  text-align: right;
+  font-size: 1.3em;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  margin: 0 -10px 15px -10px; /* Extend border and add margin */
 }
 
-/* === Transition Styles === */
-/* for item click transition */
-.item-clicked {
-    transition: all 0.3s ease; /* Smooth transition */
-    opacity: 0.5; /* Fade slightly */
-    transform: scale(0.95); /* Shrink slightly */
+/* Category Buttons Container */
+#category-buttons-container {
+  /* display: block; /* Initially shown, controlled by JS */
+}
+#actual-button-list {
+  /* Container for the buttons themselves */
+  padding: 0 5px; /* Add some padding if needed */
+}
+.category-button {
+  display: block;
+  width: 100%; /* Full width within its container */
+  margin: 10px 0; /* Vertical spacing */
+  padding: 18px 15px; /* Comfortable padding */
+  font-size: 1.1em;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px; /* Slightly more rounded */
+  text-align: right;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.category-button:hover {
+  background-color: #f8f8f8;
+  border-color: #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* Style for images within item rows */
+/* Items List Container */
+#items-list-container {
+ /* display: none; /* Initially hidden, controlled by JS */
+}
+.product-list-container {
+  /* No specific styles needed unless overriding defaults */
+}
+
+/* Items List Grid/Layout */
+#items-list {
+  display: grid;
+  /* Responsive grid: min 300px width, max 1fr (takes equal space) */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px; /* Spacing between grid items */
+}
+#items-list p { /* Styling for loading/error messages */
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    grid-column: 1 / -1; /* Span full grid width */
+}
+
+
+/* Item Container Styles (Wrapper for each item link) */
+.item-container {
+  /* No margin needed here if using grid gap */
+  /* background-color: #ffffff; /* Moved background to item-row */
+  /* border-radius: 5px; /* Moved border-radius to item-row */
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Moved shadow to item-row */
+  overflow: hidden; /* Ensure content respects border radius */
+}
+
+/* Item Row Styles (The <a> tag) */
+.item-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  padding: 10px; /* Increased padding */
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.item-row:hover {
+  background-color: #f9f9f9;
+  border-color: #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Item Image in List */
 .list-image {
-    width: 40px;        /* Slightly smaller image for potentially tighter rows */
-    height: 40px;
-    object-fit: cover;    /* Prevent distortion */
-    margin-right: 8px; /* Adjust spacing */
-    border-radius: 4px; /* Optional: Rounded corners */
-    transition: all 0.3s ease; /* Add transition for smoothness*/
-    flex-shrink: 0; /* Prevent image from shrinking if text is long */
+  width: 50px; /* Slightly larger image */
+  height: 50px;
+  object-fit: cover;
+  margin-left: 12px; /* RTL: Space is on the left */
+  border-radius: 4px;
+  flex-shrink: 0; /* Prevent image shrinking */
+  background-color: #eee; /* Placeholder background */
+}
+
+/* Item Code in List */
+.item-code {
+  font-size: 0.8em; /* Smaller code */
+  color: #777; /* Lighter color */
+  margin-left: 10px; /* RTL: Space between code and description */
+  text-align: right;
+}
+
+/* Item Description in List */
+.item-description {
+  font-size: 1em;
+  color: #333; /* Darker text */
+  flex-grow: 1; /* Take remaining space */
+  text-align: right;
+  /* White space handling if names are long */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Tab Bar Styles */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  background-color: #ffffff; /* White background */
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1); /* Slightly stronger shadow */
+  z-index: 1000;
+  height: 60px; /* Define tab bar height */
+}
+
+.tab-button {
+  flex: 1; /* Equal width */
+  padding: 10px;
+  background: none;
+  border: none;
+  border-top: 3px solid transparent; /* Top border for active state */
+  font-size: 1rem;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tab-button.active {
+  color: #007bff; /* Active color */
+  font-weight: bold;
+  border-top-color: #007bff; /* Active indicator on top */
+}
+
+.tab-button:hover:not(.active) {
+  color: #333;
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  #items-list {
+    /* Single column on smaller screens */
+    grid-template-columns: 1fr;
+    gap: 8px; /* Adjust gap for single column */
+  }
+  .item-row {
+      padding: 8px; /* Adjust padding */
+  }
+  .list-image {
+      width: 40px;
+      height: 40px;
+      margin-left: 10px;
+  }
+  .item-description {
+      font-size: 0.95em;
+  }
+  .item-code {
+      font-size: 0.75em;
+  }
+  .tab-button {
+      font-size: 0.9rem; /* Slightly smaller font on tabs */
+  }
+  .view-title {
+      font-size: 1.1em;
+  }
+  .category-button {
+      padding: 15px 12px;
+      font-size: 1em;
+  }
+}
+
+@media (max-width: 400px) {
+    .search-bar {
+        padding: 8px;
+    }
+    .refresh-button {
+        padding: 8px;
+        margin-left: 8px;
+    }
+    .refresh-button svg {
+        width: 20px;
+        height: 20px;
+    }
+    .search-input {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+    #signOutButton {
+        font-size: 0.8em;
+        padding: 6px 10px;
+        top: 12px;
+        left: 12px;
+    }
+}
+
+/* Item Click Transition (Optional - used in detail page navigation) */
+.item-clicked {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0.5;
+  transform: scale(0.98);
 }
