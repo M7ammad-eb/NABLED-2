@@ -64,12 +64,13 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         // User is signed in.
         signOutButton.style.display = "block"; // Show sign out button
+        searchBar.style.display = 'flex'; // Show search bar now that user is logged in
 
         // Load data into localStorage (if needed) AND THEN set up the view.
         try {
             await loadDataIntoLocalStorage(false); // Pass false for initial load (use cache/localStorage if available)
             showCategoriesView(); // Show categories view by default
-            setupSearch(); // Setup search functionality (it's initially hidden)
+            setupSearch(); // Setup search functionality
         } catch (error) {
             console.error("Failed to load initial data or setup view:", error);
             // Display an error message in both potential views
@@ -89,6 +90,7 @@ auth.onAuthStateChanged(async (user) => {
     } else {
         // User is signed out.
         signOutButton.style.display = "none";
+        searchBar.style.display = 'none'; // Hide search bar if logged out
         // Redirect to sign-in page if not already there
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') { // Adjust path if needed
              window.location.href = "signin.html";
@@ -325,11 +327,12 @@ function displayCategoryButtons() {
 
 // Show the main categories list view
 function showCategoriesView() {
-    if (!itemsListContainer || !categoryButtonsContainer || !searchBar || !categoriesTab || !itemsTab) return; // Safety check
+    // Safety check for elements
+    if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab) return;
 
     itemsListContainer.style.display = 'none';      // Hide items list
     categoryButtonsContainer.style.display = 'block'; // Show categories container
-    searchBar.style.display = 'none';               // Hide search bar
+    // searchBar remains visible
 
     // Update active tab state
     categoriesTab.classList.add('active');
@@ -341,12 +344,13 @@ function showCategoriesView() {
 
 // Show the view with all items listed
 function showAllItemsView() {
-     if (!itemsListContainer || !categoryButtonsContainer || !searchBar || !categoriesTab || !itemsTab || !itemsListTitle) return;
+     // Safety check for elements
+     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
 
     categoryButtonsContainer.style.display = 'none'; // Hide categories
     itemsListContainer.style.display = 'block';    // Show items list container
     itemsListTitle.textContent = 'جميع العناصر';      // Set title for the view
-    searchBar.style.display = 'flex';              // Show search bar (assuming it uses flex)
+    // searchBar remains visible
 
     // Update active tab state
     itemsTab.classList.add('active');
@@ -358,12 +362,13 @@ function showAllItemsView() {
 
 // Show the view with items filtered by a specific category
 function showItemsByCategory(categoryName) {
-    if (!itemsListContainer || !categoryButtonsContainer || !searchBar || !categoriesTab || !itemsTab || !itemsListTitle) return;
+    // Safety check for elements
+    if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
 
     categoryButtonsContainer.style.display = 'none'; // Hide categories
     itemsListContainer.style.display = 'block';    // Show items list container
     itemsListTitle.textContent = categoryName;       // Set title to the category name
-    searchBar.style.display = 'flex';              // Show search bar (can be hidden if search shouldn't work here)
+    // searchBar remains visible
 
     // Update active tab state (Visually switch to 'Items' tab when showing items)
     itemsTab.classList.add('active');
@@ -383,6 +388,11 @@ refreshButton.addEventListener("click", async function() {
     button.disabled = true;
     button.classList.add('loading');
 
+    // Store current view state before refresh
+    const categoriesViewActive = categoryButtonsContainer.style.display === 'block';
+    const currentFilterCategory = itemsTab.classList.contains('active') && itemsListTitle.textContent !== 'جميع العناصر' ? itemsListTitle.textContent : null;
+
+
     try {
         // Clear previous data from localStorage
         localStorage.removeItem('dataSheet');
@@ -392,18 +402,26 @@ refreshButton.addEventListener("click", async function() {
         // Force fetch fresh data using cache-busting
         await loadDataIntoLocalStorage(true); // Pass true to force refresh
 
-        // --- Refresh the CURRENT view ---
-        // For simplicity, always default back to the categories view after refresh.
-        // A more complex implementation could remember the last view/category.
-        showCategoriesView();
-        console.log("Data refreshed, showing default Categories view.");
-
+        // --- Refresh the view that was active before ---
+        if (categoriesViewActive) {
+            showCategoriesView();
+            console.log("Data refreshed, showing Categories view.");
+        } else if (currentFilterCategory) {
+             showItemsByCategory(currentFilterCategory);
+             console.log(`Data refreshed, showing filtered Items view for: ${currentFilterCategory}`);
+        }
+        else {
+            showAllItemsView();
+            console.log("Data refreshed, showing All Items view.");
+        }
 
     } catch (error) {
         console.error("Error during refresh process:", error);
         // Optionally show error to user in the UI
          if(actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data. Please try again.</p>';
          if(itemsList) itemsList.innerHTML = '<p>Error refreshing data. Please try again.</p>';
+         // Default back to categories view on error
+         showCategoriesView();
     } finally {
         // --- Visual feedback ends ---
         button.disabled = false;
@@ -414,17 +432,28 @@ refreshButton.addEventListener("click", async function() {
 
 // --- Search Functionality ---
 function setupSearch() {
-    if (!searchInput || !itemsList) {
-        console.warn("Search input or items list not found for setupSearch.");
+    if (!searchInput || !itemsList || !categoryButtonsContainer) {
+        console.warn("Search input, items list, or category container not found for setupSearch.");
         return;
     }
 
     // Use 'input' event for real-time filtering
     searchInput.addEventListener('input', () => {
+        // If user starts typing while categories are shown, switch to All Items view first
+        if (categoryButtonsContainer.style.display === 'block') {
+             console.log("Search initiated from Categories view, switching to All Items.");
+             showAllItemsView();
+             // Note: The filtering logic below will run immediately after switching the view
+        }
+
         const searchTerm = searchInput.value.toLowerCase().trim();
 
         // Get all item *containers* currently displayed in the list
-        const itemElements = itemsList.querySelectorAll('.item-container');
+        // Ensure we are selecting from the correct list container
+        const currentItemsList = document.getElementById('items-list');
+        if (!currentItemsList) return; // Exit if items list isn't available
+
+        const itemElements = currentItemsList.querySelectorAll('.item-container');
 
         itemElements.forEach(itemElement => {
             const itemLink = itemElement.querySelector('a.item-row');
