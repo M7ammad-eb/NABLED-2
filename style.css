@@ -181,7 +181,8 @@ body {
 /* Item Row Styles (The <a> tag) */
 .item-row {
   display: flex;
-  align-items: center;
+  /* Align items to the top if description wraps */
+  align-items: flex-start;
   border: 1px solid #ddd;
   padding: 10px; /* Increased padding */
   background-color: #ffffff;
@@ -209,6 +210,7 @@ body {
   border-radius: 4px;
   flex-shrink: 0; /* Prevent image shrinking */
   background-color: #eee; /* Placeholder background */
+  margin-top: 2px; /* Align better with multi-line text */
 }
 
 /* Item Code in List */
@@ -217,6 +219,8 @@ body {
   color: #777; /* Lighter color */
   margin-left: 10px; /* RTL: Space between code and description */
   text-align: right;
+  line-height: 1.4; /* Adjust line height if needed */
+  padding-top: 2px; /* Align better with multi-line text */
 }
 
 /* Item Description in List */
@@ -225,10 +229,14 @@ body {
   color: #333; /* Darker text */
   flex-grow: 1; /* Take remaining space */
   text-align: right;
-  /* White space handling if names are long */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* --- MODIFIED FOR WRAPPING --- */
+  white-space: normal; /* Allow wrapping */
+  overflow: visible; /* Allow content to overflow vertically if needed */
+  text-overflow: clip; /* Remove ellipsis */
+  /* word-wrap: break-word; /* Optional: break long words */
+  /* overflow-wrap: break-word; /* Optional: break long words (newer property) */
+  line-height: 1.4; /* Adjust line height for readability */
+  /* --- END OF MODIFICATION --- */
 }
 
 
@@ -280,6 +288,7 @@ body {
   }
   .item-row {
       padding: 8px; /* Adjust padding */
+      align-items: flex-start; /* Ensure alignment works with wrapped text */
   }
   .list-image {
       width: 40px;
