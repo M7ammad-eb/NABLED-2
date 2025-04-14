@@ -152,7 +152,8 @@ function displayItems() {
 
     if (cachedData && cachedData.data && cachedPermission && cachedPermission.data && auth.currentUser) { // Check auth.currentUser too
         const dataRows = cachedData.data;
-        const permissionRows = cachedPermission.data;
+        
+        /*const permissionRows = cachedPermission.data;
 
         const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
         // Default to empty array if no permissions found
@@ -167,7 +168,7 @@ function displayItems() {
          if (!userPermissions) {
             itemsList.innerHTML = '<p>Your email is not configured for access. Please contact an administrator.</p>';
             return; // Stop if user email not found in permissions
-        }
+        }*/
 
 
         for (let i = 1; i < dataRows.length; i++) { // Start from 1 to skip header row
