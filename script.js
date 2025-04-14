@@ -213,7 +213,7 @@ function displayCategoryButtons() {
             button.classList.add('category-button');
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                showItemsByCategory(category, false); // Pass false for isPopState
+                showItemsByCategory(category, false); // Pass false for isPopState (this should PUSH state)
             });
             actualButtonList.appendChild(button);
         });
@@ -285,10 +285,8 @@ function handlePopState(event) {
 
     const state = event.state;
     // Determine the target view based on the state from history
-    // IMPORTANT: When navigating *back* TO categories, we REPLACE state to make it the base
     if (!state || state.view === 'categories') {
-        console.log("Popstate: updating UI to categories view and REPLACING state");
-        history.replaceState({ view: 'categories', filter: null }, '', '#categories'); // Replace state on back navigation TO categories
+        console.log("Popstate: updating UI to categories view");
         showCategoriesViewUI(); // Update UI only
     } else if (state.view === 'items') {
         if (state.filter) {
@@ -300,7 +298,6 @@ function handlePopState(event) {
         }
     } else {
          console.warn("Popstate: Unknown state received, defaulting to categories UI", state);
-         history.replaceState({ view: 'categories', filter: null }, '', '#categories'); // Replace with default
          showCategoriesViewUI();
     }
 }
@@ -387,7 +384,7 @@ function setupSearch() {
              const newState = { view: 'items', filter: null };
              if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
                  console.log("Pushing state for all items view (from search)");
-                 history.pushState(newState, '', '#items'); // PUSH state here
+                 history.pushState(newState, '', '#items'); // *** PUSH state here ***
              }
              showAllItemsViewUI(); // Update UI only
              filterDisplayedItems(searchTerm); // Filter the newly displayed items
@@ -439,7 +436,7 @@ function setupProfileMenu() {
     console.log("Profile menu setup.");
 }
 
-// --- Tab Event Listeners (REVISED History Logic) ---
+// --- Tab Event Listeners (FINAL History Logic) ---
 if (categoriesTab && itemsTab) {
     categoriesTab.addEventListener('click', (e) => {
         e.preventDefault();
@@ -459,16 +456,28 @@ if (categoriesTab && itemsTab) {
         e.preventDefault();
         const currentState = history.state;
         const newState = { view: 'items', filter: null };
-         // Always PUSH state when navigating TO all items via tab click, unless already there
+
+        // Only change history if the target state is different
         if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
-            console.log("Tab Click: Pushing state for all items view");
-            history.pushState(newState, '', '#items');
+            // *** REVISED LOGIC FOR ALL ITEMS TAB CLICK ***
+            if (currentState && currentState.view === 'items' && currentState.filter !== null) {
+                // If coming from a filtered item view, REPLACE the filtered state with Categories first, then PUSH All Items
+                console.log("Tab Click: Replacing filtered item state with Categories, then Pushing All Items");
+                // Replace the current filtered state with the base Categories state
+                history.replaceState({ view: 'categories', filter: null }, '', '#categories');
+                // Now push the All Items state on top of the Categories state
+                history.pushState(newState, '', '#items');
+            } else {
+                // Otherwise (coming from categories, null, or unknown), just PUSH the All Items state
+                console.log("Tab Click: Pushing state for all items view");
+                history.pushState(newState, '', '#items');
+            }
         } else {
             console.log("Tab Click: All items view state already current.");
         }
         showAllItemsViewUI(); // Update UI only
     });
-     console.log("Tab event listeners added with revised history logic.");
+     console.log("Tab event listeners added with FINAL history logic.");
 } else {
     console.error("Tab elements not found, listeners not added.");
 }
