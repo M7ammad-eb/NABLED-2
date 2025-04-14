@@ -18,32 +18,38 @@ const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vn
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
 // --- DOM Element References ---
-const signOutButton = document.getElementById('signOutButton');
+// Tabs and Views
 const categoriesTab = document.getElementById('categories-tab');
 const itemsTab = document.getElementById('items-tab');
 const categoryButtonsContainer = document.getElementById('category-buttons-container');
-const actualButtonList = document.getElementById('actual-button-list'); // Div inside the container for buttons
+const actualButtonList = document.getElementById('actual-button-list');
 const itemsListContainer = document.getElementById('items-list-container');
-const itemsList = document.getElementById('items-list'); // The actual list where items are rendered
+const itemsList = document.getElementById('items-list');
 const itemsListTitle = document.getElementById('items-list-title');
+// Search Bar Elements
 const searchBar = document.querySelector('.search-bar');
 const searchInput = document.querySelector('.search-input');
+const clearSearchButton = document.getElementById('clear-search-button'); // New
 const refreshButton = document.querySelector(".refresh-button");
+// Profile Menu Elements
+const profileButton = document.getElementById('profile-button'); // New
+const profileDropdown = document.getElementById('profile-dropdown'); // New
+const userEmailDisplay = document.getElementById('user-email-display'); // New
+const dropdownSignOutButton = document.getElementById('dropdown-sign-out-button'); // New
 
-// --- Sign Out ---
-signOutButton.addEventListener('click', signOut);
-
+// --- Sign Out Function ---
+// Now triggered from the dropdown menu
 function signOut() {
     auth.signOut()
         .then(() => {
-            // Clear local storage on sign out
             localStorage.removeItem('dataSheet');
             localStorage.removeItem('permissionRows');
             console.log('User signed out and local data cleared.');
-            window.location.href = 'signin.html';
+            window.location.href = 'signin.html'; // Redirect to sign-in
         })
         .catch((error) => {
             console.error('Sign-out error:', error);
+            // Optionally show error to user
         });
 }
 
@@ -63,367 +69,362 @@ if ('serviceWorker' in navigator) {
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         // User is signed in.
-        signOutButton.style.display = "block"; // Show sign out button
-        searchBar.style.display = 'flex'; // Show search bar now that user is logged in
+        profileButton.style.display = "block"; // Show profile button
+        searchBar.style.display = 'flex'; // Show search bar
 
-        // Load data into localStorage (if needed) AND THEN set up the view.
+        // Load data and set initial view
         try {
-            await loadDataIntoLocalStorage(false); // Pass false for initial load (use cache/localStorage if available)
-            showCategoriesView(); // Show categories view by default
+            await loadDataIntoLocalStorage(false);
+            // Check initial URL hash or default to categories
+            handleUrlHash(); // Check hash on load
             setupSearch(); // Setup search functionality
+            setupProfileMenu(); // Setup profile menu interactions
         } catch (error) {
             console.error("Failed to load initial data or setup view:", error);
-            // Display an error message in both potential views
             if(actualButtonList) actualButtonList.innerHTML = '<p>Error loading data. Please check connection and refresh.</p>';
             if(itemsList) itemsList.innerHTML = '<p>Error loading data. Please check connection and refresh.</p>';
         }
 
         // Offline indicator logic (optional)
-        function updateOnlineStatus() {
-            // Add logic here if you have an offline indicator element
-             console.log("Online status:", navigator.onLine);
-        }
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        updateOnlineStatus(); // Check initial status
+        // ... (keep if needed) ...
 
     } else {
         // User is signed out.
-        signOutButton.style.display = "none";
-        searchBar.style.display = 'none'; // Hide search bar if logged out
+        profileButton.style.display = "none"; // Hide profile button
+        searchBar.style.display = 'none'; // Hide search bar
+        profileDropdown.style.display = 'none'; // Ensure dropdown is hidden
+
         // Redirect to sign-in page if not already there
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') { // Adjust path if needed
+             // Check if the current hash indicates a view state; if so, clear it before redirecting
+             if (window.location.hash.startsWith('#categories') || window.location.hash.startsWith('#items')) {
+                 history.replaceState(null, '', window.location.pathname); // Clear hash
+             }
              window.location.href = "signin.html";
         }
     }
 });
 
 // --- Data Loading ---
-// forceRefresh = true will bypass localStorage check and add cache-busting
+// (Keep the existing loadDataIntoLocalStorage function as is)
 async function loadDataIntoLocalStorage(forceRefresh = false) {
     try {
-        // Only fetch if forced OR data is not in localStorage
         if (forceRefresh || !localStorage.getItem('dataSheet') || !localStorage.getItem('permissionRows')) {
             console.log(forceRefresh ? "Forcing refresh..." : "Fetching data (missing from localStorage or refresh forced)...");
-
-            // Add cache-busting parameter if forcing refresh
             const cacheBuster = forceRefresh ? `&_=${Date.now()}` : '';
             const currentSheetUrl = `${sheetUrl}${cacheBuster}`;
             const currentPermissionsUrl = `${permissionsSheetUrl}${cacheBuster}`;
-
-            // Fetch both sheets concurrently
             const [dataResponse, permissionsResponse] = await Promise.all([
                 fetch(currentSheetUrl, { cache: forceRefresh ? 'reload' : 'default' }),
                 fetch(currentPermissionsUrl, { cache: forceRefresh ? 'reload' : 'default' })
             ]);
-
             if (!dataResponse.ok || !permissionsResponse.ok) {
                 throw new Error(`HTTP error! Status: Data=${dataResponse.status}, Permissions=${permissionsResponse.status}`);
             }
-
             const dataCsvText = await dataResponse.text();
             const permissionsCsvText = await permissionsResponse.text();
-
             const dataRows = parseCSV(dataCsvText);
             const permissionRows = parseCSV(permissionsCsvText);
-
-            // Basic validation: Check if header row exists (at least one row)
-             if (!dataRows || dataRows.length === 0) {
-                 throw new Error("Fetched data sheet appears empty or invalid.");
-             }
-             if (!permissionRows || permissionRows.length === 0) {
-                 throw new Error("Fetched permissions sheet appears empty or invalid.");
-             }
-
-            // Store the freshly fetched data
+             if (!dataRows || dataRows.length === 0) throw new Error("Fetched data sheet appears empty or invalid.");
+             if (!permissionRows || permissionRows.length === 0) throw new Error("Fetched permissions sheet appears empty or invalid.");
             localStorage.setItem('dataSheet', JSON.stringify({ data: dataRows }));
             localStorage.setItem('permissionRows', JSON.stringify({ data: permissionRows }));
             console.log("Data loaded into localStorage");
-
         } else {
             console.log("Using data from localStorage.");
         }
-
     } catch (error) {
         console.error("Error fetching and storing data:", error);
-        // Re-throw the error to be caught by the calling function (e.g., in auth check or refresh handler)
-        throw error;
+        throw error; // Re-throw
     }
 }
 
 // --- CSV Parsing ---
+// (Keep the existing parseCSV function as is)
 function parseCSV(csvText) {
     if (typeof Papa === 'undefined') {
         console.error("PapaParse library not loaded!");
-        return []; // Return empty array or handle error appropriately
+        return [];
     }
-    // Use PapaParse to parse CSV text into an array of arrays
     const result = Papa.parse(csvText, { header: false });
-    if (result.errors.length > 0) {
-        console.warn("PapaParse encountered errors:", result.errors);
-    }
+    if (result.errors.length > 0) console.warn("PapaParse encountered errors:", result.errors);
     return result.data;
 }
 
 // --- Get Unique Categories ---
+// (Keep the existing getUniqueCategories function as is)
 function getUniqueCategories() {
     const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
-
-    if (!cachedData || !cachedData.data || cachedData.data.length < 2) { // Need at least header + 1 data row
+    if (!cachedData || !cachedData.data || cachedData.data.length < 2) {
         console.warn("No sufficient data found in localStorage for categories.");
         return [];
     }
-
     const dataRows = cachedData.data;
-    const categories = new Set(); // Use a Set for efficient uniqueness
-
-    // Start from 1 to skip header row
+    const categories = new Set();
     for (let i = 1; i < dataRows.length; i++) {
         const row = dataRows[i];
-        // Assuming category is in the second column (index 1)
         if (row && row[1] && typeof row[1] === 'string' && row[1].trim() !== '') {
             categories.add(row[1].trim());
         }
     }
-
-    // Convert Set back to an array and sort alphabetically (optional)
     return [...categories].sort();
 }
 
-
 // --- Display Items ---
-// filterCategory (optional): If provided, only items matching this category are shown.
+// (Keep the existing displayItems function as is)
 function displayItems(filterCategory = null) {
-    if (!itemsList) {
-        console.error("Items list element not found!");
-        return;
-    }
-    itemsList.innerHTML = '<p>Loading items...</p>'; // Show loading message
-
+    if (!itemsList) return;
+    itemsList.innerHTML = '<p>Loading items...</p>';
     const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
-    // Permissions are not directly needed for display here, but checked for existence
     const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
-
     if (cachedData && cachedData.data && cachedPermission && cachedPermission.data && auth.currentUser) {
         const dataRows = cachedData.data;
-        let itemsFound = false; // Flag to check if any items are displayed
-
-        // Clear previous items *before* the loop
+        let itemsFound = false;
         itemsList.innerHTML = '';
-
-        // Start from 1 to skip header row
         for (let i = 1; i < dataRows.length; i++) {
             const item = dataRows[i];
-            // Basic row validation: Ensure it's an array and has at least the columns we need (ID, Name, Category, Image URLs)
-            if (!Array.isArray(item) || item.length < 7 || item.every(cell => !cell || String(cell).trim() === '')) {
-                 console.warn(`Skipping invalid or empty row at index ${i}`);
-                 continue; // Skip empty/invalid rows
-            }
-
-            // --- Category Filtering ---
-            const itemCategory = item[1] ? String(item[1]).trim() : ''; // Assuming category is column index 1
-            if (filterCategory && itemCategory !== filterCategory) {
-                continue; // Skip item if a filter is set and it doesn't match
-            }
-            // ------------------------
-
-            itemsFound = true; // Mark that we found at least one item to display
-
+            if (!Array.isArray(item) || item.length < 7 || item.every(cell => !cell || String(cell).trim() === '')) continue;
+            const itemCategory = item[1] ? String(item[1]).trim() : '';
+            if (filterCategory && itemCategory !== filterCategory) continue;
+            itemsFound = true;
             const itemId = String(item[0] || '').trim();
-            const itemName = String(item[2] || 'No Name').trim(); // Default name if column 2 is empty
-            // Get the first available image URL from columns 4, 5, 6
+            const itemName = String(item[2] || 'No Name').trim();
             const itemImage = [item[4], item[5], item[6]].map(img => img ? String(img).trim() : null).find(img => img !== null && img !== '');
-
-            const imageSrc = itemImage ? itemImage : "placeholder.png"; // Use placeholder if no image found
-
+            const imageSrc = itemImage ? itemImage : "placeholder.png";
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('item-container');
-
-            // Create the link element for navigation
             const link = document.createElement('a');
             link.href = `detail.html?id=${encodeURIComponent(itemId)}`;
             link.classList.add('item-row');
-            link.dataset.itemId = itemId; // Add data attributes if needed elsewhere
-
-            // Create and append the image
+            link.dataset.itemId = itemId;
             const img = document.createElement('img');
-            img.src = imageSrc; // Initially set src
+            img.src = imageSrc;
             img.alt = itemName;
             img.classList.add('list-image');
-            // Add onerror handler *before* setting src if possible, or right after
-            img.onerror = function() { this.src='placeholder.png'; this.onerror=null; }; // Fallback to placeholder on error
+            img.loading = "lazy"; // Add lazy loading
+            img.onerror = function() { this.src='placeholder.png'; this.onerror=null; };
             link.appendChild(img);
-
-            // Create and append item code
             const codeDiv = document.createElement('div');
             codeDiv.classList.add('item-code');
             codeDiv.textContent = itemId;
             link.appendChild(codeDiv);
-
-            // Create and append item description
             const descDiv = document.createElement('div');
             descDiv.classList.add('item-description');
             descDiv.textContent = itemName;
             link.appendChild(descDiv);
-
-            // Append the link to the item container div, then the container to the list
             itemDiv.appendChild(link);
             itemsList.appendChild(itemDiv);
         }
-
-        // Handle case where no items were found (either empty sheet or filter mismatch)
         if (!itemsFound) {
-            if (filterCategory) {
-                itemsList.innerHTML = `<p>No items found in the category "${filterCategory}".</p>`;
-            } else if (dataRows.length <= 1) {
-                 itemsList.innerHTML = '<p>No item data found in the source sheet.</p>';
-            } else {
-                 itemsList.innerHTML = '<p>No items to display.</p>'; // Generic message
-            }
+             if (filterCategory) itemsList.innerHTML = `<p>No items found in the category "${filterCategory}".</p>`;
+             else if (dataRows.length <= 1) itemsList.innerHTML = '<p>No item data found.</p>';
+             else itemsList.innerHTML = '<p>No items to display.</p>';
         }
-
     } else if (!auth.currentUser) {
-        itemsList.innerHTML = '<p>Please sign in to view items.</p>';
+        itemsList.innerHTML = '<p>Please sign in.</p>';
     } else {
-        itemsList.innerHTML = '<p>Could not load item data. Please check your connection or refresh.</p>';
-        console.error("DisplayItems called but required data/permissions missing from localStorage or user not authenticated.");
+        itemsList.innerHTML = '<p>Could not load item data.</p>';
+        console.error("DisplayItems error: Data/permissions missing or user not auth.");
     }
 }
 
-
 // --- Display Category Buttons ---
+// (Keep the existing displayCategoryButtons function, ensuring it adds listeners correctly)
 function displayCategoryButtons() {
-    if (!actualButtonList) {
-        console.error("Element to hold category buttons (#actual-button-list) not found!");
-        return;
-    }
-    actualButtonList.innerHTML = '<p>Loading categories...</p>'; // Loading message
-
+    if (!actualButtonList) return;
+    actualButtonList.innerHTML = '<p>Loading categories...</p>';
     try {
-        const categories = getUniqueCategories(); // Get categories from localStorage data
-
+        const categories = getUniqueCategories();
         if (categories.length === 0) {
             actualButtonList.innerHTML = '<p>No categories found.</p>';
             return;
         }
-
-        actualButtonList.innerHTML = ''; // Clear loading message
-
+        actualButtonList.innerHTML = '';
         categories.forEach(category => {
             const button = document.createElement('button');
             button.textContent = category;
-            button.classList.add('category-button'); // Add class for styling
-            // Add event listener to show items for this category when clicked
-            button.addEventListener('click', () => showItemsByCategory(category));
+            button.classList.add('category-button');
+            // IMPORTANT: Modify click listener to use history state
+            button.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default if it was an anchor
+                showItemsByCategory(category); // Let this function handle history.pushState
+            });
             actualButtonList.appendChild(button);
         });
     } catch (error) {
-        console.error("Error getting or displaying categories:", error);
+        console.error("Error getting/displaying categories:", error);
         actualButtonList.innerHTML = '<p>Error loading categories.</p>';
     }
 }
 
-// --- View Switching Logic ---
+// --- View Switching & History Management ---
 
-// Show the main categories list view
-function showCategoriesView() {
-    // Safety check for elements
+// Helper to check current state and prevent duplicate pushes
+function shouldPushState(newState) {
+    const currentState = history.state;
+    if (!currentState && newState.view === 'categories') return false; // Initial state often null, treat as categories
+    if (!currentState) return true; // If current is null but new isn't categories, push
+    return !(currentState.view === newState.view && currentState.filter === newState.filter);
+}
+
+// Show Categories View
+function showCategoriesView(isPopState = false) {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab) return;
+    console.log(`showCategoriesView called (isPopState: ${isPopState})`);
 
-    itemsListContainer.style.display = 'none';      // Hide items list
-    categoryButtonsContainer.style.display = 'block'; // Show categories container
-    // searchBar remains visible
-
-    // Update active tab state
+    itemsListContainer.style.display = 'none';
+    categoryButtonsContainer.style.display = 'block';
     categoriesTab.classList.add('active');
     itemsTab.classList.remove('active');
+    categoriesTab.setAttribute('aria-selected', 'true');
+    itemsTab.setAttribute('aria-selected', 'false');
 
-    displayCategoryButtons(); // Populate/refresh the category buttons
-    console.log("Switched to Categories View");
+    displayCategoryButtons(); // Refresh buttons
+
+    // Update history state if not called by popstate
+    const newState = { view: 'categories', filter: null };
+    if (!isPopState && shouldPushState(newState)) {
+         console.log("Pushing state for categories");
+         history.pushState(newState, '', '#categories');
+    }
 }
 
-// Show the view with all items listed
-function showAllItemsView() {
-     // Safety check for elements
-     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
-
-    categoryButtonsContainer.style.display = 'none'; // Hide categories
-    itemsListContainer.style.display = 'block';    // Show items list container
-    itemsListTitle.textContent = 'جميع العناصر';      // Set title for the view
-    // searchBar remains visible
-
-    // Update active tab state
-    itemsTab.classList.add('active');
-    categoriesTab.classList.remove('active');
-
-    displayItems(); // Display all items (no filter)
-    console.log("Switched to All Items View");
-}
-
-// Show the view with items filtered by a specific category
-function showItemsByCategory(categoryName) {
-    // Safety check for elements
+// Show All Items View
+function showAllItemsView(isPopState = false) {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
+    console.log(`showAllItemsView called (isPopState: ${isPopState})`);
 
-    categoryButtonsContainer.style.display = 'none'; // Hide categories
-    itemsListContainer.style.display = 'block';    // Show items list container
-    itemsListTitle.textContent = categoryName;       // Set title to the category name
-    // searchBar remains visible
-
-    // Update active tab state (Visually switch to 'Items' tab when showing items)
+    categoryButtonsContainer.style.display = 'none';
+    itemsListContainer.style.display = 'block';
+    itemsListTitle.textContent = 'جميع العناصر';
     itemsTab.classList.add('active');
     categoriesTab.classList.remove('active');
+    itemsTab.setAttribute('aria-selected', 'true');
+    categoriesTab.setAttribute('aria-selected', 'false');
 
-    displayItems(categoryName); // Display items filtered by the category
-    console.log(`Switched to Items View for Category: ${categoryName}`);
+    displayItems(); // Display all items
+
+    // Update history state if not called by popstate
+    const newState = { view: 'items', filter: null };
+     if (!isPopState && shouldPushState(newState)) {
+        console.log("Pushing state for all items");
+        history.pushState(newState, '', '#items');
+    }
+}
+
+// Show Items Filtered by Category
+function showItemsByCategory(categoryName, isPopState = false) {
+    if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
+     console.log(`showItemsByCategory called for "${categoryName}" (isPopState: ${isPopState})`);
+
+    categoryButtonsContainer.style.display = 'none';
+    itemsListContainer.style.display = 'block';
+    itemsListTitle.textContent = categoryName;
+    itemsTab.classList.add('active'); // Visually activate Items tab
+    categoriesTab.classList.remove('active');
+    itemsTab.setAttribute('aria-selected', 'true');
+    categoriesTab.setAttribute('aria-selected', 'false');
+
+    displayItems(categoryName); // Display filtered items
+
+    // Update history state if not called by popstate
+    const newState = { view: 'items', filter: categoryName };
+    if (!isPopState && shouldPushState(newState)) {
+        console.log(`Pushing state for category: ${categoryName}`);
+        history.pushState(newState, '', `#items/${encodeURIComponent(categoryName)}`);
+    }
+}
+
+// --- Popstate Event Handler (Browser Back/Forward) ---
+function handlePopState(event) {
+    console.log("popstate event fired. State:", event.state);
+    if (!auth.currentUser) {
+        console.log("User not logged in, ignoring popstate.");
+        return; // Don't handle history if logged out
+    }
+
+    const state = event.state;
+    if (!state || state.view === 'categories') {
+        // Default to categories if state is null or explicitly categories
+        console.log("Popstate: showing categories view");
+        showCategoriesView(true); // Pass true to prevent pushing state again
+    } else if (state.view === 'items') {
+        if (state.filter) {
+            console.log(`Popstate: showing items for category: ${state.filter}`);
+            showItemsByCategory(state.filter, true); // Pass true
+        } else {
+            console.log("Popstate: showing all items view");
+            showAllItemsView(true); // Pass true
+        }
+    } else {
+         console.warn("Popstate: Unknown state received, defaulting to categories", state);
+         showCategoriesView(true);
+    }
+}
+window.addEventListener('popstate', handlePopState);
+
+// --- Handle Initial URL Hash ---
+function handleUrlHash() {
+    const hash = window.location.hash;
+    console.log("Handling initial hash:", hash);
+    let initialState = { view: 'categories', filter: null }; // Default
+
+    if (hash === '#items') {
+        initialState = { view: 'items', filter: null };
+        showAllItemsView(true); // Show view without pushing state
+    } else if (hash.startsWith('#items/')) {
+        const category = decodeURIComponent(hash.substring(7)); // Get category name after #items/
+        initialState = { view: 'items', filter: category };
+        showItemsByCategory(category, true); // Show view without pushing state
+    } else {
+        // Default to categories (#categories or no hash/invalid hash)
+        initialState = { view: 'categories', filter: null };
+        showCategoriesView(true); // Show view without pushing state
+    }
+
+    // Replace initial history entry
+    console.log("Replacing initial state:", initialState);
+    history.replaceState(initialState, '', hash || '#categories'); // Use current hash or default
 }
 
 
 // --- Refresh Button Logic ---
+// (Keep existing refresh logic, but ensure it calls the correct view function after load)
 refreshButton.addEventListener("click", async function() {
     const button = this;
     console.log("Refresh button clicked");
-
-    // --- Visual feedback starts ---
     button.disabled = true;
     button.classList.add('loading');
 
     // Store current view state before refresh
-    const categoriesViewActive = categoryButtonsContainer.style.display === 'block';
-    const currentFilterCategory = itemsTab.classList.contains('active') && itemsListTitle.textContent !== 'جميع العناصر' ? itemsListTitle.textContent : null;
-
+    const currentState = history.state || { view: 'categories', filter: null }; // Use history state
 
     try {
-        // Clear previous data from localStorage
         localStorage.removeItem('dataSheet');
         localStorage.removeItem('permissionRows');
         console.log("Cleared localStorage for data/permissions.");
+        await loadDataIntoLocalStorage(true); // Force refresh
 
-        // Force fetch fresh data using cache-busting
-        await loadDataIntoLocalStorage(true); // Pass true to force refresh
-
-        // --- Refresh the view that was active before ---
-        if (categoriesViewActive) {
-            showCategoriesView();
-            console.log("Data refreshed, showing Categories view.");
-        } else if (currentFilterCategory) {
-             showItemsByCategory(currentFilterCategory);
-             console.log(`Data refreshed, showing filtered Items view for: ${currentFilterCategory}`);
-        }
-        else {
-            showAllItemsView();
-            console.log("Data refreshed, showing All Items view.");
+        // --- Refresh the view based on the state *before* refresh ---
+        console.log("Refresh complete, restoring view for state:", currentState);
+        if (currentState.view === 'categories') {
+            showCategoriesView(true); // Pass true as we don't want to push state
+        } else if (currentState.view === 'items') {
+            if (currentState.filter) {
+                showItemsByCategory(currentState.filter, true); // Pass true
+            } else {
+                showAllItemsView(true); // Pass true
+            }
+        } else {
+             showCategoriesView(true); // Default fallback
         }
 
     } catch (error) {
         console.error("Error during refresh process:", error);
-        // Optionally show error to user in the UI
-         if(actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data. Please try again.</p>';
-         if(itemsList) itemsList.innerHTML = '<p>Error refreshing data. Please try again.</p>';
-         // Default back to categories view on error
-         showCategoriesView();
+         if(actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data.</p>';
+         if(itemsList) itemsList.innerHTML = '<p>Error refreshing data.</p>';
+         showCategoriesView(true); // Default back to categories on error
     } finally {
-        // --- Visual feedback ends ---
         button.disabled = false;
         button.classList.remove('loading');
         console.log("Refresh attempt complete.");
@@ -432,76 +433,113 @@ refreshButton.addEventListener("click", async function() {
 
 // --- Search Functionality ---
 function setupSearch() {
-    if (!searchInput || !itemsList || !categoryButtonsContainer) {
-        console.warn("Search input, items list, or category container not found for setupSearch.");
+    if (!searchInput || !itemsList || !categoryButtonsContainer || !clearSearchButton) {
+        console.warn("Required elements not found for setupSearch.");
         return;
     }
 
-    // Use 'input' event for real-time filtering
     searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value;
+
+        // Show/hide clear button
+        clearSearchButton.style.display = searchTerm ? 'block' : 'none';
+
         // If user starts typing while categories are shown, switch to All Items view first
-        if (categoryButtonsContainer.style.display === 'block') {
+        if (categoryButtonsContainer.style.display === 'block' && searchTerm) {
              console.log("Search initiated from Categories view, switching to All Items.");
-             showAllItemsView();
-             // Note: The filtering logic below will run immediately after switching the view
+             showAllItemsView(); // This will display all items
+             // Now filter the newly displayed items immediately
+             filterDisplayedItems(searchTerm);
+             return; // Prevent filtering the (now hidden) category buttons
         }
 
-        const searchTerm = searchInput.value.toLowerCase().trim();
+        // Filter items currently visible
+        filterDisplayedItems(searchTerm);
 
-        // Get all item *containers* currently displayed in the list
-        // Ensure we are selecting from the correct list container
-        const currentItemsList = document.getElementById('items-list');
-        if (!currentItemsList) return; // Exit if items list isn't available
-
-        const itemElements = currentItemsList.querySelectorAll('.item-container');
-
-        itemElements.forEach(itemElement => {
-            const itemLink = itemElement.querySelector('a.item-row');
-            if (!itemLink) return; // Skip if structure is unexpected
-
-            const itemCodeElement = itemLink.querySelector('.item-code');
-            const itemDescriptionElement = itemLink.querySelector('.item-description');
-
-            // Check if elements exist before accessing textContent
-            const itemCode = itemCodeElement ? itemCodeElement.textContent.toLowerCase() : '';
-            const itemDescription = itemDescriptionElement ? itemDescriptionElement.textContent.toLowerCase() : '';
-
-            // Show if search term is empty or if it matches code or description
-            const isMatch = searchTerm === '' || itemCode.includes(searchTerm) || itemDescription.includes(searchTerm);
-            // Hide/show the parent container (.item-container)
-            itemElement.style.display = isMatch ? 'block' : 'none';
-        });
     });
+
+    // Clear button functionality
+    clearSearchButton.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchButton.style.display = 'none'; // Hide button
+        // Manually trigger input event to re-filter (showing all items in the current view)
+        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+        searchInput.focus(); // Set focus back to input
+    });
+
      console.log("Search functionality setup.");
+}
+
+// Helper function to filter items currently in the DOM
+function filterDisplayedItems(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    const currentItemsList = document.getElementById('items-list'); // Get the list element again
+    if (!currentItemsList) return;
+
+    const itemElements = currentItemsList.querySelectorAll('.item-container');
+    itemElements.forEach(itemElement => {
+        const itemLink = itemElement.querySelector('a.item-row');
+        if (!itemLink) return;
+        const itemCode = (itemLink.querySelector('.item-code')?.textContent || '').toLowerCase();
+        const itemDescription = (itemLink.querySelector('.item-description')?.textContent || '').toLowerCase();
+        const isMatch = term === '' || itemCode.includes(term) || itemDescription.includes(term);
+        itemElement.style.display = isMatch ? 'block' : 'none';
+    });
+}
+
+// --- Profile Menu Setup ---
+function setupProfileMenu() {
+    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton) {
+        console.error("Profile menu elements not found.");
+        return;
+    }
+
+    // Toggle Dropdown
+    profileButton.addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent click from immediately closing dropdown via body listener
+        const isVisible = profileDropdown.style.display === 'block';
+        profileDropdown.style.display = isVisible ? 'none' : 'block';
+        // Populate email when showing
+        if (!isVisible && auth.currentUser) {
+            userEmailDisplay.textContent = auth.currentUser.email;
+             userEmailDisplay.title = auth.currentUser.email; // Add title for long emails
+        }
+    });
+
+    // Sign Out Button inside Dropdown
+    dropdownSignOutButton.addEventListener('click', signOut);
+
+    // Close dropdown if clicking outside
+    document.addEventListener('click', (event) => {
+        if (!profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+            profileDropdown.style.display = 'none';
+        }
+    });
+    console.log("Profile menu setup.");
 }
 
 
 // --- Tab Event Listeners ---
 // Add listeners to switch views when tabs are clicked
 if (categoriesTab && itemsTab) {
-    categoriesTab.addEventListener('click', showCategoriesView);
-    itemsTab.addEventListener('click', showAllItemsView);
+    // Prevent default if they were anchors, and use history functions
+    categoriesTab.addEventListener('click', (e) => { e.preventDefault(); showCategoriesView(); });
+    itemsTab.addEventListener('click', (e) => { e.preventDefault(); showAllItemsView(); });
      console.log("Tab event listeners added.");
 } else {
     console.error("Tab elements not found, listeners not added.");
 }
 
 // --- Helper: Get User Permissions (Used by detail.js, keep for consistency) ---
-// This function is not directly used in the main list display now, but might be needed elsewhere.
+// (Keep the existing getUserPermissions function as is)
 function getUserPermissions(permissions, userEmail) {
-    if (!permissions || !userEmail) {
-        console.log("Permissions data or userEmail missing for getUserPermissions");
-        return null;
-    }
-    userEmail = userEmail.trim().toLowerCase(); // Normalize email
-    for (let i = 1; i < permissions.length; i++) { // Start i=1 to skip header
+    if (!permissions || !userEmail) return null;
+    userEmail = userEmail.trim().toLowerCase();
+    for (let i = 1; i < permissions.length; i++) {
         if (permissions[i] && typeof permissions[i][0] === 'string') {
-            let storedEmail = permissions[i][0].trim().toLowerCase(); // Normalize stored email
-            if (storedEmail === userEmail) {
-                return permissions[i]; // Return the full permission row
-            }
+            let storedEmail = permissions[i][0].trim().toLowerCase();
+            if (storedEmail === userEmail) return permissions[i];
         }
     }
-    console.log(`Permissions not found for email: ${userEmail}`);
-    return null; // Return null if no match found
+    return null;
 }
