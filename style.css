@@ -17,174 +17,201 @@ body {
   display: flex; /* Use flex for alignment */
   align-items: center;
   background-color: #f8f8f8;
-  padding: 10px;
+  padding: 10px 15px; /* Adjusted padding */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  height: 60px; /* Explicit height to help positioning other elements */
+  height: 60px; /* Explicit height */
   box-sizing: border-box;
   /* display: none; /* Initially hidden, shown by JS when user logs in */
 }
 
 /* Refresh Button Styles */
 .refresh-button {
-  background: #28a745; /* Green background */
+  background: #28a745;
   border: none;
-  padding: 10px;
-  border-radius: 50%; /* Circular */
+  padding: 8px; /* Slightly smaller padding */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.3s, transform 0.3s;
   margin-left: 10px; /* RTL: space is on the left */
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
 }
-.refresh-button:hover:enabled {
-  background: #218838; /* Darker green on hover */
-}
-.refresh-button:disabled {
-  cursor: not-allowed;
-  background: #cccccc; /* Grey out when disabled */
-}
-.refresh-button svg {
-  fill: white;
-  width: 24px;
-  height: 24px;
-  transition: transform 0.5s linear; /* Smooth rotation */
-}
-/* Loading animation for refresh button */
-.refresh-button.loading svg {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+.refresh-button:hover:enabled { background: #218838; }
+.refresh-button:disabled { cursor: not-allowed; background: #cccccc; }
+.refresh-button svg { fill: white; width: 20px; height: 20px; transition: transform 0.5s linear; } /* Smaller icon */
+.refresh-button.loading svg { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* Search Input Styles */
 .search-container {
   flex-grow: 1; /* Take remaining space */
+  position: relative; /* Needed for absolute positioning of clear button */
+  margin-left: 10px; /* Space between search and profile button */
 }
 .search-input {
   width: 100%;
   padding: 8px 12px;
+  /* Add padding-left (for RTL) to make space for clear button */
+  padding-left: 30px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
   box-sizing: border-box;
-  direction: rtl; /* Ensure text input is RTL */
+  direction: rtl;
+}
+/* NEW: Clear Search Button Style */
+#clear-search-button {
+    position: absolute;
+    left: 5px; /* Position on the left for RTL */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 20px; /* Make 'x' bigger */
+    line-height: 1;
+    padding: 0 5px;
+    cursor: pointer;
+    color: #999;
+    display: none; /* Initially hidden */
+}
+#clear-search-button:hover {
+    color: #333;
 }
 
-/* Sign Out Button */
-#signOutButton {
-  position: absolute;
-  top: 12px; /* Vertically align roughly with search bar content */
-  left: 20px; /* Increased left spacing for RTL */
-  padding: 8px 15px;
-  background-color: #dc3545; /* Red color */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9em;
-  z-index: 101; /* Ensure it's above search bar background */
-  white-space: nowrap; /* Prevent text wrapping */
-  /* display: none; /* Initially hidden, shown by JS when user logs in */
+
+/* NEW: Profile Button Style */
+#profile-button {
+    background: none;
+    border: none;
+    padding: 5px;
+    margin: 0;
+    cursor: pointer;
+    display: flex; /* Align icon */
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0; /* Prevent shrinking */
+    /* display: none; /* Initially hidden, shown by JS */
 }
-#signOutButton:hover {
-  background-color: #c82333;
+#profile-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #555; /* Icon color */
 }
+#profile-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); /* Subtle hover */
+}
+
+/* NEW: Profile Dropdown Menu Style */
+#profile-dropdown {
+    position: absolute;
+    top: 55px; /* Position below search bar */
+    left: 15px; /* Align left (adjust as needed for RTL) */
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 10px;
+    z-index: 110; /* Above search bar */
+    min-width: 200px;
+    display: none; /* Initially hidden */
+    border: 1px solid #eee;
+}
+#user-email-display {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    text-align: right;
+    /* Handle long emails */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#dropdown-sign-out-button {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    color: #dc3545; /* Red text */
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+#dropdown-sign-out-button:hover {
+    background-color: #e9ecef;
+    border-color: #ccc;
+}
+
+/* REMOVED: Old Sign Out Button Style */
+/* #signOutButton { ... } */
 
 
 /* Main Content Area */
 .main-content {
-  flex-grow: 1; /* Allow this area to fill available vertical space */
-  overflow-y: auto; /* Enable vertical scrolling ONLY for this container */
-  padding: 10px; /* Add some padding around the content */
-  /* Add top padding equal to search bar height to prevent content starting under it */
-  padding-top: 10px; /* Adjust if needed, combined with margin-top */
-  /* margin-top: 60px; /* Push content down below sticky search bar */
-  padding-bottom: 70px; /* Space for the fixed tab bar (adjust if tab bar height changes) */
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 10px;
+  padding-top: 10px;
+  padding-bottom: 70px; /* Space for tab bar */
 }
 
-/* View Title Styles (for "Categories" and Item List Title) */
+/* View Title Styles */
 .view-title {
   padding: 10px 15px;
   text-align: right;
   font-size: 1.3em;
   color: #333;
   border-bottom: 1px solid #eee;
-  margin: 0 -10px 15px -10px; /* Extend border and add margin */
+  margin: 0 -10px 15px -10px;
 }
 
 /* Category Buttons Container */
-#category-buttons-container {
-  /* display: block; /* Initially shown, controlled by JS */
-}
-#actual-button-list {
-  /* Container for the buttons themselves */
-  padding: 0 5px; /* Add some padding if needed */
-}
-#actual-button-list p { /* Style loading/error message */
-    text-align: center;
-    padding: 20px;
-    color: #666;
-}
+#category-buttons-container { }
+#actual-button-list { padding: 0 5px; }
+#actual-button-list p { text-align: center; padding: 20px; color: #666; }
 .category-button {
   display: block;
-  width: 100%; /* Full width within its container */
-  margin: 10px 0; /* Vertical spacing */
-  padding: 18px 15px; /* Comfortable padding */
+  width: 100%;
+  margin: 10px 0;
+  padding: 18px 15px;
   font-size: 1.1em;
   background-color: #ffffff;
   border: 1px solid #ddd;
-  border-radius: 8px; /* Slightly more rounded */
+  border-radius: 8px;
   text-align: right;
   cursor: pointer;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-.category-button:hover {
-  background-color: #f8f8f8;
-  border-color: #ccc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
+.category-button:hover { background-color: #f8f8f8; border-color: #ccc; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); }
 
 /* Items List Container */
-#items-list-container {
- /* display: none; /* Initially hidden, controlled by JS */
-}
-.product-list-container {
-  /* No specific styles needed unless overriding defaults */
-}
+#items-list-container { }
+.product-list-container { }
 
 /* Items List Grid/Layout */
 #items-list {
   display: grid;
-  /* Responsive grid: min 300px width, max 1fr (takes equal space) */
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 10px; /* Spacing between grid items */
+  gap: 10px;
 }
-#items-list p { /* Styling for loading/error messages */
-    text-align: center;
-    padding: 20px;
-    color: #666;
-    grid-column: 1 / -1; /* Span full grid width */
-}
+#items-list p { text-align: center; padding: 20px; color: #666; grid-column: 1 / -1; }
 
+/* Item Container Styles */
+.item-container { overflow: hidden; }
 
-/* Item Container Styles (Wrapper for each item link) */
-.item-container {
-  /* No margin needed here if using grid gap */
-  overflow: hidden; /* Ensure content respects border radius */
-}
-
-/* Item Row Styles (The <a> tag) */
+/* Item Row Styles */
 .item-row {
   display: flex;
-  /* Align items to the top if description wraps */
   align-items: flex-start;
   border: 1px solid #ddd;
-  padding: 10px; /* Increased padding */
+  padding: 10px;
   background-color: #ffffff;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -195,50 +222,41 @@ body {
   color: inherit;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
-.item-row:hover {
-  background-color: #f9f9f9;
-  border-color: #ccc;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
+.item-row:hover { background-color: #f9f9f9; border-color: #ccc; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
 
 /* Item Image in List */
 .list-image {
-  width: 50px; /* Slightly larger image */
+  width: 50px;
   height: 50px;
   object-fit: cover;
-  margin-left: 12px; /* RTL: Space is on the left */
+  margin-left: 12px; /* RTL */
   border-radius: 4px;
-  flex-shrink: 0; /* Prevent image shrinking */
-  background-color: #eee; /* Placeholder background */
-  margin-top: 2px; /* Align better with multi-line text */
+  flex-shrink: 0;
+  background-color: #eee;
+  margin-top: 2px;
 }
 
 /* Item Code in List */
 .item-code {
-  font-size: 0.8em; /* Smaller code */
-  color: #777; /* Lighter color */
-  margin-left: 10px; /* RTL: Space between code and description */
+  font-size: 0.8em;
+  color: #777;
+  margin-left: 10px; /* RTL */
   text-align: right;
-  line-height: 1.4; /* Adjust line height if needed */
-  padding-top: 2px; /* Align better with multi-line text */
+  line-height: 1.4;
+  padding-top: 2px;
 }
 
 /* Item Description in List */
 .item-description {
   font-size: 1em;
-  color: #333; /* Darker text */
-  flex-grow: 1; /* Take remaining space */
+  color: #333;
+  flex-grow: 1;
   text-align: right;
-  /* --- MODIFIED FOR WRAPPING --- */
   white-space: normal; /* Allow wrapping */
-  overflow: visible; /* Allow content to overflow vertically if needed */
-  text-overflow: clip; /* Remove ellipsis */
-  /* word-wrap: break-word; /* Optional: break long words */
-  /* overflow-wrap: break-word; /* Optional: break long words (newer property) */
-  line-height: 1.4; /* Adjust line height for readability */
-  /* --- END OF MODIFICATION --- */
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.4;
 }
-
 
 /* Tab Bar Styles */
 .tab-bar {
@@ -247,18 +265,18 @@ body {
   left: 0;
   width: 100%;
   display: flex;
-  background-color: #ffffff; /* White background */
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1); /* Slightly stronger shadow */
+  background-color: #ffffff;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  height: 60px; /* Define tab bar height */
+  height: 60px;
 }
 
 .tab-button {
-  flex: 1; /* Equal width */
+  flex: 1;
   padding: 10px;
   background: none;
   border: none;
-  border-top: 3px solid transparent; /* Top border for active state */
+  border-top: 3px solid transparent;
   font-size: 1rem;
   color: #666;
   cursor: pointer;
@@ -267,87 +285,34 @@ body {
   justify-content: center;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
-
-.tab-button.active {
-  color: #007bff; /* Active color */
-  font-weight: bold;
-  border-top-color: #007bff; /* Active indicator on top */
-}
-
-.tab-button:hover:not(.active) {
-  color: #333;
-}
-
+.tab-button.active { color: #007bff; font-weight: bold; border-top-color: #007bff; }
+.tab-button:hover:not(.active) { color: #333; }
 
 /* Responsive Adjustments */
 @media (max-width: 600px) {
-  #items-list {
-    /* Single column on smaller screens */
-    grid-template-columns: 1fr;
-    gap: 8px; /* Adjust gap for single column */
-  }
-  .item-row {
-      padding: 8px; /* Adjust padding */
-      align-items: flex-start; /* Ensure alignment works with wrapped text */
-  }
-  .list-image {
-      width: 40px;
-      height: 40px;
-      margin-left: 10px;
-  }
-  .item-description {
-      font-size: 0.95em;
-  }
-  .item-code {
-      font-size: 0.75em;
-  }
-  .tab-button {
-      font-size: 0.9rem; /* Slightly smaller font on tabs */
-  }
-  .view-title {
-      font-size: 1.1em;
-  }
-  .category-button {
-      padding: 15px 12px;
-      font-size: 1em;
-  }
-   #signOutButton {
-      left: 15px; /* Adjust position slightly on smaller screens */
-      top: 14px;
-   }
+  #items-list { grid-template-columns: 1fr; gap: 8px; }
+  .item-row { padding: 8px; align-items: flex-start; }
+  .list-image { width: 40px; height: 40px; margin-left: 10px; }
+  .item-description { font-size: 0.95em; }
+  .item-code { font-size: 0.75em; }
+  .tab-button { font-size: 0.9rem; }
+  .view-title { font-size: 1.1em; }
+  .category-button { padding: 15px 12px; font-size: 1em; }
+  #profile-dropdown { left: 10px; min-width: 180px; } /* Adjust dropdown position */
 }
 
 @media (max-width: 400px) {
-    .search-bar {
-        padding: 8px;
-        height: 54px; /* Adjust height */
-    }
-    .refresh-button {
-        padding: 8px;
-        margin-left: 8px;
-    }
-    .refresh-button svg {
-        width: 20px;
-        height: 20px;
-    }
-    .search-input {
-        font-size: 14px;
-        padding: 6px 10px;
-    }
-    #signOutButton {
-        font-size: 0.8em;
-        padding: 6px 10px;
-        top: 11px; /* Re-adjust top */
-        left: 10px; /* Bring closer on very small screens */
-    }
-    .main-content {
-        /* margin-top: 54px; /* Match adjusted search bar height */
-    }
+    .search-bar { padding: 8px 10px; height: 54px; }
+    .refresh-button { padding: 6px; margin-left: 6px; }
+    .refresh-button svg { width: 18px; height: 18px; }
+    .search-input { font-size: 14px; padding: 6px 10px; padding-left: 25px; } /* Adjust clear button padding */
+    #clear-search-button { font-size: 18px; left: 3px; }
+    #profile-button { padding: 4px; }
+    #profile-button svg { width: 22px; height: 22px; }
+    #profile-dropdown { top: 50px; left: 10px; }
+    .main-content { /* margin-top: 54px; */ }
 }
 
-/* Item Click Transition (Optional - used in detail page navigation) */
-.item-clicked {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0.5;
-  transform: scale(0.98);
-}
+/* Item Click Transition */
+.item-clicked { transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0.5; transform: scale(0.98); }
+
