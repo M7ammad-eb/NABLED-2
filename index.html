@@ -14,14 +14,24 @@
         <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
       </svg>
     </button>
+
     <div class="search-container">
       <input type="text" placeholder="بحث..." class="search-input" aria-label="Search Items">
+      <button id="clear-search-button" aria-label="Clear Search" style="display: none;">&times;</button>
     </div>
-  </div>
 
-  <button id="signOutButton" style="display: none;">تسجيل الخروج</button>
+    <button id="profile-button" aria-label="User Menu" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+    </button>
 
-  <div class="main-content">
+    <div id="profile-dropdown" style="display: none;">
+        <div id="user-email-display">Signed in as...</div>
+        <button id="dropdown-sign-out-button">تسجيل الخروج</button>
+    </div>
+
+  </div> <div class="main-content">
 
     <div id="category-buttons-container" style="display: block;">
         <h2 class="view-title">الفئات</h2>
@@ -38,8 +48,8 @@
          </div>
     </div>
 
-  </div> <div class="tab-bar">
-    <button id="categories-tab" class="tab-button active" aria-label="Show Categories">الفئات</button> <button id="items-tab" class="tab-button" aria-label="Show Items">العناصر</button>
+  </div> <div class="tab-bar" role="tablist">
+    <button id="categories-tab" class="tab-button active" role="tab" aria-selected="true" aria-controls="category-buttons-container" aria-label="Show Categories">الفئات</button> <button id="items-tab" class="tab-button" role="tab" aria-selected="false" aria-controls="items-list-container" aria-label="Show Items">العناصر</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
