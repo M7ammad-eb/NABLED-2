@@ -19,7 +19,9 @@ body {
   background-color: #f8f8f8;
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  /* display: none; /* Initially hidden, controlled by JS */
+  height: 60px; /* Explicit height to help positioning other elements */
+  box-sizing: border-box;
+  /* display: none; /* Initially hidden, shown by JS when user logs in */
 }
 
 /* Refresh Button Styles */
@@ -34,6 +36,7 @@ body {
   cursor: pointer;
   transition: background 0.3s, transform 0.3s;
   margin-left: 10px; /* RTL: space is on the left */
+  flex-shrink: 0; /* Prevent shrinking */
 }
 .refresh-button:hover:enabled {
   background: #218838; /* Darker green on hover */
@@ -73,9 +76,9 @@ body {
 
 /* Sign Out Button */
 #signOutButton {
-  position: absolute; /* Position relative to body or a container */
-  top: 15px; /* Adjust as needed */
-  left: 15px; /* Adjust as needed for RTL */
+  position: absolute;
+  top: 12px; /* Vertically align roughly with search bar content */
+  left: 20px; /* Increased left spacing for RTL */
   padding: 8px 15px;
   background-color: #dc3545; /* Red color */
   color: white;
@@ -83,7 +86,9 @@ body {
   border-radius: 5px;
   cursor: pointer;
   font-size: 0.9em;
-  z-index: 101; /* Above search bar */
+  z-index: 101; /* Ensure it's above search bar background */
+  white-space: nowrap; /* Prevent text wrapping */
+  /* display: none; /* Initially hidden, shown by JS when user logs in */
 }
 #signOutButton:hover {
   background-color: #c82333;
@@ -95,6 +100,9 @@ body {
   flex-grow: 1; /* Allow this area to fill available vertical space */
   overflow-y: auto; /* Enable vertical scrolling ONLY for this container */
   padding: 10px; /* Add some padding around the content */
+  /* Add top padding equal to search bar height to prevent content starting under it */
+  padding-top: 10px; /* Adjust if needed, combined with margin-top */
+  /* margin-top: 60px; /* Push content down below sticky search bar */
   padding-bottom: 70px; /* Space for the fixed tab bar (adjust if tab bar height changes) */
 }
 
@@ -115,6 +123,11 @@ body {
 #actual-button-list {
   /* Container for the buttons themselves */
   padding: 0 5px; /* Add some padding if needed */
+}
+#actual-button-list p { /* Style loading/error message */
+    text-align: center;
+    padding: 20px;
+    color: #666;
 }
 .category-button {
   display: block;
@@ -162,9 +175,6 @@ body {
 /* Item Container Styles (Wrapper for each item link) */
 .item-container {
   /* No margin needed here if using grid gap */
-  /* background-color: #ffffff; /* Moved background to item-row */
-  /* border-radius: 5px; /* Moved border-radius to item-row */
-  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Moved shadow to item-row */
   overflow: hidden; /* Ensure content respects border radius */
 }
 
@@ -292,11 +302,16 @@ body {
       padding: 15px 12px;
       font-size: 1em;
   }
+   #signOutButton {
+      left: 15px; /* Adjust position slightly on smaller screens */
+      top: 14px;
+   }
 }
 
 @media (max-width: 400px) {
     .search-bar {
         padding: 8px;
+        height: 54px; /* Adjust height */
     }
     .refresh-button {
         padding: 8px;
@@ -313,8 +328,11 @@ body {
     #signOutButton {
         font-size: 0.8em;
         padding: 6px 10px;
-        top: 12px;
-        left: 12px;
+        top: 11px; /* Re-adjust top */
+        left: 10px; /* Bring closer on very small screens */
+    }
+    .main-content {
+        /* margin-top: 54px; /* Match adjusted search bar height */
     }
 }
 
