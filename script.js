@@ -141,6 +141,31 @@ function parseCSV(csvText) {
     return Papa.parse(csvText, { header: false }).data;
 }
 
+// Get Categries
+function getUniqueCategories() {
+    const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
+
+    if (!cachedData || !cachedData.data) {
+        console.warn("No data found in localStorage.");
+        return [];
+    }
+
+    const dataRows = cachedData.data;
+
+    // Skip header (row 0), take only the 2nd column (index 1)
+    const categories = dataRows.slice(1) // Exclude header
+        .map(row => row[1]) // Get column index 1
+        .filter(value => value && value.trim() !== '') // Filter out empty/null
+        .map(value => value.trim()); // Clean up whitespace
+
+    // Return unique values using a Set
+    const uniqueCategories = [...new Set(categories)];
+
+    console.log(getUniqueCategories());
+    return uniqueCategories;
+}
+
+
 // Display items (using localStorage data) with transition, image, and placeholder
 function displayItems() {
     const itemsList = document.getElementById('items-list');
