@@ -176,8 +176,8 @@ function displayItems() {
             if (!item || item.length === 0 || item.every(cell => cell.trim() === '')) continue; // Skip empty/invalid rows
 
             const itemId = item[0] || ''; // Default to empty string if undefined
-            const itemName = item[1] || 'No Name'; // Default name
-            const itemImage = [item[3], item[4], item[5]].filter(Boolean); // Get the image URL (index 3)
+            const itemName = item[2] || 'No Name'; // Default name
+            const itemImage = [item[4], item[5], item[6]].filter(Boolean); // Get the image URL (index 3)
 
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('item-container'); // Add a class for potential styling
@@ -232,13 +232,7 @@ function getUserPermissions(permissions, userEmail) {
   return null;
 }
 
-// *** Deprecated cache functions - replaced by standard localStorage usage ***
-// function getCachedData(key) { ... }
-// function cacheData(key, data) { ... }
-// async function loadData() { ... }
 
-
-// [2025-02-25] Rewriting the relevant code block as requested.
 // Refresh Button (Updated to use CSS class and animation for visual feedback)
 document.querySelector(".refresh-button").addEventListener("click", async function() {
     const button = this; // Keep reference to the button
