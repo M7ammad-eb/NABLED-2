@@ -94,6 +94,11 @@ function displayItem(item, visibleColumns, columnNames) {
 
   const images = [item[4], item[5], item[6]].filter(Boolean); 
 
+  // If no images, add a single placeholder
+  if (images.length === 0) {
+    images.push('placeholder.png');
+  }
+
   const slidesWrapper = document.createElement('div');
   slidesWrapper.className = 'slides-wrapper';
 
@@ -103,15 +108,15 @@ function displayItem(item, visibleColumns, columnNames) {
     if (index === 0) slide.classList.add('active');
 
     const img = document.createElement('img');
-    img.src = 'placeholder.png'; // initial placeholder
-    img.alt = item[1] || 'Product Image';
-    img.classList.add('carousel-image');
-    img.dataset.src = src;
+    img.src = src === 'placeholder.png' ? src : 'placeholder.png'; // Use real src only after loading
+    img.alt = item[2] || 'Product Name';
+    img.classList.add('carousel-image');
+    img.dataset.src = src;
 
     slide.appendChild(img);
     slidesWrapper.appendChild(slide);
 
-    if (src) {
+    if (src !== 'placeholder.png') {
       const realImageLoader = new Image();
       realImageLoader.src = src;
       realImageLoader.onload = () => { img.src = realImageLoader.src; };
