@@ -29,27 +29,26 @@ const itemsListTitle = document.getElementById('items-list-title');
 // Search Bar Elements
 const searchBar = document.querySelector('.search-bar');
 const searchInput = document.querySelector('.search-input');
-const clearSearchButton = document.getElementById('clear-search-button'); // New
+const clearSearchButton = document.getElementById('clear-search-button');
 const refreshButton = document.querySelector(".refresh-button");
 // Profile Menu Elements
-const profileButton = document.getElementById('profile-button'); // New
-const profileDropdown = document.getElementById('profile-dropdown'); // New
-const userEmailDisplay = document.getElementById('user-email-display'); // New
-const dropdownSignOutButton = document.getElementById('dropdown-sign-out-button'); // New
+const profileButton = document.getElementById('profile-button');
+const profileDropdown = document.getElementById('profile-dropdown');
+const userEmailDisplay = document.getElementById('user-email-display');
+const dropdownSignOutButton = document.getElementById('dropdown-sign-out-button');
 
 // --- Sign Out Function ---
-// Now triggered from the dropdown menu
 function signOut() {
     auth.signOut()
         .then(() => {
             localStorage.removeItem('dataSheet');
             localStorage.removeItem('permissionRows');
             console.log('User signed out and local data cleared.');
-            window.location.href = 'signin.html'; // Redirect to sign-in
+            history.replaceState(null, '', window.location.pathname);
+            window.location.href = 'signin.html';
         })
         .catch((error) => {
             console.error('Sign-out error:', error);
-            // Optionally show error to user
         });
 }
 
@@ -68,37 +67,25 @@ if ('serviceWorker' in navigator) {
 // --- Authentication State Change ---
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        // User is signed in.
-        profileButton.style.display = "block"; // Show profile button
-        searchBar.style.display = 'flex'; // Show search bar
-
-        // Load data and set initial view
+        profileButton.style.display = "block";
+        searchBar.style.display = 'flex';
         try {
             await loadDataIntoLocalStorage(false);
-            // Check initial URL hash or default to categories
-            handleUrlHash(); // Check hash on load
-            setupSearch(); // Setup search functionality
-            setupProfileMenu(); // Setup profile menu interactions
+            handleUrlHash(); // Check hash and set initial view/state
+            setupSearch();
+            setupProfileMenu();
         } catch (error) {
             console.error("Failed to load initial data or setup view:", error);
             if(actualButtonList) actualButtonList.innerHTML = '<p>Error loading data. Please check connection and refresh.</p>';
             if(itemsList) itemsList.innerHTML = '<p>Error loading data. Please check connection and refresh.</p>';
         }
-
-        // Offline indicator logic (optional)
-        // ... (keep if needed) ...
-
     } else {
-        // User is signed out.
-        profileButton.style.display = "none"; // Hide profile button
-        searchBar.style.display = 'none'; // Hide search bar
-        profileDropdown.style.display = 'none'; // Ensure dropdown is hidden
-
-        // Redirect to sign-in page if not already there
-        if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') { // Adjust path if needed
-             // Check if the current hash indicates a view state; if so, clear it before redirecting
+        profileButton.style.display = "none";
+        searchBar.style.display = 'none';
+        profileDropdown.style.display = 'none';
+        if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
              if (window.location.hash.startsWith('#categories') || window.location.hash.startsWith('#items')) {
-                 history.replaceState(null, '', window.location.pathname); // Clear hash
+                 history.replaceState(null, '', window.location.pathname);
              }
              window.location.href = "signin.html";
         }
@@ -106,11 +93,10 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 // --- Data Loading ---
-// (Keep the existing loadDataIntoLocalStorage function as is)
 async function loadDataIntoLocalStorage(forceRefresh = false) {
     try {
         if (forceRefresh || !localStorage.getItem('dataSheet') || !localStorage.getItem('permissionRows')) {
-            console.log(forceRefresh ? "Forcing refresh..." : "Fetching data (missing from localStorage or refresh forced)...");
+            console.log(forceRefresh ? "Forcing refresh..." : "Fetching data...");
             const cacheBuster = forceRefresh ? `&_=${Date.now()}` : '';
             const currentSheetUrl = `${sheetUrl}${cacheBuster}`;
             const currentPermissionsUrl = `${permissionsSheetUrl}${cacheBuster}`;
@@ -118,15 +104,13 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
                 fetch(currentSheetUrl, { cache: forceRefresh ? 'reload' : 'default' }),
                 fetch(currentPermissionsUrl, { cache: forceRefresh ? 'reload' : 'default' })
             ]);
-            if (!dataResponse.ok || !permissionsResponse.ok) {
-                throw new Error(`HTTP error! Status: Data=${dataResponse.status}, Permissions=${permissionsResponse.status}`);
-            }
+            if (!dataResponse.ok || !permissionsResponse.ok) throw new Error(`HTTP error! Status: Data=${dataResponse.status}, Permissions=${permissionsResponse.status}`);
             const dataCsvText = await dataResponse.text();
             const permissionsCsvText = await permissionsResponse.text();
             const dataRows = parseCSV(dataCsvText);
             const permissionRows = parseCSV(permissionsCsvText);
-             if (!dataRows || dataRows.length === 0) throw new Error("Fetched data sheet appears empty or invalid.");
-             if (!permissionRows || permissionRows.length === 0) throw new Error("Fetched permissions sheet appears empty or invalid.");
+             if (!dataRows || dataRows.length === 0) throw new Error("Fetched data sheet appears empty.");
+             if (!permissionRows || permissionRows.length === 0) throw new Error("Fetched permissions sheet appears empty.");
             localStorage.setItem('dataSheet', JSON.stringify({ data: dataRows }));
             localStorage.setItem('permissionRows', JSON.stringify({ data: permissionRows }));
             console.log("Data loaded into localStorage");
@@ -134,50 +118,39 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
             console.log("Using data from localStorage.");
         }
     } catch (error) {
-        console.error("Error fetching and storing data:", error);
-        throw error; // Re-throw
+        console.error("Error fetching/storing data:", error);
+        throw error;
     }
 }
 
 // --- CSV Parsing ---
-// (Keep the existing parseCSV function as is)
 function parseCSV(csvText) {
-    if (typeof Papa === 'undefined') {
-        console.error("PapaParse library not loaded!");
-        return [];
-    }
+    if (typeof Papa === 'undefined') { console.error("PapaParse library not loaded!"); return []; }
     const result = Papa.parse(csvText, { header: false });
-    if (result.errors.length > 0) console.warn("PapaParse encountered errors:", result.errors);
+    if (result.errors.length > 0) console.warn("PapaParse errors:", result.errors);
     return result.data;
 }
 
 // --- Get Unique Categories ---
-// (Keep the existing getUniqueCategories function as is)
 function getUniqueCategories() {
     const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
-    if (!cachedData || !cachedData.data || cachedData.data.length < 2) {
-        console.warn("No sufficient data found in localStorage for categories.");
-        return [];
-    }
+    if (!cachedData || !cachedData.data || cachedData.data.length < 2) { console.warn("No sufficient data for categories."); return []; }
     const dataRows = cachedData.data;
     const categories = new Set();
     for (let i = 1; i < dataRows.length; i++) {
         const row = dataRows[i];
-        if (row && row[1] && typeof row[1] === 'string' && row[1].trim() !== '') {
-            categories.add(row[1].trim());
-        }
+        if (row && row[1] && typeof row[1] === 'string' && row[1].trim() !== '') { categories.add(row[1].trim()); }
     }
     return [...categories].sort();
 }
 
 // --- Display Items ---
-// (Keep the existing displayItems function as is)
 function displayItems(filterCategory = null) {
     if (!itemsList) return;
     itemsList.innerHTML = '<p>Loading items...</p>';
     const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
     const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
-    if (cachedData && cachedData.data && cachedPermission && cachedPermission.data && auth.currentUser) {
+    if (cachedData?.data && cachedPermission?.data && auth.currentUser) {
         const dataRows = cachedData.data;
         let itemsFound = false;
         itemsList.innerHTML = '';
@@ -189,8 +162,8 @@ function displayItems(filterCategory = null) {
             itemsFound = true;
             const itemId = String(item[0] || '').trim();
             const itemName = String(item[2] || 'No Name').trim();
-            const itemImage = [item[4], item[5], item[6]].map(img => img ? String(img).trim() : null).find(img => img !== null && img !== '');
-            const imageSrc = itemImage ? itemImage : "placeholder.png";
+            const itemImage = [item[4], item[5], item[6]].map(img => img ? String(img).trim() : null).find(img => img && img !== '');
+            const imageSrc = itemImage || "placeholder.png";
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('item-container');
             const link = document.createElement('a');
@@ -201,7 +174,7 @@ function displayItems(filterCategory = null) {
             img.src = imageSrc;
             img.alt = itemName;
             img.classList.add('list-image');
-            img.loading = "lazy"; // Add lazy loading
+            img.loading = "lazy";
             img.onerror = function() { this.src='placeholder.png'; this.onerror=null; };
             link.appendChild(img);
             const codeDiv = document.createElement('div');
@@ -216,9 +189,7 @@ function displayItems(filterCategory = null) {
             itemsList.appendChild(itemDiv);
         }
         if (!itemsFound) {
-             if (filterCategory) itemsList.innerHTML = `<p>No items found in the category "${filterCategory}".</p>`;
-             else if (dataRows.length <= 1) itemsList.innerHTML = '<p>No item data found.</p>';
-             else itemsList.innerHTML = '<p>No items to display.</p>';
+             itemsList.innerHTML = filterCategory ? `<p>No items found in category "${filterCategory}".</p>` : (dataRows.length <= 1 ? '<p>No item data found.</p>' : '<p>No items to display.</p>');
         }
     } else if (!auth.currentUser) {
         itemsList.innerHTML = '<p>Please sign in.</p>';
@@ -229,25 +200,20 @@ function displayItems(filterCategory = null) {
 }
 
 // --- Display Category Buttons ---
-// (Keep the existing displayCategoryButtons function, ensuring it adds listeners correctly)
 function displayCategoryButtons() {
     if (!actualButtonList) return;
     actualButtonList.innerHTML = '<p>Loading categories...</p>';
     try {
         const categories = getUniqueCategories();
-        if (categories.length === 0) {
-            actualButtonList.innerHTML = '<p>No categories found.</p>';
-            return;
-        }
+        if (categories.length === 0) { actualButtonList.innerHTML = '<p>No categories found.</p>'; return; }
         actualButtonList.innerHTML = '';
         categories.forEach(category => {
             const button = document.createElement('button');
             button.textContent = category;
             button.classList.add('category-button');
-            // IMPORTANT: Modify click listener to use history state
             button.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default if it was an anchor
-                showItemsByCategory(category); // Let this function handle history.pushState
+                e.preventDefault();
+                showItemsByCategory(category, false); // Pass false for isPopState
             });
             actualButtonList.appendChild(button);
         });
@@ -259,41 +225,23 @@ function displayCategoryButtons() {
 
 // --- View Switching & History Management ---
 
-// Helper to check current state and prevent duplicate pushes
-function shouldPushState(newState) {
-    const currentState = history.state;
-    if (!currentState && newState.view === 'categories') return false; // Initial state often null, treat as categories
-    if (!currentState) return true; // If current is null but new isn't categories, push
-    return !(currentState.view === newState.view && currentState.filter === newState.filter);
-}
-
-// Show Categories View
-function showCategoriesView(isPopState = false) {
+// Show Categories View - Updates UI only
+function showCategoriesViewUI() {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab) return;
-    console.log(`showCategoriesView called (isPopState: ${isPopState})`);
-
+    console.log(`Updating UI for Categories View`);
     itemsListContainer.style.display = 'none';
     categoryButtonsContainer.style.display = 'block';
     categoriesTab.classList.add('active');
     itemsTab.classList.remove('active');
     categoriesTab.setAttribute('aria-selected', 'true');
     itemsTab.setAttribute('aria-selected', 'false');
-
-    displayCategoryButtons(); // Refresh buttons
-
-    // Update history state if not called by popstate
-    const newState = { view: 'categories', filter: null };
-    if (!isPopState && shouldPushState(newState)) {
-         console.log("Pushing state for categories");
-         history.pushState(newState, '', '#categories');
-    }
+    displayCategoryButtons();
 }
 
-// Show All Items View
-function showAllItemsView(isPopState = false) {
+// Show All Items View - Updates UI only
+function showAllItemsViewUI() {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
-    console.log(`showAllItemsView called (isPopState: ${isPopState})`);
-
+    console.log(`Updating UI for All Items View`);
     categoryButtonsContainer.style.display = 'none';
     itemsListContainer.style.display = 'block';
     itemsListTitle.textContent = 'جميع العناصر';
@@ -301,35 +249,30 @@ function showAllItemsView(isPopState = false) {
     categoriesTab.classList.remove('active');
     itemsTab.setAttribute('aria-selected', 'true');
     categoriesTab.setAttribute('aria-selected', 'false');
-
-    displayItems(); // Display all items
-
-    // Update history state if not called by popstate
-    const newState = { view: 'items', filter: null };
-     if (!isPopState && shouldPushState(newState)) {
-        console.log("Pushing state for all items");
-        history.pushState(newState, '', '#items');
-    }
+    displayItems();
 }
 
-// Show Items Filtered by Category
+// Show Items Filtered by Category - Updates UI and PUSHES state if not popstate
 function showItemsByCategory(categoryName, isPopState = false) {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
      console.log(`showItemsByCategory called for "${categoryName}" (isPopState: ${isPopState})`);
 
+    // Update UI
     categoryButtonsContainer.style.display = 'none';
     itemsListContainer.style.display = 'block';
     itemsListTitle.textContent = categoryName;
-    itemsTab.classList.add('active'); // Visually activate Items tab
+    itemsTab.classList.add('active');
     categoriesTab.classList.remove('active');
     itemsTab.setAttribute('aria-selected', 'true');
     categoriesTab.setAttribute('aria-selected', 'false');
+    displayItems(categoryName);
 
-    displayItems(categoryName); // Display filtered items
-
-    // Update history state if not called by popstate
+    // PUSH history state ONLY if called directly (not by popstate)
     const newState = { view: 'items', filter: categoryName };
-    if (!isPopState && shouldPushState(newState)) {
+    const currentState = history.state;
+    const stateChanged = !(currentState?.view === newState.view && currentState?.filter === newState.filter);
+
+    if (!isPopState && stateChanged) {
         console.log(`Pushing state for category: ${categoryName}`);
         history.pushState(newState, '', `#items/${encodeURIComponent(categoryName)}`);
     }
@@ -338,92 +281,91 @@ function showItemsByCategory(categoryName, isPopState = false) {
 // --- Popstate Event Handler (Browser Back/Forward) ---
 function handlePopState(event) {
     console.log("popstate event fired. State:", event.state);
-    if (!auth.currentUser) {
-        console.log("User not logged in, ignoring popstate.");
-        return; // Don't handle history if logged out
-    }
+    if (!auth.currentUser) { console.log("User not logged in, ignoring popstate."); return; }
 
     const state = event.state;
+    // Determine the target view based on the state from history
+    // IMPORTANT: When navigating *back* TO categories, we REPLACE state to make it the base
     if (!state || state.view === 'categories') {
-        // Default to categories if state is null or explicitly categories
-        console.log("Popstate: showing categories view");
-        showCategoriesView(true); // Pass true to prevent pushing state again
+        console.log("Popstate: updating UI to categories view and REPLACING state");
+        history.replaceState({ view: 'categories', filter: null }, '', '#categories'); // Replace state on back navigation TO categories
+        showCategoriesViewUI(); // Update UI only
     } else if (state.view === 'items') {
         if (state.filter) {
-            console.log(`Popstate: showing items for category: ${state.filter}`);
-            showItemsByCategory(state.filter, true); // Pass true
+            console.log(`Popstate: updating UI to items for category: ${state.filter}`);
+            showItemsByCategory(state.filter, true); // Update UI, mark as popstate
         } else {
-            console.log("Popstate: showing all items view");
-            showAllItemsView(true); // Pass true
+            console.log("Popstate: updating UI to all items view");
+            showAllItemsViewUI(); // Update UI only
         }
     } else {
-         console.warn("Popstate: Unknown state received, defaulting to categories", state);
-         showCategoriesView(true);
+         console.warn("Popstate: Unknown state received, defaulting to categories UI", state);
+         history.replaceState({ view: 'categories', filter: null }, '', '#categories'); // Replace with default
+         showCategoriesViewUI();
     }
 }
 window.addEventListener('popstate', handlePopState);
 
-// --- Handle Initial URL Hash ---
+// --- Handle Initial URL Hash on Load ---
 function handleUrlHash() {
     const hash = window.location.hash;
     console.log("Handling initial hash:", hash);
     let initialState = { view: 'categories', filter: null }; // Default
 
+    // Determine initial view based on hash
     if (hash === '#items') {
         initialState = { view: 'items', filter: null };
-        showAllItemsView(true); // Show view without pushing state
+        showAllItemsViewUI();
     } else if (hash.startsWith('#items/')) {
-        const category = decodeURIComponent(hash.substring(7)); // Get category name after #items/
+        const category = decodeURIComponent(hash.substring(7));
         initialState = { view: 'items', filter: category };
-        showItemsByCategory(category, true); // Show view without pushing state
+        showItemsByCategory(category, true);
     } else {
-        // Default to categories (#categories or no hash/invalid hash)
         initialState = { view: 'categories', filter: null };
-        showCategoriesView(true); // Show view without pushing state
+        showCategoriesViewUI();
     }
 
-    // Replace initial history entry
+    // Replace initial history entry correctly based on determined state
     console.log("Replacing initial state:", initialState);
-    history.replaceState(initialState, '', hash || '#categories'); // Use current hash or default
+    let targetHash = '#categories';
+    if (initialState.view === 'items') {
+        targetHash = initialState.filter ? `#items/${encodeURIComponent(initialState.filter)}` : '#items';
+    }
+    // Use replaceState for the very first load state
+    history.replaceState(initialState, '', targetHash);
 }
 
 
 // --- Refresh Button Logic ---
-// (Keep existing refresh logic, but ensure it calls the correct view function after load)
 refreshButton.addEventListener("click", async function() {
     const button = this;
     console.log("Refresh button clicked");
     button.disabled = true;
     button.classList.add('loading');
-
-    // Store current view state before refresh
-    const currentState = history.state || { view: 'categories', filter: null }; // Use history state
-
+    const currentState = history.state || { view: 'categories', filter: null };
     try {
         localStorage.removeItem('dataSheet');
         localStorage.removeItem('permissionRows');
-        console.log("Cleared localStorage for data/permissions.");
-        await loadDataIntoLocalStorage(true); // Force refresh
-
-        // --- Refresh the view based on the state *before* refresh ---
+        console.log("Cleared localStorage.");
+        await loadDataIntoLocalStorage(true);
         console.log("Refresh complete, restoring view for state:", currentState);
+        // Restore view UI based on state BEFORE refresh
         if (currentState.view === 'categories') {
-            showCategoriesView(true); // Pass true as we don't want to push state
+            showCategoriesViewUI();
         } else if (currentState.view === 'items') {
             if (currentState.filter) {
                 showItemsByCategory(currentState.filter, true); // Pass true
             } else {
-                showAllItemsView(true); // Pass true
+                showAllItemsViewUI();
             }
         } else {
-             showCategoriesView(true); // Default fallback
+             showCategoriesViewUI(); // Default fallback
         }
-
     } catch (error) {
-        console.error("Error during refresh process:", error);
+        console.error("Error during refresh:", error);
          if(actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data.</p>';
          if(itemsList) itemsList.innerHTML = '<p>Error refreshing data.</p>';
-         showCategoriesView(true); // Default back to categories on error
+         showCategoriesViewUI(); // Default back to categories UI on error
     } finally {
         button.disabled = false;
         button.classList.remove('loading');
@@ -433,49 +375,38 @@ refreshButton.addEventListener("click", async function() {
 
 // --- Search Functionality ---
 function setupSearch() {
-    if (!searchInput || !itemsList || !categoryButtonsContainer || !clearSearchButton) {
-        console.warn("Required elements not found for setupSearch.");
-        return;
-    }
-
+    if (!searchInput || !itemsList || !categoryButtonsContainer || !clearSearchButton) return;
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value;
-
-        // Show/hide clear button
         clearSearchButton.style.display = searchTerm ? 'block' : 'none';
-
-        // If user starts typing while categories are shown, switch to All Items view first
+        // If user starts typing while categories are shown, switch to All Items view
         if (categoryButtonsContainer.style.display === 'block' && searchTerm) {
              console.log("Search initiated from Categories view, switching to All Items.");
-             showAllItemsView(); // This will display all items
-             // Now filter the newly displayed items immediately
-             filterDisplayedItems(searchTerm);
-             return; // Prevent filtering the (now hidden) category buttons
+             // Manually trigger the state change PUSHING the 'items' state
+             const currentState = history.state;
+             const newState = { view: 'items', filter: null };
+             if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
+                 console.log("Pushing state for all items view (from search)");
+                 history.pushState(newState, '', '#items'); // PUSH state here
+             }
+             showAllItemsViewUI(); // Update UI only
+             filterDisplayedItems(searchTerm); // Filter the newly displayed items
+             return;
         }
-
-        // Filter items currently visible
         filterDisplayedItems(searchTerm);
-
     });
-
-    // Clear button functionality
     clearSearchButton.addEventListener('click', () => {
         searchInput.value = '';
-        clearSearchButton.style.display = 'none'; // Hide button
-        // Manually trigger input event to re-filter (showing all items in the current view)
+        clearSearchButton.style.display = 'none';
         searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        searchInput.focus(); // Set focus back to input
+        searchInput.focus();
     });
-
      console.log("Search functionality setup.");
 }
-
-// Helper function to filter items currently in the DOM
 function filterDisplayedItems(searchTerm) {
     const term = searchTerm.toLowerCase().trim();
-    const currentItemsList = document.getElementById('items-list'); // Get the list element again
+    const currentItemsList = document.getElementById('items-list');
     if (!currentItemsList) return;
-
     const itemElements = currentItemsList.querySelectorAll('.item-container');
     itemElements.forEach(itemElement => {
         const itemLink = itemElement.querySelector('a.item-row');
@@ -489,27 +420,17 @@ function filterDisplayedItems(searchTerm) {
 
 // --- Profile Menu Setup ---
 function setupProfileMenu() {
-    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton) {
-        console.error("Profile menu elements not found.");
-        return;
-    }
-
-    // Toggle Dropdown
+    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton) return;
     profileButton.addEventListener('click', (event) => {
-        event.stopPropagation(); // Prevent click from immediately closing dropdown via body listener
+        event.stopPropagation();
         const isVisible = profileDropdown.style.display === 'block';
         profileDropdown.style.display = isVisible ? 'none' : 'block';
-        // Populate email when showing
         if (!isVisible && auth.currentUser) {
             userEmailDisplay.textContent = auth.currentUser.email;
-             userEmailDisplay.title = auth.currentUser.email; // Add title for long emails
+             userEmailDisplay.title = auth.currentUser.email;
         }
     });
-
-    // Sign Out Button inside Dropdown
     dropdownSignOutButton.addEventListener('click', signOut);
-
-    // Close dropdown if clicking outside
     document.addEventListener('click', (event) => {
         if (!profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
             profileDropdown.style.display = 'none';
@@ -518,26 +439,47 @@ function setupProfileMenu() {
     console.log("Profile menu setup.");
 }
 
-
-// --- Tab Event Listeners ---
-// Add listeners to switch views when tabs are clicked
+// --- Tab Event Listeners (REVISED History Logic) ---
 if (categoriesTab && itemsTab) {
-    // Prevent default if they were anchors, and use history functions
-    categoriesTab.addEventListener('click', (e) => { e.preventDefault(); showCategoriesView(); });
-    itemsTab.addEventListener('click', (e) => { e.preventDefault(); showAllItemsView(); });
-     console.log("Tab event listeners added.");
+    categoriesTab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const currentState = history.state;
+        const newState = { view: 'categories', filter: null };
+        // Always REPLACE state when navigating TO categories via tab click, unless already there
+        if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
+            console.log("Tab Click: Replacing state with categories view");
+            history.replaceState(newState, '', '#categories');
+        } else {
+             console.log("Tab Click: Categories view state already current.");
+        }
+        showCategoriesViewUI(); // Update UI only
+    });
+
+    itemsTab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const currentState = history.state;
+        const newState = { view: 'items', filter: null };
+         // Always PUSH state when navigating TO all items via tab click, unless already there
+        if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
+            console.log("Tab Click: Pushing state for all items view");
+            history.pushState(newState, '', '#items');
+        } else {
+            console.log("Tab Click: All items view state already current.");
+        }
+        showAllItemsViewUI(); // Update UI only
+    });
+     console.log("Tab event listeners added with revised history logic.");
 } else {
     console.error("Tab elements not found, listeners not added.");
 }
 
-// --- Helper: Get User Permissions (Used by detail.js, keep for consistency) ---
-// (Keep the existing getUserPermissions function as is)
+// --- Helper: Get User Permissions ---
 function getUserPermissions(permissions, userEmail) {
     if (!permissions || !userEmail) return null;
     userEmail = userEmail.trim().toLowerCase();
     for (let i = 1; i < permissions.length; i++) {
-        if (permissions[i] && typeof permissions[i][0] === 'string') {
-            let storedEmail = permissions[i][0].trim().toLowerCase();
+        if (permissions[i]?.[0]) { // Check if row and first cell exist
+            let storedEmail = String(permissions[i][0]).trim().toLowerCase();
             if (storedEmail === userEmail) return permissions[i];
         }
     }
