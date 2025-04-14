@@ -92,7 +92,7 @@ function displayItem(item, visibleColumns, columnNames) {
   const carouselContainer = document.createElement('div');
   carouselContainer.className = 'carousel-container';
 
-  const images = [item[3], item[4], item[5]].filter(Boolean); 
+  const images = [item[4], item[5], item[6]].filter(Boolean); 
 
   const slidesWrapper = document.createElement('div');
   slidesWrapper.className = 'slides-wrapper';
@@ -119,17 +119,6 @@ function displayItem(item, visibleColumns, columnNames) {
   });
 
   carouselContainer.appendChild(slidesWrapper);
-
-    /* // Arrows
-    const leftArrow = document.createElement('div');
-    leftArrow.className = 'carousel-arrow left';
-    leftArrow.innerHTML = '&#10094;';
-    const rightArrow = document.createElement('div');
-    rightArrow.className = 'carousel-arrow right';
-    rightArrow.innerHTML = '&#10095;';
-    carouselContainer.appendChild(leftArrow);
-    carouselContainer.appendChild(rightArrow);
-    */
     
   // Dots
   if (images.length > 1) {
@@ -148,7 +137,7 @@ function displayItem(item, visibleColumns, columnNames) {
   // === 2. ITEM DATA  ===
   // Item Name
   const itemName = document.createElement('p');
-  itemName.innerHTML = `<h2>${item[1] || ""}</h2><br>`; // Use empty string if item[1] is undefined.  Good practice for ALL data.
+  itemName.innerHTML = `<h2>${item[2] || ""}</h2><br>`; // Use empty string if item[1] is undefined.  Good practice for ALL data.
   itemDetailsDiv.appendChild(itemName);
 
   // Item ID
@@ -158,19 +147,18 @@ function displayItem(item, visibleColumns, columnNames) {
 
   // Specifications
   const specs = document.createElement('p');
-  specs.innerHTML = `${columnNames[2] || ""} <br><strong>${item[2] || ""}</strong><br>`; // Handle potential undefined values.
+  specs.innerHTML = item[3] ? `${columnNames[3]} <br><strong>${item[3]}</strong><br>` : '';
   itemDetailsDiv.appendChild(specs);
 
   // Cataloge Link
   const catalog = document.createElement('p');
-  const catalogLink = item[6] ? `<a href="${item[6]}">${columnNames[6] || ""}</a>` : (columnNames[6] || ""); // Make link conditional.  Handle undefined columnNames[6] too
-  catalog.innerHTML = `${catalogLink}<br>`;
+  catalog.innerHTML = item[7] ? `<a href="${item[7]}">${columnNames[7] || ""}</a><br>` : ''; // Make link conditional.  Handle undefined columnNames[6] too
   itemDetailsDiv.appendChild(catalog);
 
 
   // Prices (Corrected visibility check)
-  for (let i = 7; i < item.length; i++) {
-      if (visibleColumns[i-2] === 1) { // Corrected check!
+  for (let i = 8; i < item.length; i++) {
+      if (visibleColumns[i-3] === 1) { // Corrected check!
           const key = columnNames[i];
           const value = item[i];
           const prices = document.createElement('p');
