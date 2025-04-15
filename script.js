@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -18,7 +18,6 @@ const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vn
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
 // --- DOM Element References ---
-// Loading Indicator REMOVED
 // Tabs and Views
 const categoriesTab = document.getElementById('categories-tab');
 const itemsTab = document.getElementById('items-tab');
@@ -27,7 +26,7 @@ const actualButtonList = document.getElementById('actual-button-list');
 const itemsListContainer = document.getElementById('items-list-container');
 const itemsList = document.getElementById('items-list');
 const itemsListTitle = document.getElementById('items-list-title');
-const viewWrapper = document.getElementById('view-wrapper'); // New wrapper
+const viewWrapper = document.getElementById('view-wrapper'); // Wrapper for views
 // Search Bar Elements
 const searchBar = document.querySelector('.search-bar');
 const searchInput = document.querySelector('.search-input');
@@ -88,6 +87,9 @@ function tryInitialRenderFromCache() {
         } catch (error) {
             console.error("Error parsing or rendering initial cache:", error);
             localStorage.removeItem('dataSheet');
+             // Show categories container structure but with message if parse fails
+            showCategoriesViewUI();
+            if(actualButtonList) actualButtonList.innerHTML = '<p>Error loading data. Please refresh.</p>';
         }
     } else {
         console.log("No cached data found for initial render.");
@@ -136,7 +138,7 @@ auth.onAuthStateChanged(async (user) => {
             }
         } catch (error) {
             console.error("Error during initial data fetch/setup:", error);
-            if (mainContent) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
+            if (mainContent && !initialRenderDone) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
             initialRenderDone = true;
         }
     } else {
@@ -365,13 +367,11 @@ function showCategoriesViewUI() {
     console.log(`Updating UI for Categories View`);
 
     // Set classes for positioning/transition
-    categoryButtonsContainer.classList.remove('view-hidden-right', 'view-hidden-left');
     categoryButtonsContainer.classList.add('view-active');
-    itemsListContainer.classList.remove('view-active');
-    // Determine direction for transition (optional, simpler to just set end state)
-     itemsListContainer.classList.add('view-hidden-right'); // Slide items right (for RTL)
-     itemsListContainer.classList.remove('view-hidden-left');
+    categoryButtonsContainer.classList.remove('view-left', 'view-right');
 
+    itemsListContainer.classList.add('view-left'); // Position items offscreen left (prep for slide in from right for RTL)
+    itemsListContainer.classList.remove('view-active', 'view-right');
 
     // Update Tabs
     categoriesTab.classList.add('active');
@@ -389,13 +389,11 @@ function showAllItemsViewUI() {
     console.log(`Updating UI for All Items View`);
 
      // Set classes for positioning/transition
-    itemsListContainer.classList.remove('view-hidden-right', 'view-hidden-left');
     itemsListContainer.classList.add('view-active');
-    categoryButtonsContainer.classList.remove('view-active');
-    // Determine direction for transition (optional, simpler to just set end state)
-    categoryButtonsContainer.classList.add('view-hidden-left'); // Slide categories left (for RTL)
-    categoryButtonsContainer.classList.remove('view-hidden-right');
+    itemsListContainer.classList.remove('view-left', 'view-right');
 
+    categoryButtonsContainer.classList.add('view-right'); // Position categories offscreen right (prep for slide in from left for RTL)
+    categoryButtonsContainer.classList.remove('view-active', 'view-left');
 
     // Update Tabs
     itemsTab.classList.add('active');
@@ -413,19 +411,18 @@ function showItemsByCategory(categoryName, isPopState = false) {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
      console.log(`showItemsByCategory called for "${categoryName}" (isPopState: ${isPopState})`);
 
-    // Update UI Classes and Content
-    itemsListContainer.classList.remove('view-hidden-right', 'view-hidden-left');
+    // Update UI Classes and Content (Treat same as showing All Items view visually)
     itemsListContainer.classList.add('view-active');
-    categoryButtonsContainer.classList.remove('view-active');
-    categoryButtonsContainer.classList.add('view-hidden-left'); // Slide categories left (for RTL)
-    categoryButtonsContainer.classList.remove('view-hidden-right');
+    itemsListContainer.classList.remove('view-left', 'view-right');
+    categoryButtonsContainer.classList.add('view-right'); // Categories offscreen right
+    categoryButtonsContainer.classList.remove('view-active', 'view-left');
 
     itemsListTitle.textContent = categoryName;
-    itemsTab.classList.add('active');
+    itemsTab.classList.add('active'); // Keep Items tab visually active
     categoriesTab.classList.remove('active');
     itemsTab.setAttribute('aria-selected', 'true');
     categoriesTab.setAttribute('aria-selected', 'false');
-    displayItems(categoryName);
+    displayItems(categoryName); // Display filtered items
 
     // PUSH history state ONLY if called directly (not by popstate)
     const newState = { view: 'items', filter: categoryName };
@@ -539,7 +536,8 @@ function setupSearch() {
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value;
         clearSearchButton.style.display = searchTerm ? 'block' : 'none';
-        if (categoryButtonsContainer.classList.contains('view-active') && searchTerm) { // Check active view using class
+        // Check active view using class on container
+        if (categoryButtonsContainer.classList.contains('view-active') && searchTerm) {
              console.log("Search initiated from Categories view, switching to All Items.");
              const currentState = history.state;
              const newState = { view: 'items', filter: null };
@@ -676,55 +674,92 @@ function setupSwipeGestures() {
     let touchStartY = 0;
     let touchEndX = 0;
     let touchEndY = 0;
+    let isSwiping = false; // Flag to track if swipe is in progress
     const swipeThreshold = 50; // Minimum horizontal distance for a swipe
     const maxVerticalThreshold = 75; // Maximum vertical distance allowed for a horizontal swipe
 
     // Use viewWrapper for swipe detection
-    if (!viewWrapper) return;
+    if (!viewWrapper) {
+        console.error("View wrapper not found for swipe gestures.");
+        return;
+    }
 
     viewWrapper.addEventListener('touchstart', (event) => {
-        // Use event.changedTouches[0] for multi-touch compatibility
+        // Don't start swipe if interacting with scrollable content or buttons
+        if (event.target.closest('.category-button, .item-row, input, button:not(#profile-button)')) {
+             isSwiping = false;
+             return;
+        }
         touchStartX = event.changedTouches[0].screenX;
         touchStartY = event.changedTouches[0].screenY;
-    }, { passive: true }); // Use passive for performance if not preventing scroll
+        isSwiping = true; // Potential swipe starts
+         // console.log("Touch Start:", touchStartX);
+    }, { passive: true });
+
+     viewWrapper.addEventListener('touchmove', (event) => {
+         if (!isSwiping) return; // Ignore if not swiping
+
+         touchEndX = event.changedTouches[0].screenX;
+         touchEndY = event.changedTouches[0].screenY;
+         const deltaX = touchEndX - touchStartX;
+         const deltaY = touchEndY - touchStartY;
+
+         // If swipe is primarily horizontal, prevent vertical scroll during swipe
+         if (Math.abs(deltaX) > Math.abs(deltaY)) {
+             // This is tricky without making the listener non-passive.
+             // For now, we rely on the touchend logic and vertical threshold.
+             // A more robust solution might require event.preventDefault() here,
+             // making the listener active (potentially impacting performance).
+             // console.log("Horizontal move detected");
+         }
+
+     }, { passive: true }); // Keep passive for performance for now
 
     viewWrapper.addEventListener('touchend', (event) => {
-        touchEndX = event.changedTouches[0].screenX;
+         if (!isSwiping) return; // Ignore if swipe didn't start properly
+         isSwiping = false; // Swipe ends
+
+        touchEndX = event.changedTouches[0].screenX; // Ensure end coords are captured
         touchEndY = event.changedTouches[0].screenY;
+        // console.log("Touch End:", touchEndX);
         handleSwipeGesture();
     }, { passive: true });
 
     function handleSwipeGesture() {
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
+        // console.log(`Swipe Delta: X=${deltaX}, Y=${deltaY}`);
+
+        // Reset coordinates for next potential swipe
+        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0;
 
         // Check if it's primarily a horizontal swipe and meets threshold
         if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaY) < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
 
             // Swipe Right (->): Navigate towards Categories (if on Items)
+            // In RTL, swiping right means moving finger right-to-left on screen
             if (deltaX > 0) {
                 console.log("Swipe Right detected");
-                // Check if currently on an items view (All or Filtered)
-                 if (currentState.view === 'items') {
+                 if (currentState.view === 'items') { // Check if we are on any items view
                      console.log("Swiping from Items to Categories");
-                     categoriesTab.click(); // Simulate click to trigger state change and UI update
+                     // Simulate clicking the categories tab
+                     if(categoriesTab) categoriesTab.click();
                  }
             }
             // Swipe Left (<-): Navigate towards Items (if on Categories)
+            // In RTL, swiping left means moving finger left-to-right on screen
             else if (deltaX < 0) {
                  console.log("Swipe Left detected");
-                 // Check if currently on Categories view
-                 if (currentState.view === 'categories') {
+                 if (currentState.view === 'categories') { // Check if we are on categories view
                      console.log("Swiping from Categories to Items");
-                     itemsTab.click(); // Simulate click to trigger state change and UI update
+                     // Simulate clicking the items tab
+                     if(itemsTab) itemsTab.click();
                  }
             }
         } else {
-             console.log("Swipe ignored (thresholds not met)");
+             console.log("Swipe ignored (thresholds not met or too vertical)");
         }
-        // Reset values (optional, happens on next touchstart anyway)
-        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0;
     }
      console.log("Swipe gestures setup.");
 }
