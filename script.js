@@ -525,50 +525,108 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     return html;
 }
 
-// Carousel Functionality
+// Carousel Functionality (Updated for Sliding Animation)
 function addCarouselFunctionality(parentSelector) {
     const container = document.querySelector(parentSelector);
-    if (!container) return;
+    if (!container) {
+        console.warn("Carousel container not found:", parentSelector);
+        return;
+    }
+
     let currentSlide = 0;
     const slides = container.querySelectorAll('.slide');
     const dots = container.querySelectorAll('.dot');
     const slidesWrapper = container.querySelector('.slides-wrapper');
-    if (!slides.length || !slidesWrapper) return;
 
-    // Image Loading
+    if (!slides.length || !slidesWrapper) {
+        // console.log("Carousel elements not found or no slides.");
+        return; // No carousel to set up
+    }
+
+    // --- Image Loading (remains the same) ---
     slides.forEach(slide => {
         const img = slide.querySelector('img');
         const realSrc = slide.dataset.src;
         if (img && realSrc && realSrc !== 'placeholder.png') {
             const realImageLoader = new Image();
             realImageLoader.onload = () => { img.src = realSrc; };
-            realImageLoader.onerror = () => console.warn(`Failed carousel image: ${realSrc}`);
+            realImageLoader.onerror = () => { console.warn(`Failed to load carousel image: ${realSrc}`); /* Keep placeholder */ };
             realImageLoader.src = realSrc;
-        } else if (img) { img.src = realSrc || 'placeholder.png'; }
+        } else if (img) {
+            // Ensure placeholder is set if it's the only source or loading fails
+            img.src = realSrc || 'placeholder.png';
+        }
     });
 
+    // --- Inner function to show a specific slide ---
     function showSlide(index) {
-        if (slides.length <= 1) return;
-        index = (index + slides.length) % slides.length;
-        slides.forEach((s, i) => s.classList.toggle('active', i === index));
-        dots.forEach((d, i) => d.classList.toggle('active', i === index));
-        currentSlide = index;
-    }
-    dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+        if (slides.length <= 1) return; // No sliding needed for 0 or 1 slide
 
-    // Swipe support for Carousel
+        // Wrap index around if it goes out of bounds
+        index = (index + slides.length) % slides.length;
+
+        console.log(`Showing slide index: ${index}`); // Debug log
+
+        // --- Apply CSS Transform for Sliding ---
+        // For RTL layout, positive translateX moves the wrapper right (showing previous items)
+        // Negative translateX moves the wrapper left (showing next items)
+        // To show slide `index`, we need to move the wrapper right by `index * 100%`.
+        slidesWrapper.style.transform = `translateX(${index * 100}%)`;
+
+        // --- Update Dots ---
+        // Still useful to indicate the active slide visually
+        dots.forEach((d, i) => d.classList.toggle('active', i === index));
+
+        currentSlide = index; // Update the current slide index
+    }
+
+    // --- Dot navigation ---
+    dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+            console.log(`Dot clicked: index ${i}`); // Debug log
+            showSlide(i);
+        });
+    });
+
+    // --- Swipe support for Carousel (remains the same) ---
     let touchStartX = 0;
-    slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
+    slidesWrapper.addEventListener('touchstart', e => {
+        // Only start swipe if there are multiple slides
+        if (slides.length > 1) {
+            touchStartX = e.touches[0].clientX;
+            // Temporarily disable the transition during swipe for better responsiveness
+            // slidesWrapper.style.transition = 'none';
+        }
+    }, { passive: true });
+
     slidesWrapper.addEventListener('touchend', e => {
         if (slides.length <= 1 || touchStartX === 0) return;
+
         const touchEndX = e.changedTouches[0].clientX;
         const diff = touchEndX - touchStartX;
-        if (diff < -50) showSlide(currentSlide - 1); // Swipe Right (L->R) -> Previous
-        else if (diff > 50) showSlide(currentSlide + 1); // Swipe Left (R->L) -> Next
-        touchStartX = 0;
+
+        // Re-enable transition after swipe ends
+       // slidesWrapper.style.transition = 'transform 0.4s ease-in-out'; // Ensure this matches CSS
+
+        // Determine swipe direction and change slide
+        // RTL: L->R swipe (positive diff) = Previous; R->L swipe (negative diff) = Next
+        if (diff < -50) { // Swipe Right (L->R) -> Go to Previous slide
+             console.log("Carousel Swipe Right (L->R) -> Previous");
+             showSlide(currentSlide - 1);
+        } else if (diff < 50) { // Swipe Left (R->L) -> Go to Next slide
+             console.log("Carousel Swipe Left (R->L) -> Next");
+             showSlide(currentSlide + 1);
+        } else {
+            // Optional: Snap back if swipe wasn't enough
+            // showSlide(currentSlide); // Or just do nothing
+        }
+
+        touchStartX = 0; // Reset start position for next swipe
     }, { passive: true });
+
+    // Initialize first slide
     showSlide(0);
-    console.log("Carousel functionality added.");
+    console.log("Carousel functionality (sliding) added.");
 }
 
 
