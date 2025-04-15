@@ -2,8 +2,7 @@
 <html dir="rtl" lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NABLED</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <title>NABLED</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <iframe src="detail.html" style="display: none; visibility: hidden; position: absolute; width:0; height:0; border:0;"></iframe>
@@ -34,20 +33,20 @@
     </div>
 
   </div> <div class="main-content">
+    <div id="view-wrapper">
+        <div id="category-buttons-container" class="view view-active">
+            <h2 class="view-title">الفئات</h2>
+            <div id="actual-button-list">
+                </div>
+        </div>
 
-    <div id="category-buttons-container">
-        <h2 class="view-title">الفئات</h2>
-        <div id="actual-button-list">
-            </div>
-    </div>
-
-    <div id="items-list-container" style="display: none;"> <h2 id="items-list-title" class="view-title"></h2> <div class="product-list-container">
-             <div id="items-list">
-                 </div>
-         </div>
-    </div>
-
-  </div> <div class="tab-bar" role="tablist">
+        <div id="items-list-container" class="view">
+             <h2 id="items-list-title" class="view-title"></h2> <div class="product-list-container">
+                 <div id="items-list">
+                     </div>
+             </div>
+        </div>
+    </div> </div> <div class="tab-bar" role="tablist">
     <button id="categories-tab" class="tab-button active" role="tab" aria-selected="true" aria-controls="category-buttons-container" aria-label="Show Categories">الفئات</button> <button id="items-tab" class="tab-button" role="tab" aria-selected="false" aria-controls="items-list-container" aria-label="Show Items">العناصر</button>
   </div>
 
