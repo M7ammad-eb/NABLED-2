@@ -563,8 +563,8 @@ function addCarouselFunctionality(parentSelector) {
         if (slides.length <= 1 || touchStartX === 0) return;
         const touchEndX = e.changedTouches[0].clientX;
         const diff = touchEndX - touchStartX;
-        if (diff > 50) showSlide(currentSlide - 1); // Swipe Right (L->R) -> Previous
-        else if (diff < -50) showSlide(currentSlide + 1); // Swipe Left (R->L) -> Next
+        if (diff < -50) showSlide(currentSlide - 1); // Swipe Right (L->R) -> Previous
+        else if (diff > 50) showSlide(currentSlide + 1); // Swipe Left (R->L) -> Next
         touchStartX = 0;
     }, { passive: true });
     showSlide(0);
