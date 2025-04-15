@@ -710,7 +710,7 @@ function setupSwipeGestures() {
         // console.log('Closest Interactive:', isInteractive);
         // console.log('Is View Scrolled:', isScrolled);
 
-        if (isInteractive || isScrolled) {
+        if (isInteractive /*|| isScrolled*/) {
              isSwiping = false;
              console.log("Swipe ignored: Target is interactive or view is scrolled.");
              return;
