@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -241,7 +241,7 @@ function getUniqueCategories() {
     }
 }
 
-// --- Display Items ---
+// --- Display Items (Modified Image Loading) ---
 function displayItems(filterCategory = null) {
     if (!itemsList) return;
     itemsList.innerHTML = '<p>Loading items...</p>';
@@ -256,7 +256,7 @@ function displayItems(filterCategory = null) {
         if (!cachedData?.data) throw new Error("Invalid data format");
         const dataRows = cachedData.data;
         let itemsFound = false;
-        itemsList.innerHTML = '';
+        itemsList.innerHTML = ''; // Clear loading message now
         for (let i = 1; i < dataRows.length; i++) {
             const item = dataRows[i];
             if (!Array.isArray(item) || item.length < 7 || item.every(cell => !cell || String(cell).trim() === '')) continue;
@@ -265,21 +265,48 @@ function displayItems(filterCategory = null) {
             itemsFound = true;
             const itemId = String(item[0] || '').trim();
             const itemName = String(item[2] || 'No Name').trim();
-            const itemImage = [item[4], item[5], item[6]].map(img => img ? String(img).trim() : null).find(img => img && img !== '');
-            const imageSrc = itemImage || "placeholder.png";
+
+            // Get the first valid image URL, or null if none
+            const realImageSrc = [item[4], item[5], item[6]]
+                                 .map(img => img ? String(img).trim() : null)
+                                 .find(img => img && img !== '');
+
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('item-container');
             const link = document.createElement('a');
             link.href = `detail.html?id=${encodeURIComponent(itemId)}`;
             link.classList.add('item-row');
             link.dataset.itemId = itemId;
+
+            // --- Start Image Loading Modification ---
             const img = document.createElement('img');
-            img.src = imageSrc;
+            img.src = "placeholder.png"; // Start with placeholder
             img.alt = itemName;
             img.classList.add('list-image');
-            img.loading = "lazy";
-            img.onerror = function() { this.src='placeholder.png'; this.onerror=null; };
-            link.appendChild(img);
+            img.loading = "lazy"; // Still use lazy loading
+
+            // If a real image URL exists, try to load it in the background
+            if (realImageSrc) {
+                img.dataset.realSrc = realImageSrc; // Store the real source
+                const imageLoader = new Image(); // Create an in-memory image
+                imageLoader.onload = () => {
+                    // When the real image loads successfully, update the visible image's src
+                    // Check if the img element still exists and wants this src
+                    if (img && img.dataset.realSrc === realImageSrc) {
+                         img.src = realImageSrc;
+                    }
+                };
+                imageLoader.onerror = () => {
+                    // If the real image fails to load (e.g., 403 error), do nothing.
+                    // The visible image will keep showing the placeholder.
+                    console.warn(`Failed to load image: ${realImageSrc}`);
+                };
+                imageLoader.src = realImageSrc; // Start loading the real image
+            }
+            // --- End Image Loading Modification ---
+
+            link.appendChild(img); // Add the img tag (initially showing placeholder)
+
             const codeDiv = document.createElement('div');
             codeDiv.classList.add('item-code');
             codeDiv.textContent = itemId;
@@ -299,6 +326,7 @@ function displayItems(filterCategory = null) {
          console.error("DisplayItems error parsing or processing data:", error);
     }
 }
+
 
 // --- Display Category Buttons ---
 function displayCategoryButtons() {
