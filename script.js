@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -285,10 +285,9 @@ function handlePopState(event) {
 
     const state = event.state;
     // Determine the target view based on the state from history
+    // *** NO history modification here - just update UI ***
     if (!state || state.view === 'categories') {
-        console.log("Popstate: updating UI to categories view and REPLACING state");
-        // *** REPLACE state when popstate lands on categories ***
-        history.replaceState({ view: 'categories', filter: null }, '', '#categories');
+        console.log("Popstate: updating UI to categories view");
         showCategoriesViewUI(); // Update UI only
     } else if (state.view === 'items') {
         if (state.filter) {
@@ -300,7 +299,6 @@ function handlePopState(event) {
         }
     } else {
          console.warn("Popstate: Unknown state received, defaulting to categories UI", state);
-         history.replaceState({ view: 'categories', filter: null }, '', '#categories'); // Replace with default
          showCategoriesViewUI();
     }
 }
@@ -439,12 +437,15 @@ function setupProfileMenu() {
     console.log("Profile menu setup.");
 }
 
-// --- Tab Event Listeners (History Logic V6 - replaceState added back to popstate for Categories) ---
+// --- Tab Event Listeners (History Logic V7 - Force replaceState for Categories Tab Click ONLY) ---
 if (categoriesTab && itemsTab) {
     categoriesTab.addEventListener('click', (e) => {
         e.preventDefault();
+        const currentState = history.state;
         const newState = { view: 'categories', filter: null };
-        // Always REPLACE state when navigating TO categories via tab click
+        // *** ALWAYS REPLACE state when clicking Categories Tab ***
+        // (Check if state is actually different before replacing to avoid redundant calls if needed,
+        // but forcing replace ensures it becomes the base if user clicks it multiple times)
         console.log("Tab Click: Forcing replaceState with categories view");
         history.replaceState(newState, '', '#categories');
         showCategoriesViewUI(); // Update UI only
@@ -454,17 +455,15 @@ if (categoriesTab && itemsTab) {
         e.preventDefault();
         const currentState = history.state;
         const newState = { view: 'items', filter: null };
-
         // Only change history if the target state is different
         if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
-            // Logic to ensure back goes to categories
+            // *** Use Balanced Logic for All Items Tab ***
+            // Use REPLACE state only if coming from a filtered view
             if (currentState && currentState.view === 'items' && currentState.filter !== null) {
-                // If coming from a filtered item view, REPLACE the filtered state with Categories first, then PUSH All Items
-                console.log("Tab Click: Replacing filtered item state with Categories, then Pushing All Items");
-                history.replaceState({ view: 'categories', filter: null }, '', '#categories');
-                history.pushState(newState, '', '#items');
+                console.log("Tab Click: Replacing filtered item state with all items view");
+                history.replaceState(newState, '', '#items');
             } else {
-                // Otherwise (coming from categories, null, or unknown), just PUSH the All Items state
+                // Otherwise (coming from categories, null, or unknown), PUSH state
                 console.log("Tab Click: Pushing state for all items view");
                 history.pushState(newState, '', '#items');
             }
@@ -473,7 +472,7 @@ if (categoriesTab && itemsTab) {
         }
         showAllItemsViewUI(); // Update UI only
     });
-     console.log("Tab event listeners added with History Logic V6.");
+     console.log("Tab event listeners added with History Logic V7.");
 } else {
     console.error("Tab elements not found, listeners not added.");
 }
