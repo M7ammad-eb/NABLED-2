@@ -1,6 +1,4 @@
-// service-worker.js (v11 - Fixed cache name usage, added baseURL check)
-
-const CACHE_NAME = 'nabled-cache-v11'; // Increment version to force update
+const CACHE_NAME = 'nabled-cache-v12'; // Increment version to force update
 // Define baseURL based on potential deployment environment (e.g., GitHub Pages subdirectory)
 // Adjust '/NABLED-2' to your actual repository name if using GitHub Pages, or '' if deploying at the root.
 const baseURL = '/NABLED-2'; // Example: for https://username.github.io/NABLED-2/
