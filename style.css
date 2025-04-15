@@ -1,67 +1,63 @@
 /* Base styles */
 body {
-  font-family: Arial, sans-serif; /* Consider a more suitable Arabic font like 'Tajawal', 'Cairo' */
+  font-family: Arial, sans-serif;
   margin: 0;
   background-color: #f5f5f5;
   display: flex;
-  flex-direction: column; /* Arrange children vertically */
-  min-height: 100vh; /* Ensure body takes full viewport height */
-  overscroll-behavior-y: contain; /* Prevent pull-to-refresh on body */
+  flex-direction: column;
+  min-height: 100vh;
+  /* Prevent pull-to-refresh and body scroll */
+  overscroll-behavior-y: contain;
+  overflow: hidden; /* Prevent body scroll */
 }
 
-/* Loading Indicator Styles REMOVED */
-/* #app-loading { ... } */
-
-/* Class to hide content initially REMOVED */
-/* .content-hidden { ... } */
-
+/* Loading/Hiding Styles REMOVED */
 
 /* Search Bar Styles */
 .search-bar {
-  position: sticky; /* Keep it at the top */
+  position: sticky;
   top: 0;
   z-index: 100;
-  display: flex; /* Use flex for alignment */
+  display: flex;
   align-items: center;
   background-color: #f8f8f8;
-  padding: 10px 15px; /* Adjusted padding */
+  padding: 10px 15px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  height: 60px; /* Explicit height */
+  height: 60px;
   box-sizing: border-box;
-  /* display: none; /* Initially hidden, shown by JS when user logs in */
+  flex-shrink: 0; /* Prevent search bar from shrinking */
 }
 
 /* Refresh Button Styles */
 .refresh-button {
   background: #28a745;
   border: none;
-  padding: 8px; /* Slightly smaller padding */
+  padding: 8px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.3s, transform 0.3s;
-  margin-left: 10px; /* RTL: space is on the left */
+  margin-left: 10px; /* RTL */
   flex-shrink: 0;
 }
 .refresh-button:hover:enabled { background: #218838; }
 .refresh-button:disabled { cursor: not-allowed; background: #cccccc; }
-.refresh-button svg { fill: white; width: 20px; height: 20px; transition: transform 0.5s linear; } /* Smaller icon */
+.refresh-button svg { fill: white; width: 20px; height: 20px; transition: transform 0.5s linear; }
 .refresh-button.loading svg { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* Search Input Styles */
 .search-container {
-  flex-grow: 1; /* Take remaining space */
-  position: relative; /* Needed for absolute positioning of clear button */
-  margin-left: 10px; /* Space between search and profile button */
+  flex-grow: 1;
+  position: relative;
+  margin-left: 10px; /* RTL */
 }
 .search-input {
   width: 100%;
   padding: 8px 12px;
-  /* Add padding-left (for RTL) to make space for clear button */
-  padding-left: 30px;
+  padding-left: 30px; /* RTL space for clear button */
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
@@ -71,22 +67,19 @@ body {
 /* Clear Search Button Style */
 #clear-search-button {
     position: absolute;
-    left: 5px; /* Position on the left for RTL */
+    left: 5px; /* RTL */
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    font-size: 20px; /* Make 'x' bigger */
+    font-size: 20px;
     line-height: 1;
     padding: 0 5px;
     cursor: pointer;
     color: #999;
-    display: none; /* Initially hidden */
+    display: none;
 }
-#clear-search-button:hover {
-    color: #333;
-}
-
+#clear-search-button:hover { color: #333; }
 
 /* Profile Button Style */
 #profile-button {
@@ -95,85 +88,108 @@ body {
     padding: 5px;
     margin: 0;
     cursor: pointer;
-    display: flex; /* Align icon */
+    display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    flex-shrink: 0; /* Prevent shrinking */
-    /* display: none; /* Initially hidden, shown by JS */
+    flex-shrink: 0;
 }
-#profile-button svg {
-    width: 24px;
-    height: 24px;
-    fill: #555; /* Icon color */
-}
-#profile-button:hover {
-    background-color: rgba(0, 0, 0, 0.05); /* Subtle hover */
-}
+#profile-button svg { width: 24px; height: 24px; fill: #555; }
+#profile-button:hover { background-color: rgba(0, 0, 0, 0.05); }
 
 /* Profile Dropdown Menu Style */
 #profile-dropdown {
     position: absolute;
-    top: 55px; /* Position below search bar */
-    left: 15px; /* Align left (adjust as needed for RTL) */
+    top: 55px;
+    left: 15px; /* RTL */
     background-color: white;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 10px;
-    z-index: 110; /* Above search bar */
+    z-index: 110;
     min-width: 200px;
-    display: none; /* Initially hidden */
+    display: none;
     border: 1px solid #eee;
 }
-/* Style for details within dropdown */
 .user-detail {
     text-align: right;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 5px; /* Spacing below each detail */
+    margin-bottom: 5px;
 }
 #user-email-display {
     font-size: 0.9em;
     color: #555;
-    padding-bottom: 5px; /* Spacing below email */
-    border-bottom: 1px solid #eee; /* Separator line */
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
 }
-/* Style for Job Title */
 #user-job-title {
-    font-size: 0.8em; /* Smaller text */
-    color: #777; /* Lighter color */
-    margin-top: 5px; /* Space above job title */
-    /* display: none; /* Initially hidden, controlled by JS */
+    font-size: 0.8em;
+    color: #777;
+    margin-top: 5px;
 }
 #dropdown-sign-out-button {
     display: block;
     width: 100%;
     padding: 8px 10px;
-    margin-top: 10px; /* Space above button */
+    margin-top: 10px;
     background-color: #f8f8f8;
     border: 1px solid #ddd;
-    color: #dc3545; /* Red text */
+    color: #dc3545;
     border-radius: 4px;
     text-align: center;
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.2s ease;
-    /* display: none; /* Initially hidden, controlled by JS */
 }
-#dropdown-sign-out-button:hover {
-    background-color: #e9ecef;
-    border-color: #ccc;
-}
+#dropdown-sign-out-button:hover { background-color: #e9ecef; border-color: #ccc; }
 
 /* Main Content Area */
 .main-content {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 10px;
-  padding-top: 10px;
-  padding-bottom: 70px; /* Space for tab bar */
+  flex-grow: 1; /* Take remaining vertical space */
+  overflow: hidden; /* Hide vertical overflow if wrapper handles scrolling */
+  position: relative; /* Needed for absolute positioning of views */
+  /* Remove padding-bottom for tab bar, as view-wrapper handles height */
 }
+
+/* NEW: View Wrapper Styles */
+#view-wrapper {
+    position: relative; /* Changed from absolute */
+    width: 100%;
+    height: 100%; /* Take full height of main-content */
+    overflow: hidden; /* Clip the views */
+}
+
+/* NEW: View Container Styles */
+.view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5; /* Match body or set desired background */
+    transition: transform 0.35s ease-in-out; /* Animation */
+    /* Add scrolling within each view */
+    overflow-y: auto;
+    padding: 10px; /* Add padding inside views */
+    box-sizing: border-box; /* Include padding in height/width */
+}
+
+/* NEW: View Positioning Classes */
+.view.view-active {
+    transform: translateX(0%);
+    z-index: 1; /* Bring active view slightly forward if needed */
+}
+/* Position inactive views offscreen */
+/* Note: For RTL, positive translateX moves left, negative moves right */
+#category-buttons-container:not(.view-active) {
+    transform: translateX(100%); /* Start offscreen right (for RTL) */
+}
+#items-list-container:not(.view-active) {
+    transform: translateX(-100%); /* Start offscreen left (for RTL) */
+}
+
 
 /* View Title Styles */
 .view-title {
@@ -182,7 +198,12 @@ body {
   font-size: 1.3em;
   color: #333;
   border-bottom: 1px solid #eee;
-  margin: 0 -10px 15px -10px;
+  /* Adjust margin to account for view padding */
+  margin: -10px -10px 15px -10px;
+  position: sticky; /* Make titles sticky within their view */
+  top: -10px; /* Adjust based on view padding */
+  background-color: #f5f5f5; /* Match view background */
+  z-index: 10; /* Keep title above scrolling content */
 }
 
 /* Category Buttons Container */
@@ -207,7 +228,10 @@ body {
 
 /* Items List Container */
 #items-list-container { }
-.product-list-container { }
+.product-list-container {
+    /* No specific styles needed here, #items-list handles grid */
+     padding-top: 5px; /* Add space below sticky title */
+}
 
 /* Items List Grid/Layout */
 #items-list {
@@ -283,6 +307,7 @@ body {
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   height: 60px;
+  flex-shrink: 0; /* Prevent tab bar from shrinking */
 }
 
 .tab-button {
@@ -324,7 +349,6 @@ body {
     #profile-button { padding: 4px; }
     #profile-button svg { width: 22px; height: 22px; }
     #profile-dropdown { top: 50px; left: 10px; }
-    .main-content { /* margin-top: 54px; */ }
 }
 
 /* Item Click Transition */
