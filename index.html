@@ -9,8 +9,6 @@
   <iframe src="detail.html" style="display: none; visibility: hidden; position: absolute; width:0; height:0; border:0;"></iframe>
 </head>
 <body>
-  <div id="app-loading">Loading App...</div>
-
   <div class="search-bar">
     <button class="refresh-button" aria-label="Refresh Data">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -30,20 +28,20 @@
     </button>
 
     <div id="profile-dropdown" style="display: none;">
-        <div id="user-email-display">Authenticating...</div>
+        <div id="user-email-display" class="user-detail">Authenticating...</div>
+        <div id="user-job-title" class="user-detail" style="display: none;"></div>
         <button id="dropdown-sign-out-button" style="display: none;">تسجيل الخروج</button>
     </div>
 
   </div> <div class="main-content">
 
-    <div id="category-buttons-container" class="content-hidden">
+    <div id="category-buttons-container">
         <h2 class="view-title">الفئات</h2>
         <div id="actual-button-list">
             </div>
     </div>
 
-    <div id="items-list-container" class="content-hidden">
-         <h2 id="items-list-title" class="view-title"></h2> <div class="product-list-container">
+    <div id="items-list-container" style="display: none;"> <h2 id="items-list-title" class="view-title"></h2> <div class="product-list-container">
              <div id="items-list">
                  </div>
          </div>
