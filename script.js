@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -83,8 +83,6 @@ function tryInitialRenderFromCache() {
             handleUrlHash(); // Determine and show initial view based on hash
             if (appLoading) appLoading.style.display = 'none'; // Hide loading indicator
             initialRenderDone = true; // Mark that we showed something
-            setupSearch();
-            setupProfileMenu(); // Setup structure even if button hidden
         } catch (error) {
             console.error("Error parsing or rendering initial cache:", error);
             localStorage.removeItem('dataSheet'); // Clear potentially corrupt data
@@ -94,8 +92,11 @@ function tryInitialRenderFromCache() {
         console.log("No cached data found for initial render.");
         // Keep loading indicator visible
     }
+    // *** Setup UI interactions immediately after attempting render ***
+    setupSearch();
+    setupProfileMenu();
 }
-// --- Run initial cache check immediately ---
+// --- Run initial cache check and setup immediately ---
 tryInitialRenderFromCache();
 
 // --- Authentication State Change (Runs when Firebase Auth is ready) ---
@@ -103,9 +104,7 @@ auth.onAuthStateChanged(async (user) => {
     console.log("Auth state changed. User:", user ? user.email : 'None');
     if (user) {
         // User is signed in.
-        profileButton.style.display = "block";
-        searchBar.style.display = 'flex';
-        if (!initialRenderDone) setupProfileMenu(); // Setup if not done yet
+        // UI elements (search, profile button) are already visible via HTML/CSS
 
         try {
             // Check cache status, but DO NOT fetch automatically
@@ -115,10 +114,9 @@ auth.onAuthStateChanged(async (user) => {
             // If initial render didn't happen (no cache), display message
             if (!initialRenderDone) {
                 console.log("Initial render not done and cache is empty. Prompting refresh.");
-                // Display message indicating no data and need for refresh
                  const mainContent = document.querySelector('.main-content');
                  if (mainContent) mainContent.innerHTML = '<p style="text-align: center; padding: 20px;">No data found. Please press the refresh button <svg style="display:inline; vertical-align:middle; width: 1em; height: 1em;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> to load.</p>';
-                 // Show relevant container (e.g., categories) but with the message inside
+                 // Ensure correct view container is visible for the message
                  itemsListContainer.style.display = 'none';
                  itemsListContainer.classList.add('content-hidden');
                  categoryButtonsContainer.style.display = 'block';
@@ -126,15 +124,11 @@ auth.onAuthStateChanged(async (user) => {
                  if(actualButtonList) actualButtonList.innerHTML = '<p style="text-align: center; padding: 20px;">No data found. Please press refresh.</p>';
 
                  if (appLoading) appLoading.style.display = 'none'; // Hide loading
-                 setupSearch(); // Setup search now
-                 initialRenderDone = true; // Mark as done to prevent re-triggering this block
+                 initialRenderDone = true;
             }
-            // No need to re-render here if initialRenderDone was true,
-            // because loadDataIntoLocalStorage(false) didn't change anything.
-            // Re-rendering only happens after explicit refresh button press.
+             // If initial render WAS done, no background refresh needed unless user clicks button
 
         } catch (error) {
-            // This catch is mainly for potential errors in loadDataLocalStorage's internal logic now
             console.error("Error during background data check:", error);
             if (!initialRenderDone && appLoading) appLoading.style.display = 'none';
             const mainContent = document.querySelector('.main-content');
@@ -142,9 +136,10 @@ auth.onAuthStateChanged(async (user) => {
         }
     } else {
         // User is signed out.
-        profileButton.style.display = "none";
-        searchBar.style.display = 'none';
-        profileDropdown.style.display = 'none';
+        // Hide elements that should only be visible when logged in
+        if (profileButton) profileButton.style.display = "none";
+        if (searchBar) searchBar.style.display = 'none';
+        if (profileDropdown) profileDropdown.style.display = 'none';
         if (appLoading) appLoading.style.display = 'none';
         // Redirect logic
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
@@ -166,26 +161,21 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
             const cacheBuster = `&_=${Date.now()}`;
             const currentSheetUrl = `${sheetUrl}${cacheBuster}`;
             const currentPermissionsUrl = `${permissionsSheetUrl}${cacheBuster}`;
-            const currentData = localStorage.getItem('dataSheet'); // Get current data for comparison
+            const currentData = localStorage.getItem('dataSheet');
             const currentPerms = localStorage.getItem('permissionRows');
-
             const [dataResponse, permissionsResponse] = await Promise.all([
-                fetch(currentSheetUrl, { cache: 'reload' }), // Force network request
+                fetch(currentSheetUrl, { cache: 'reload' }),
                 fetch(currentPermissionsUrl, { cache: 'reload' })
             ]);
             if (!dataResponse.ok || !permissionsResponse.ok) throw new Error(`HTTP error! Status: Data=${dataResponse.status}, Permissions=${permissionsResponse.status}`);
-
             const dataCsvText = await dataResponse.text();
             const permissionsCsvText = await permissionsResponse.text();
             const dataRows = parseCSV(dataCsvText);
             const permissionRows = parseCSV(permissionsCsvText);
              if (!dataRows || dataRows.length === 0) throw new Error("Fetched data sheet appears empty.");
              if (!permissionRows || permissionRows.length === 0) throw new Error("Fetched permissions sheet appears empty.");
-
             const newDataString = JSON.stringify({ data: dataRows });
             const newPermsString = JSON.stringify({ data: permissionRows });
-
-            // Only update localStorage and flag change if data is actually different
             if (newDataString !== currentData || newPermsString !== currentPerms) {
                  localStorage.setItem('dataSheet', newDataString);
                  localStorage.setItem('permissionRows', newPermsString);
@@ -204,14 +194,13 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
             } else {
                 console.log("No cached data found (background check).");
             }
-            // Never fetches here, so dataChanged remains false
             // --- End of Cache Check Logic ---
         }
     } catch (error) {
         console.error("Error in loadDataIntoLocalStorage:", error);
-        throw error; // Re-throw for upstream handlers (like refresh button)
+        throw error;
     }
-    return dataChanged; // Return whether NEW data was fetched and stored
+    return dataChanged;
 }
 
 
@@ -225,7 +214,6 @@ function parseCSV(csvText) {
 
 // --- Get Unique Categories ---
 function getUniqueCategories() {
-    // Add check here before proceeding
     const cachedDataString = localStorage.getItem('dataSheet');
     if (!cachedDataString) { console.warn("getUniqueCategories: No data found in localStorage."); return []; }
     try {
@@ -257,7 +245,6 @@ function displayItems(filterCategory = null) {
     try {
         const cachedData = JSON.parse(cachedDataString);
         if (!cachedData?.data) throw new Error("Invalid data format");
-
         const dataRows = cachedData.data;
         let itemsFound = false;
         itemsList.innerHTML = '';
@@ -315,10 +302,8 @@ function displayCategoryButtons() {
          return;
     }
     try {
-        // getUniqueCategories already checks/parses localStorage
         const categories = getUniqueCategories();
         if (categories.length === 0) {
-            // Check if data exists but no categories were found
             const cachedData = JSON.parse(cachedDataString);
             if (cachedData?.data && cachedData.data.length > 1) {
                  actualButtonList.innerHTML = '<p>No categories defined in data.</p>';
@@ -537,24 +522,44 @@ function filterDisplayedItems(searchTerm) {
 
 // --- Profile Menu Setup ---
 function setupProfileMenu() {
-    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton) return;
+    // Ensure elements exist before adding listeners
+    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton) {
+         console.warn("Profile menu elements not found during setup.");
+         return;
+    }
+
     profileButton.addEventListener('click', (event) => {
-        event.stopPropagation();
+        event.stopPropagation(); // Prevent click from immediately closing dropdown
         const isVisible = profileDropdown.style.display === 'block';
         profileDropdown.style.display = isVisible ? 'none' : 'block';
-        if (!isVisible && auth.currentUser) {
-            userEmailDisplay.textContent = auth.currentUser.email;
-             userEmailDisplay.title = auth.currentUser.email;
+
+        // *** Update dropdown content based on current auth state ***
+        const user = auth.currentUser; // Check auth status *at time of click*
+        if (user) {
+            userEmailDisplay.textContent = user.email;
+            userEmailDisplay.title = user.email;
+            dropdownSignOutButton.style.display = 'block'; // Show sign out button
+        } else {
+            userEmailDisplay.textContent = "Authenticating..."; // Or "Not signed in"
+            userEmailDisplay.title = '';
+            dropdownSignOutButton.style.display = 'none'; // Hide sign out button
         }
     });
+
+    // Attach sign out listener
     dropdownSignOutButton.addEventListener('click', signOut);
+
+    // Close dropdown if clicking outside
     document.addEventListener('click', (event) => {
-        if (!profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+        // Check if the dropdown exists and if the click was outside relevant elements
+        if (profileDropdown && profileDropdown.style.display === 'block' &&
+            !profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
             profileDropdown.style.display = 'none';
         }
     });
     console.log("Profile menu setup.");
 }
+
 
 // --- Tab Event Listeners (Using Balanced History Logic) ---
 // This version uses replaceState for Categories tab click,
