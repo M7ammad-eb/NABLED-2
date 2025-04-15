@@ -286,7 +286,9 @@ function handlePopState(event) {
     const state = event.state;
     // Determine the target view based on the state from history
     if (!state || state.view === 'categories') {
-        console.log("Popstate: updating UI to categories view");
+        console.log("Popstate: updating UI to categories view and REPLACING state");
+        // *** REPLACE state when popstate lands on categories ***
+        history.replaceState({ view: 'categories', filter: null }, '', '#categories');
         showCategoriesViewUI(); // Update UI only
     } else if (state.view === 'items') {
         if (state.filter) {
@@ -298,6 +300,7 @@ function handlePopState(event) {
         }
     } else {
          console.warn("Popstate: Unknown state received, defaulting to categories UI", state);
+         history.replaceState({ view: 'categories', filter: null }, '', '#categories'); // Replace with default
          showCategoriesViewUI();
     }
 }
@@ -436,19 +439,14 @@ function setupProfileMenu() {
     console.log("Profile menu setup.");
 }
 
-// --- Tab Event Listeners (FINAL History Logic) ---
+// --- Tab Event Listeners (History Logic V6 - replaceState added back to popstate for Categories) ---
 if (categoriesTab && itemsTab) {
     categoriesTab.addEventListener('click', (e) => {
         e.preventDefault();
-        const currentState = history.state;
         const newState = { view: 'categories', filter: null };
-        // Always REPLACE state when navigating TO categories via tab click, unless already there
-        if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
-            console.log("Tab Click: Replacing state with categories view");
-            history.replaceState(newState, '', '#categories');
-        } else {
-             console.log("Tab Click: Categories view state already current.");
-        }
+        // Always REPLACE state when navigating TO categories via tab click
+        console.log("Tab Click: Forcing replaceState with categories view");
+        history.replaceState(newState, '', '#categories');
         showCategoriesViewUI(); // Update UI only
     });
 
@@ -459,13 +457,11 @@ if (categoriesTab && itemsTab) {
 
         // Only change history if the target state is different
         if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
-            // *** REVISED LOGIC FOR ALL ITEMS TAB CLICK ***
+            // Logic to ensure back goes to categories
             if (currentState && currentState.view === 'items' && currentState.filter !== null) {
                 // If coming from a filtered item view, REPLACE the filtered state with Categories first, then PUSH All Items
                 console.log("Tab Click: Replacing filtered item state with Categories, then Pushing All Items");
-                // Replace the current filtered state with the base Categories state
                 history.replaceState({ view: 'categories', filter: null }, '', '#categories');
-                // Now push the All Items state on top of the Categories state
                 history.pushState(newState, '', '#items');
             } else {
                 // Otherwise (coming from categories, null, or unknown), just PUSH the All Items state
@@ -477,7 +473,7 @@ if (categoriesTab && itemsTab) {
         }
         showAllItemsViewUI(); // Update UI only
     });
-     console.log("Tab event listeners added with FINAL history logic.");
+     console.log("Tab event listeners added with History Logic V6.");
 } else {
     console.error("Tab elements not found, listeners not added.");
 }
