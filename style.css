@@ -9,26 +9,11 @@ body {
   overscroll-behavior-y: contain; /* Prevent pull-to-refresh on body */
 }
 
-/* Loading Indicator Styles */
-#app-loading {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f5f5f5; /* Match body background */
-    z-index: 2000; /* Ensure it's on top of everything */
-    font-size: 1.2em;
-    color: #555;
-}
+/* Loading Indicator Styles REMOVED */
+/* #app-loading { ... } */
 
-/* Class to hide content initially */
-.content-hidden {
-    display: none !important; /* Use important to override potential inline styles initially */
-}
+/* Class to hide content initially REMOVED */
+/* .content-hidden { ... } */
 
 
 /* Search Bar Styles */
@@ -140,22 +125,32 @@ body {
     display: none; /* Initially hidden */
     border: 1px solid #eee;
 }
-#user-email-display {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+/* Style for details within dropdown */
+.user-detail {
     text-align: right;
-    /* Handle long emails */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 5px; /* Spacing below each detail */
+}
+#user-email-display {
+    font-size: 0.9em;
+    color: #555;
+    padding-bottom: 5px; /* Spacing below email */
+    border-bottom: 1px solid #eee; /* Separator line */
+}
+/* Style for Job Title */
+#user-job-title {
+    font-size: 0.8em; /* Smaller text */
+    color: #777; /* Lighter color */
+    margin-top: 5px; /* Space above job title */
+    /* display: none; /* Initially hidden, controlled by JS */
 }
 #dropdown-sign-out-button {
     display: block;
     width: 100%;
     padding: 8px 10px;
+    margin-top: 10px; /* Space above button */
     background-color: #f8f8f8;
     border: 1px solid #ddd;
     color: #dc3545; /* Red text */
@@ -164,6 +159,7 @@ body {
     cursor: pointer;
     font-size: 0.9em;
     transition: background-color 0.2s ease;
+    /* display: none; /* Initially hidden, controlled by JS */
 }
 #dropdown-sign-out-button:hover {
     background-color: #e9ecef;
@@ -224,16 +220,14 @@ body {
 /* Item Container Styles */
 .item-container { overflow: hidden; }
 
-/* Item Row Styles (The <a> tag) */
+/* Item Row Styles */
 .item-row {
   display: flex;
-  /* *** MODIFICATION: Align items vertically centered *** */
-  align-items: center;
-  /* *** END MODIFICATION *** */
+  align-items: center; /* Vertically center */
   border: 1px solid #ddd;
   padding: 10px;
   background-color: #ffffff;
-  border-radius: 8px;
+  border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   width: 100%;
   box-sizing: border-box;
@@ -241,7 +235,7 @@ body {
   text-decoration: none;
   color: inherit;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  min-height: 70px; /* Ensure rows have some minimum height for centering */
+  min-height: 70px;
 }
 .item-row:hover { background-color: #f9f9f9; border-color: #ccc; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
 
@@ -254,7 +248,6 @@ body {
   border-radius: 4px;
   flex-shrink: 0;
   background-color: #eee;
-  /* margin-top: 2px; /* Removed - no longer needed with align-items: center */
 }
 
 /* Item Code in List */
@@ -264,7 +257,6 @@ body {
   margin-left: 10px; /* RTL */
   text-align: right;
   line-height: 1.4;
-  /* padding-top: 2px; /* Removed - no longer needed with align-items: center */
 }
 
 /* Item Description in List */
@@ -313,11 +305,7 @@ body {
 /* Responsive Adjustments */
 @media (max-width: 600px) {
   #items-list { grid-template-columns: 1fr; gap: 8px; }
-  .item-row {
-      padding: 8px;
-      /* align-items: flex-start; /* Keep center alignment */
-      min-height: 60px; /* Adjust min height */
-   }
+  .item-row { padding: 8px; min-height: 60px; }
   .list-image { width: 40px; height: 40px; margin-left: 10px; }
   .item-description { font-size: 0.95em; }
   .item-code { font-size: 0.75em; }
