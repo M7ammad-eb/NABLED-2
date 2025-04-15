@@ -92,7 +92,7 @@ function tryInitialRenderFromCache() {
         console.log("No cached data found for initial render.");
         // Keep loading indicator visible
     }
-    // *** Setup UI interactions immediately after attempting render ***
+    // Setup UI interactions immediately after attempting render
     setupSearch();
     setupProfileMenu();
 }
@@ -104,39 +104,48 @@ auth.onAuthStateChanged(async (user) => {
     console.log("Auth state changed. User:", user ? user.email : 'None');
     if (user) {
         // User is signed in.
-        // UI elements (search, profile button) are already visible via HTML/CSS
+        profileButton.style.display = "block";
+        searchBar.style.display = 'flex';
+        if (!initialRenderDone) setupProfileMenu(); // Setup if not done yet
 
         try {
-            // Check cache status, but DO NOT fetch automatically
-            console.log("Auth confirmed, checking cache status (no fetch)...");
-            await loadDataIntoLocalStorage(false); // This now ONLY checks localStorage
+            // *** MODIFIED LOGIC: Check cache before deciding fetch strategy ***
+            const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
 
-            // If initial render didn't happen (no cache), display message
-            if (!initialRenderDone) {
-                console.log("Initial render not done and cache is empty. Prompting refresh.");
-                 const mainContent = document.querySelector('.main-content');
-                 if (mainContent) mainContent.innerHTML = '<p style="text-align: center; padding: 20px;">No data found. Please press the refresh button <svg style="display:inline; vertical-align:middle; width: 1em; height: 1em;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> to load.</p>';
-                 // Ensure correct view container is visible for the message
-                 itemsListContainer.style.display = 'none';
-                 itemsListContainer.classList.add('content-hidden');
-                 categoryButtonsContainer.style.display = 'block';
-                 categoryButtonsContainer.classList.remove('content-hidden');
-                 if(actualButtonList) actualButtonList.innerHTML = '<p style="text-align: center; padding: 20px;">No data found. Please press refresh.</p>';
+            if (!hasCachedData) {
+                // If no cache exists (fresh sign-in or cleared cache), force fetch
+                console.log("Auth confirmed, NO cached data found. Forcing initial fetch...");
+                await loadDataIntoLocalStorage(true); // Force fetch
 
-                 if (appLoading) appLoading.style.display = 'none'; // Hide loading
-                 initialRenderDone = true;
+                // Now that data is fetched, render the initial view
+                handleUrlHash(); // Render view based on hash
+                if (appLoading) appLoading.style.display = 'none'; // Hide loading
+                initialRenderDone = true; // Mark render as done
+                // Search/Profile menu already set up by tryInitialRenderFromCache
+
+            } else {
+                // Cache exists, proceed without fetching (as per previous logic)
+                console.log("Auth confirmed, cached data found. Using cache (no background fetch).");
+                // If initial render didn't happen (e.g., auth was faster than initial cache check), render now
+                if (!initialRenderDone) {
+                     handleUrlHash();
+                     if (appLoading) appLoading.style.display = 'none';
+                     initialRenderDone = true;
+                }
+                // We don't call loadDataIntoLocalStorage(false) as it does nothing in this flow
             }
-             // If initial render WAS done, no background refresh needed unless user clicks button
+             // *** END OF MODIFIED LOGIC ***
 
         } catch (error) {
-            console.error("Error during background data check:", error);
-            if (!initialRenderDone && appLoading) appLoading.style.display = 'none';
+            // This catch handles errors from loadDataIntoLocalStorage(true) if it was called
+            console.error("Error during initial data fetch/setup:", error);
+            if (appLoading) appLoading.style.display = 'none'; // Hide loading even on error
             const mainContent = document.querySelector('.main-content');
-            if (mainContent && !initialRenderDone) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error checking data. Please refresh.</p>';
+            if (mainContent) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
+            initialRenderDone = true; // Mark as done even on error to prevent loops
         }
     } else {
         // User is signed out.
-        // Hide elements that should only be visible when logged in
         if (profileButton) profileButton.style.display = "none";
         if (searchBar) searchBar.style.display = 'none';
         if (profileDropdown) profileDropdown.style.display = 'none';
@@ -151,12 +160,12 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// --- Data Loading (Modified: Only fetches if forceRefresh is true) ---
+// --- Data Loading (Only fetches if forceRefresh is true) ---
 async function loadDataIntoLocalStorage(forceRefresh = false) {
     let dataChanged = false;
     try {
         if (forceRefresh) {
-            // --- Fetching logic (only runs when forceRefresh is true) ---
+            // --- Fetching logic ---
             console.log("Forcing refresh: Fetching data from network...");
             const cacheBuster = `&_=${Date.now()}`;
             const currentSheetUrl = `${sheetUrl}${cacheBuster}`;
@@ -186,7 +195,7 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
             }
             // --- End of Fetching Logic ---
         } else {
-            // --- Cache Check Logic (runs when forceRefresh is false) ---
+            // --- Cache Check Logic ---
             const currentData = localStorage.getItem('dataSheet');
             const currentPerms = localStorage.getItem('permissionRows');
             if (currentData && currentPerms) {
