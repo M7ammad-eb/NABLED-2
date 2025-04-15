@@ -693,34 +693,43 @@ function setupSwipeGestures() {
     let touchEndX = 0;
     let touchEndY = 0;
     let isSwiping = false;
-    let scrollTarget = null; // Element being scrolled, if any
+    let scrollTarget = null;
     const swipeThreshold = 50;
     const maxVerticalThreshold = 75;
 
     if (!viewWrapper) { console.error("View wrapper not found for swipe gestures."); return; }
 
     viewWrapper.addEventListener('touchstart', (event) => {
-        // Allow swipe only if touch starts directly on the wrapper or non-scrollable/non-interactive elements within it
-        // Exclude buttons, links within items, inputs, and the scrollable lists themselves if scrolled
-        scrollTarget = event.target.closest('.view'); // Find the scrollable view container
-        if (event.target.closest('.category-button, a.item-row, input, button:not(#profile-button)') || (scrollTarget && scrollTarget.scrollTop > 0)) {
+        // *** MODIFIED: Remove .item-row from exclusion ***
+        // Allow swipe unless target is explicitly interactive OR view is scrolled
+        scrollTarget = event.target.closest('.view');
+        const isInteractive = event.target.closest('.category-button, input, button:not(#profile-button)'); // Removed a.item-row
+        const isScrolled = scrollTarget && scrollTarget.scrollTop > 0;
+
+        // console.log('Touch Start Target:', event.target);
+        // console.log('Closest Interactive:', isInteractive);
+        // console.log('Is View Scrolled:', isScrolled);
+
+        if (isInteractive || isScrolled) {
              isSwiping = false;
-             // console.log("Swipe ignored: Target is interactive or view is scrolled.");
+             console.log("Swipe ignored: Target is interactive or view is scrolled.");
              return;
         }
         touchStartX = event.changedTouches[0].screenX;
         touchStartY = event.changedTouches[0].screenY;
-        isSwiping = true;
+        isSwiping = true; // Potential swipe starts
+        // console.log('Swipe Status:', isSwiping);
+
     }, { passive: true });
 
      viewWrapper.addEventListener('touchmove', (event) => {
          if (!isSwiping) return;
          touchEndX = event.changedTouches[0].screenX;
          touchEndY = event.changedTouches[0].screenY;
-         // If swipe becomes primarily vertical, cancel the horizontal swipe gesture
          const deltaX = touchEndX - touchStartX;
          const deltaY = touchEndY - touchStartY;
-         if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) { // Allow some initial diagonal movement
+         // If swipe becomes primarily vertical, cancel the horizontal swipe gesture
+         if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
               // console.log("Swipe cancelled: Too vertical.");
               isSwiping = false;
          }
@@ -737,32 +746,38 @@ function setupSwipeGestures() {
     function handleSwipeGesture() {
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
-        // Reset coordinates for next potential swipe
         const startX = touchStartX; // Keep start coords for logging if needed
-        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0;
+        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0; // Reset
+
+        console.log(`Swipe detected: deltaX=${deltaX.toFixed(0)}, deltaY=${deltaY.toFixed(0)}`); // Added log
 
         // Check if it's primarily a horizontal swipe and meets threshold
         if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaY) < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
 
-            // Swipe Left (<-): Navigate towards Items (if on Categories) (RTL: Finger moves L->R)
-            if (deltaX < 0) {
-                 console.log("Swipe Left detected");
+            // *** SWAPPED LOGIC FOR RTL ***
+            // Swipe Left (<-): Navigate towards Items (if on Categories) (RTL: Finger moves L->R) -> Positive deltaX
+            if (deltaX > 0) { // Changed from < 0
+                 console.log("Swipe Left (L->R) detected");
                  if (currentState.view === 'categories') {
-                     console.log("Swiping from Categories to Items");
+                     console.log("Action: Triggering Items Tab");
                      if(itemsTab) itemsTab.click(); // Simulate click
+                 } else {
+                      console.log("Action: No swipe action (already on Items or Filtered)");
                  }
             }
-            // Swipe Right (->): Navigate towards Categories (if on Items) (RTL: Finger moves R->L)
-            else if (deltaX > 0) {
-                console.log("Swipe Right detected");
+            // Swipe Right (->): Navigate towards Categories (if on Items) (RTL: Finger moves R->L) -> Negative deltaX
+            else if (deltaX < 0) { // Changed from > 0
+                console.log("Swipe Right (R->L) detected");
                  if (currentState.view === 'items') { // Check if we are on any items view
-                     console.log("Swiping from Items to Categories");
+                     console.log("Action: Triggering Categories Tab");
                      if(categoriesTab) categoriesTab.click(); // Simulate click
+                 } else {
+                     console.log("Action: No swipe action (already on Categories)");
                  }
             }
         } else {
-             console.log(`Swipe ignored: dX=${deltaX.toFixed(0)}, dY=${deltaY.toFixed(0)}`);
+             console.log(`Swipe ignored: dX=${deltaX.toFixed(0)}, dY=${deltaY.toFixed(0)} (Thresholds not met or too vertical)`);
         }
     }
      console.log("Swipe gestures setup.");
