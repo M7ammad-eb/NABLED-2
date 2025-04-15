@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -70,40 +70,45 @@ if ('serviceWorker' in navigator) {
 }
 
 // --- Initial Load Attempt from Cache (Runs immediately) ---
+// Tries to render UI *if* cache exists. Returns true if rendered, false otherwise.
 function tryInitialRenderFromCache() {
     console.log("Attempting initial render from localStorage...");
     const initialCachedData = localStorage.getItem('dataSheet');
+    let rendered = false;
 
     if (initialCachedData) {
-        console.log("Cached data found, rendering initial view.");
+        console.log("Cached data found, attempting initial render.");
         try {
              const parsedData = JSON.parse(initialCachedData);
              if (!parsedData || !parsedData.data) throw new Error("Cached data invalid format");
 
             handleUrlHash(); // Determine and show initial view based on hash
-            initialRenderDone = true; // Mark that we showed something
-            preloadAllItemImages();
+            rendered = true; // Mark that we showed something
+            preloadAllItemImages(); // Start preloading images
 
         } catch (error) {
             console.error("Error parsing or rendering initial cache:", error);
-            localStorage.removeItem('dataSheet');
-             // Show categories container structure but with message if parse fails
+            localStorage.removeItem('dataSheet'); // Clear potentially corrupt data
+            // Show categories container structure but with message if parse fails
             showCategoriesViewUI();
             if(actualButtonList) actualButtonList.innerHTML = '<p>Error loading data. Please refresh.</p>';
+            rendered = true; // Still count as "rendered" (an error message)
         }
     } else {
-        console.log("No cached data found for initial render.");
+        console.log("No cached data found for initial render attempt.");
         // Show categories container structure but with message
-        showCategoriesViewUI(); // Show the structure
+        showCategoriesViewUI(); // Show the basic structure
         if(actualButtonList) actualButtonList.innerHTML = '<p>Loading data...</p>'; // Show loading inside
+        rendered = true; // Count showing the loading message as an initial render
     }
     // Setup UI interactions immediately
     setupSearch();
     setupProfileMenu();
     setupSwipeGestures(); // Setup swipe
+    return rendered; // Return whether something was shown
 }
 // --- Run initial cache check and setup immediately ---
-tryInitialRenderFromCache();
+initialRenderDone = tryInitialRenderFromCache();
 
 // --- Authentication State Change (Runs when Firebase Auth is ready) ---
 auth.onAuthStateChanged(async (user) => {
@@ -112,34 +117,47 @@ auth.onAuthStateChanged(async (user) => {
 
     if (user) {
         // User is signed in.
-        profileButton.style.display = "block"; // Show profile button now
-        searchBar.style.display = 'flex'; // Show search bar now
+        profileButton.style.display = "block";
+        searchBar.style.display = 'flex';
+        // Profile menu setup is already called by tryInitialRenderFromCache
 
         try {
+            // Check if data exists in cache
             const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
+            let needsRender = false;
 
             if (!hasCachedData) {
+                // If no cache exists (fresh sign-in or cleared cache), force fetch
                 console.log("Auth confirmed, NO cached data found. Forcing initial fetch...");
                 await loadDataIntoLocalStorage(true); // Force fetch
-                if (!initialRenderDone) {
-                    handleUrlHash(); // Render view based on hash
-                    initialRenderDone = true;
-                }
-                preloadAllItemImages();
+                needsRender = true; // Need to render after fetch
             } else {
-                console.log("Auth confirmed, cached data found. Using cache.");
+                // Cache exists. Check if initial render already happened.
+                console.log("Auth confirmed, cached data found.");
                 if (!initialRenderDone) {
-                     handleUrlHash();
-                     initialRenderDone = true;
-                     preloadAllItemImages();
+                    // Render wasn't done before (e.g., auth was faster than initial check)
+                    console.log("Initial render wasn't done, rendering now.");
+                    needsRender = true;
+                } else {
+                    // Initial render was done from cache, no automatic fetch/re-render needed.
+                    console.log("Initial render already done from cache. No automatic re-render.");
                 }
-                 // Optional: Trigger a non-forced check in background if desired
-                 // loadDataIntoLocalStorage(false).then(...)
             }
+
+            // Render the view if needed (either after fetch or if initial render was skipped)
+            if (needsRender) {
+                 handleUrlHash(); // Render view based on hash
+                 initialRenderDone = true; // Mark render as done
+            }
+
+            // Preload images *after* data is confirmed available (either cache or fetch)
+            preloadAllItemImages();
+
         } catch (error) {
+            // This catch handles errors from loadDataIntoLocalStorage(true) if it was called
             console.error("Error during initial data fetch/setup:", error);
-            if (mainContent && !initialRenderDone) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
-            initialRenderDone = true;
+            if (mainContent) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
+            initialRenderDone = true; // Mark as done even on error
         }
     } else {
         // User is signed out.
@@ -191,7 +209,7 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
         } else {
             const currentData = localStorage.getItem('dataSheet');
             const currentPerms = localStorage.getItem('permissionRows');
-            if (currentData && currentPerms) console.log("Using data from localStorage (background check).");
+            if (currentData && currentPerms) console.log("Checked localStorage (background check).");
             else console.log("No cached data found (background check).");
         }
     } catch (error) {
@@ -370,7 +388,7 @@ function showCategoriesViewUI() {
     categoryButtonsContainer.classList.add('view-active');
     categoryButtonsContainer.classList.remove('view-left', 'view-right');
 
-    itemsListContainer.classList.add('view-left'); // Position items offscreen left (prep for slide in from right for RTL)
+    itemsListContainer.classList.add('view-left'); // Position items offscreen left
     itemsListContainer.classList.remove('view-active', 'view-right');
 
     // Update Tabs
@@ -392,7 +410,7 @@ function showAllItemsViewUI() {
     itemsListContainer.classList.add('view-active');
     itemsListContainer.classList.remove('view-left', 'view-right');
 
-    categoryButtonsContainer.classList.add('view-right'); // Position categories offscreen right (prep for slide in from left for RTL)
+    categoryButtonsContainer.classList.add('view-right'); // Position categories offscreen right
     categoryButtonsContainer.classList.remove('view-active', 'view-left');
 
     // Update Tabs
@@ -668,7 +686,7 @@ if (categoriesTab && itemsTab) {
     console.error("Tab elements not found, listeners not added.");
 }
 
-// --- NEW: Swipe Gesture Handling ---
+// --- Swipe Gesture Handling ---
 function setupSwipeGestures() {
     let touchStartX = 0;
     let touchStartY = 0;
@@ -678,83 +696,51 @@ function setupSwipeGestures() {
     const swipeThreshold = 50; // Minimum horizontal distance for a swipe
     const maxVerticalThreshold = 75; // Maximum vertical distance allowed for a horizontal swipe
 
-    // Use viewWrapper for swipe detection
-    if (!viewWrapper) {
-        console.error("View wrapper not found for swipe gestures.");
-        return;
-    }
+    if (!viewWrapper) { console.error("View wrapper not found for swipe gestures."); return; }
 
     viewWrapper.addEventListener('touchstart', (event) => {
-        // Don't start swipe if interacting with scrollable content or buttons
-        if (event.target.closest('.category-button, .item-row, input, button:not(#profile-button)')) {
-             isSwiping = false;
-             return;
-        }
+        if (event.target.closest('.category-button, .item-row, input, button:not(#profile-button)')) { isSwiping = false; return; }
         touchStartX = event.changedTouches[0].screenX;
         touchStartY = event.changedTouches[0].screenY;
-        isSwiping = true; // Potential swipe starts
-         // console.log("Touch Start:", touchStartX);
+        isSwiping = true;
     }, { passive: true });
 
      viewWrapper.addEventListener('touchmove', (event) => {
-         if (!isSwiping) return; // Ignore if not swiping
-
+         if (!isSwiping) return;
          touchEndX = event.changedTouches[0].screenX;
          touchEndY = event.changedTouches[0].screenY;
-         const deltaX = touchEndX - touchStartX;
-         const deltaY = touchEndY - touchStartY;
-
-         // If swipe is primarily horizontal, prevent vertical scroll during swipe
-         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-             // This is tricky without making the listener non-passive.
-             // For now, we rely on the touchend logic and vertical threshold.
-             // A more robust solution might require event.preventDefault() here,
-             // making the listener active (potentially impacting performance).
-             // console.log("Horizontal move detected");
-         }
-
-     }, { passive: true }); // Keep passive for performance for now
+         // Optional: Add logic here if needed during move, e.g., visual feedback
+     }, { passive: true });
 
     viewWrapper.addEventListener('touchend', (event) => {
-         if (!isSwiping) return; // Ignore if swipe didn't start properly
-         isSwiping = false; // Swipe ends
-
-        touchEndX = event.changedTouches[0].screenX; // Ensure end coords are captured
+         if (!isSwiping) return;
+         isSwiping = false;
+        touchEndX = event.changedTouches[0].screenX;
         touchEndY = event.changedTouches[0].screenY;
-        // console.log("Touch End:", touchEndX);
         handleSwipeGesture();
     }, { passive: true });
 
     function handleSwipeGesture() {
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
-        // console.log(`Swipe Delta: X=${deltaX}, Y=${deltaY}`);
+        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0; // Reset
 
-        // Reset coordinates for next potential swipe
-        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0;
-
-        // Check if it's primarily a horizontal swipe and meets threshold
         if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaY) < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
-
-            // Swipe Right (->): Navigate towards Categories (if on Items)
-            // In RTL, swiping right means moving finger right-to-left on screen
+            // Swipe Right (->): Navigate towards Categories (if on Items) (RTL: Finger moves R->L)
             if (deltaX > 0) {
                 console.log("Swipe Right detected");
-                 if (currentState.view === 'items') { // Check if we are on any items view
+                 if (currentState.view === 'items') {
                      console.log("Swiping from Items to Categories");
-                     // Simulate clicking the categories tab
-                     if(categoriesTab) categoriesTab.click();
+                     if(categoriesTab) categoriesTab.click(); // Simulate click
                  }
             }
-            // Swipe Left (<-): Navigate towards Items (if on Categories)
-            // In RTL, swiping left means moving finger left-to-right on screen
+            // Swipe Left (<-): Navigate towards Items (if on Categories) (RTL: Finger moves L->R)
             else if (deltaX < 0) {
                  console.log("Swipe Left detected");
-                 if (currentState.view === 'categories') { // Check if we are on categories view
+                 if (currentState.view === 'categories') {
                      console.log("Swiping from Categories to Items");
-                     // Simulate clicking the items tab
-                     if(itemsTab) itemsTab.click();
+                     if(itemsTab) itemsTab.click(); // Simulate click
                  }
             }
         } else {
