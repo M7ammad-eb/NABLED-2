@@ -13,36 +13,50 @@ body {
 
 /* Search Bar Styles */
 .search-bar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center;
+  justify-content: space-between; /* Align items */
   background-color: #f8f8f8;
   padding: 10px 15px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  height: 60px;
-  box-sizing: border-box;
+  height: 60px; box-sizing: border-box;
   flex-shrink: 0;
 }
 
 /* Common Header Button Styles */
 .header-button {
-  background: none; border: none;
-  padding: 8px; margin: 0 5px;
-  cursor: pointer; display: flex;
-  align-items: center; justify-content: center;
-  border-radius: 50%; flex-shrink: 0;
-  color: #555;
+  background: none; border: none; padding: 8px; margin: 0; /* Remove default margins */
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; flex-shrink: 0; color: #555;
 }
 .header-button:hover { background-color: rgba(0, 0, 0, 0.05); }
 .header-button svg { width: 24px; height: 24px; fill: currentColor; }
 
 /* Back Button Styles */
-#back-button { margin-left: 0; margin-right: 5px; }
+#back-button {
+  /* Uses .header-button styles */
+  order: 3; /* Place on the right in RTL */
+}
+#back-button svg {
+  transform: scaleX(-1); /* Mirror the icon for RTL */
+}
+
+/* Header Logo Styles */
+#header-logo {
+    display: none; /* Hidden by default */
+    height: 75%; /* Adjust size as needed */
+    object-fit: contain;
+    margin: 0 auto; /* Center horizontally */
+    order: 2; /* Place in the middle */
+}
 
 /* Refresh Button Styles */
-.refresh-button { background: #28a745; color: white; }
+.refresh-button {
+  /* Uses .header-button styles */
+  background: #28a745; color: white;
+  order: 1; /* Place on the left in RTL */
+  margin-left: 10px; /* Space from search */
+}
 .refresh-button:hover:enabled { background: #218838; }
 .refresh-button:disabled { cursor: not-allowed; background: #cccccc; }
 .refresh-button.loading svg { animation: spin 1s linear infinite; }
@@ -51,33 +65,34 @@ body {
 /* Search Input Styles */
 .search-container {
   flex-grow: 1; position: relative;
-  margin-left: 5px; margin-right: 5px;
-  transition: margin 0.25s ease-in-out;
+  order: 2; /* Place in the middle by default */
+  margin: 0 10px; /* Space around search */
 }
 .search-input {
-  width: 100%; padding: 8px 12px;
-  padding-left: 30px; /* RTL space for clear button */
+  width: 100%; padding: 8px 12px; padding-left: 30px;
   border: 1px solid #ccc; border-radius: 4px;
   font-size: 16px; box-sizing: border-box; direction: rtl;
 }
 #clear-search-button {
-  position: absolute; left: 5px; top: 50%;
-  transform: translateY(-50%); background: none; border: none;
-  font-size: 20px; line-height: 1; padding: 0 5px;
-  cursor: pointer; color: #999; display: none;
+  position: absolute; left: 5px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 20px; line-height: 1;
+  padding: 0 5px; cursor: pointer; color: #999; display: none;
 }
 #clear-search-button:hover { color: #333; }
 
 /* Profile Button Style */
-#profile-button { margin-right: 0; margin-left: 5px; }
+#profile-button {
+  /* Uses .header-button styles */
+  order: 3; /* Place on the right in RTL */
+  margin-right: 0; /* Align to edge */
+}
 
 /* Profile Dropdown Menu Style */
 #profile-dropdown {
-  position: absolute; top: 55px; left: 15px;
+  position: absolute; top: 55px; left: 15px; /* Align left in RTL */
   background-color: white; border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 10px; z-index: 110; min-width: 200px;
-  display: none; border: 1px solid #eee;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); padding: 10px;
+  z-index: 110; min-width: 200px; display: none; border: 1px solid #eee;
 }
 .user-detail { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
 #user-email-display { font-size: 0.9em; color: #555; padding-bottom: 5px; border-bottom: 1px solid #eee; }
@@ -90,30 +105,24 @@ body {
 
 /* Default state (List/Category view active) */
 #back-button,
-#detail-footer-title {
+#header-logo {
   display: none;
 }
 
 /* Detail view active state */
-body.is-detail-active #back-button {
-  display: flex; /* Show back button */
+body.is-detail-active #back-button,
+body.is-detail-active #header-logo {
+  display: flex; /* Or block/inline-block as needed */
 }
 
 body.is-detail-active #profile-button,
 body.is-detail-active .refresh-button,
-body.is-detail-active .tab-bar {
-  display: none; /* Hide profile, refresh, tabs */
-}
-
-body.is-detail-active #detail-footer-title {
-   display: flex; /* Show detail footer */
-}
-
-/* Adjust search container margins when detail view is active */
 body.is-detail-active .search-container {
-  margin-right: 50px; /* Make space for back button */
-  margin-left: 10px; /* Adjust if needed */
+  display: none; /* Hide profile, refresh, search */
 }
+
+/* Tab bar is always visible now, so no rule needed here */
+/* Removed #detail-footer-title rules */
 
 
 /* Main Content Area */
@@ -121,34 +130,20 @@ body.is-detail-active .search-container {
   flex-grow: 1;
   overflow: hidden;
   position: relative;
-  /* Add padding at the bottom when detail footer is visible */
-  padding-bottom: 0; /* Default no padding */
-  transition: padding-bottom 0.25s ease-in-out;
-}
-
-body.is-detail-active .main-content {
-   padding-bottom: 60px; /* Add padding equal to footer height */
+  /* Remove bottom padding, tabs are always visible */
+  padding-bottom: 0;
 }
 
 
 /* View Wrapper Styles */
-#view-wrapper {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-    overflow: hidden;
-}
+#view-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
 
 /* View Container Styles */
 .view {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: #f5f5f5;
-    transition: transform 0.25s ease-in-out;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 10px;
-    box-sizing: border-box;
-    visibility: hidden;
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: #f5f5f5; transition: transform 0.25s ease-in-out;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 10px; box-sizing: border-box; visibility: hidden;
 }
 
 /* View Positioning Classes */
@@ -158,12 +153,9 @@ body.is-detail-active .main-content {
 
 /* View Title Styles (Categories, Items List) */
 .view-title {
-  padding: 10px 15px; text-align: right;
-  font-size: 1.3em; color: #333;
-  border-bottom: 1px solid #eee;
-  margin: -10px -10px 15px -10px;
-  position: sticky; top: -10px;
-  background-color: #f5f5f5; z-index: 10;
+  padding: 10px 15px; text-align: right; font-size: 1.3em; color: #333;
+  border-bottom: 1px solid #eee; margin: -10px -10px 15px -10px;
+  position: sticky; top: -10px; background-color: #f5f5f5; z-index: 10;
 }
 
 /* Category Buttons Container */
@@ -184,10 +176,7 @@ body.is-detail-active .main-content {
 .product-list-container { padding-top: 5px; }
 
 /* Items List Grid/Layout */
-#items-list {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 10px;
-}
+#items-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
 #items-list p { text-align: center; padding: 20px; color: #666; grid-column: 1 / -1; }
 .no-search-results { text-align: center; padding: 20px; color: #666; grid-column: 1 / -1; }
 
@@ -231,15 +220,11 @@ body.is-detail-active .main-content {
 /* --- End Detail View Styles --- */
 
 
-/* Tab Bar Styles */
+/* Tab Bar Styles (Always Visible) */
 .tab-bar {
-  position: fixed; bottom: 0; left: 0;
-  width: 100%; display: flex;
-  background-color: #ffffff;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 1000; height: 60px;
-  flex-shrink: 0;
-  /* Visibility controlled by body.is-detail-active */
+  position: fixed; bottom: 0; left: 0; width: 100%; display: flex;
+  background-color: #ffffff; box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000; height: 60px; flex-shrink: 0;
 }
 .tab-button {
   flex: 1; padding: 10px; background: none; border: none;
@@ -250,27 +235,7 @@ body.is-detail-active .main-content {
 .tab-button.active { color: #007bff; font-weight: bold; border-top-color: #007bff; }
 .tab-button:hover:not(.active) { color: #333; }
 
-/* Detail Footer Title Styles */
-#detail-footer-title {
-  position: fixed; bottom: 0; left: 0;
-  width: 100%; height: 60px; /* Match tab bar height */
-  background-color: #f8f8f8; /* Similar background */
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1); /* Similar shadow */
-  z-index: 1000; /* Same level as tab bar */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 20px;
-  box-sizing: border-box;
-  font-size: 1.1em;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  /* Visibility controlled by body.is-detail-active */
-}
+/* Removed Detail Footer Title Styles */
 
 
 /* Responsive Adjustments */
@@ -286,7 +251,7 @@ body.is-detail-active .main-content {
   #profile-dropdown { left: 10px; min-width: 180px; }
   #item-details-content { padding: 15px; margin: 10px auto; }
   #item-detail-view .carousel-container { height: 300px; }
-  #detail-footer-title { font-size: 1em; } /* Adjust footer title size */
+  #header-logo { height: 70%; } /* Adjust logo size */
 }
 
 @media (max-width: 480px) { #item-details-content { padding: 10px; } }
@@ -294,15 +259,16 @@ body.is-detail-active .main-content {
 @media (max-width: 400px) {
     .search-bar { padding: 8px 10px; height: 54px; }
     .header-button svg { width: 20px; height: 20px; }
-    .refresh-button { padding: 6px; }
+    .refresh-button { margin-left: 5px; }
+    .search-container { margin: 0 5px; }
     .search-input { font-size: 14px; padding: 6px 10px; padding-left: 25px; }
     #clear-search-button { font-size: 18px; left: 3px; }
     #profile-dropdown { top: 50px; left: 10px; }
     #item-detail-view .carousel-container { height: 250px; }
-    #detail-footer-title { font-size: 0.9em; height: 54px; } /* Adjust footer */
-    body.is-detail-active .main-content { padding-bottom: 54px; } /* Match footer height */
-    body.is-detail-active .search-container { margin-right: 40px; }
+    .tab-bar { height: 54px; } /* Match search bar height */
+    #header-logo { height: 65%; } /* Adjust logo size */
 }
 
 /* Item Click Transition */
 .item-clicked { transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0.5; transform: scale(0.98); }
+
