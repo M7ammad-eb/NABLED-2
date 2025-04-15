@@ -613,7 +613,7 @@ function addCarouselFunctionality(parentSelector) {
         if (diff < -50) { // Swipe Right (L->R) -> Go to Previous slide
              console.log("Carousel Swipe Right (L->R) -> Previous");
              showSlide(currentSlide - 1);
-        } else if (diff < 50) { // Swipe Left (R->L) -> Go to Next slide
+        } else if (diff > 50) { // Swipe Left (R->L) -> Go to Next slide
              console.log("Carousel Swipe Left (R->L) -> Next");
              showSlide(currentSlide + 1);
         } else {
