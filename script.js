@@ -821,7 +821,7 @@ function setupSwipeGestures() {
 
             // --- Corrected RTL Swipe Logic ---
             // Swipe Right (Finger L -> R, positive deltaX): Navigate "backward"
-            if (deltaX > 0) {
+            if (deltaX < 0) {
                 console.log("Swipe Right (L->R) detected - Navigating Back");
                 if (currentState.view === 'items') {
                     console.log("Action: Triggering Categories Tab");
@@ -829,7 +829,7 @@ function setupSwipeGestures() {
                 } else { console.log("Action: No swipe back action from categories."); }
             }
             // Swipe Left (Finger R -> L, negative deltaX): Navigate "forward"
-            else if (deltaX < 0) {
+            else if (deltaX > 0) {
                 console.log("Swipe Left (R->L) detected - Navigating Forward");
                 if (currentState.view === 'categories') {
                     console.log("Action: Triggering Items Tab (All Items)");
