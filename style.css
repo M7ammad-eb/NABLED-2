@@ -161,7 +161,7 @@ body {
     overflow: hidden; /* Clip the views */
 }
 
-/* View Container Styles */
+/* View Container Styles (Common for Categories, Items, Detail) */
 .view {
     position: absolute;
     top: 0;
@@ -169,7 +169,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: #f5f5f5;
-    transition: transform 0.21s ease-in-out; /* Animation */
+    transition: transform 0.25s ease-in-out; /* Slightly slower for smoother feel */
     overflow-y: auto; /* Scroll within the view */
     -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS */
     padding: 10px;
@@ -180,17 +180,25 @@ body {
 .view.view-active {
     transform: translateX(0%);
     z-index: 1; /* Keep active view on top */
+    /* Ensure active view allows pointer events */
+    pointer-events: auto;
+    visibility: visible;
 }
 .view.view-left {
     transform: translateX(-100%); /* Position offscreen left */
     z-index: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+    visibility: hidden;
 }
 .view.view-right {
     transform: translateX(100%); /* Position offscreen right */
     z-index: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+    visibility: hidden;
 }
 
-/* View Title Styles */
+
+/* View Title Styles (Common for Categories, Items List) */
 .view-title {
   padding: 10px 15px;
   text-align: right;
@@ -227,7 +235,7 @@ body {
 /* Items List Container */
 #items-list-container { }
 .product-list-container {
-     padding-top: 5px; /* Add space below sticky title */
+      padding-top: 5px; /* Add space below sticky title */
 }
 
 /* Items List Grid/Layout */
@@ -268,7 +276,7 @@ body {
   margin-left: 12px; /* RTL */
   border-radius: 4px;
   flex-shrink: 0;
-  background-color: #eee;
+  background-color: #eee; /* Placeholder background */
 }
 
 /* Item Code in List */
@@ -291,6 +299,133 @@ body {
   text-overflow: clip;
   line-height: 1.4;
 }
+
+/* --- Styles for Item Detail View (Merged from detailstyle.css) --- */
+
+#item-detail-view {
+    /* Uses the common .view styles */
+    /* Add specific padding if needed, otherwise inherits from .view */
+}
+
+#item-details-content {
+    max-width: 600px; /* Limit content width on larger screens */
+    margin: 0 auto; /* Center content */
+    padding: 20px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+#item-detail-view h2 {
+    color: #007bff; /* Primary color */
+    margin-bottom: 10px;
+    margin-top: 0; /* Reset margin */
+    text-align: right; /* Ensure RTL alignment */
+}
+
+#item-detail-view p {
+    margin-bottom: 10px;
+    font-size: 1em;
+    text-align: right; /* Ensure RTL alignment */
+}
+
+#item-detail-view strong {
+    font-weight: 600;
+    color: #555;
+}
+
+#item-detail-view a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#item-detail-view a:hover {
+    text-decoration: underline;
+}
+
+/* Currency symbol image styling */
+#item-detail-view .currency-symbol {
+    height: 1em; /* Adjust the height relative to the font size */
+    width: auto;
+    vertical-align: middle;
+    margin-right: 3px; /* Space before symbol in RTL */
+}
+
+/* Carousel Styles (within Detail View) */
+#item-detail-view .carousel-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 400px; /* Adjust as needed */
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background-color: #eee; /* Background while images load */
+}
+
+#item-detail-view .slides-wrapper {
+  display: flex;
+  /* Transition applied via JS for swipe */
+  height: 100%;
+  width: 100%; /* Ensure the wrapper takes the full width */
+}
+
+#item-detail-view .slide {
+  flex: 0 0 100%; /* Each slide takes the full width */
+  height: 100%;
+  display: flex; /* Center image */
+  align-items: center;
+  justify-content: center;
+  opacity: 0; /* Initially hidden - managed by JS */
+  transition: opacity 0.5s ease; /* Fade transition if needed */
+  position: absolute; /* Stack slides */
+  top: 0;
+  left: 0; /* Adjusted for absolute positioning */
+  width: 100%;
+}
+
+#item-detail-view .slide.active {
+  opacity: 1; /* Only the active slide is visible */
+  z-index: 1; /* Bring active slide to front */
+}
+
+#item-detail-view .carousel-image {
+  max-width: 100%; /* Allow image to shrink */
+  max-height: 100%; /* Allow image to shrink */
+  width: auto; /* Maintain aspect ratio */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Show whole image, letterbox if needed */
+  border-radius: 8px; /* Match container */
+  display: block;
+}
+
+/* Carousel Dots (within Detail View) */
+#item-detail-view .carousel-dots {
+  text-align: center;
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  z-index: 2; /* Above slides */
+}
+
+#item-detail-view .dot {
+  height: 10px;
+  width: 10px;
+  margin: 0 3px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid white;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#item-detail-view .dot.active {
+  background-color: white;
+  border-color: black;
+}
+
+/* --- End Detail View Styles --- */
 
 
 /* Tab Bar Styles */
@@ -335,7 +470,14 @@ body {
   .view-title { font-size: 1.1em; }
   .category-button { padding: 15px 12px; font-size: 1em; }
   #profile-dropdown { left: 10px; min-width: 180px; }
+  #item-details-content { padding: 15px; margin: 10px auto; } /* Adjust detail padding */
+  #item-detail-view .carousel-container { height: 300px; } /* Adjust carousel height */
 }
+
+@media (max-width: 480px) {
+    #item-details-content { padding: 10px; }
+}
+
 
 @media (max-width: 400px) {
     .search-bar { padding: 8px 10px; height: 54px; }
@@ -346,7 +488,12 @@ body {
     #profile-button { padding: 4px; }
     #profile-button svg { width: 22px; height: 22px; }
     #profile-dropdown { top: 50px; left: 10px; }
+    #item-detail-view .carousel-container { height: 250px; } /* Further adjust carousel height */
 }
 
-/* Item Click Transition */
-.item-clicked { transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0.5; transform: scale(0.98); }
+/* Item Click Transition (Visual feedback on list item click) */
+.item-clicked {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0.5;
+    transform: scale(0.98);
+}
