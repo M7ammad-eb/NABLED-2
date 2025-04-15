@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
-   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تفاصيل العنصر</title>
-  <link rel="stylesheet" href="detailstyle.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>تفاصيل العنصر</title>
+    <link rel="stylesheet" href="detailstyle.css">
+    <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body>
-  <div id="item-details"></div>
+    <div class="detail-page-wrapper">
+        <div class="detail-header">
+             <button id="back-button" aria-label="Go Back">
+                 <i data-feather="arrow-right"></i> </button>
+             </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script src="detail.js"></script>
+        <div id="item-details">
+            <p>Loading details...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="detail.js"></script>
+    <script>
+      // Initialize Feather Icons
+      feather.replace();
+    </script>
 </body>
 </html>
