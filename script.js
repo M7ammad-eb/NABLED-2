@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -18,8 +18,8 @@ const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhx959g4-I3vn
 const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLwZaoxBCFUM8Vc5X6OHo9AXC-5NGfYCOIcFlEMcnRAU-XQTfuGVJGjQh0B9e17Nw4OXhoE9yImi06/pub?output=csv';
 
 // --- DOM Element References ---
-// Loading Indicator
-const appLoading = document.getElementById('app-loading');
+// Loading Indicator REMOVED
+// const appLoading = document.getElementById('app-loading');
 // Tabs and Views
 const categoriesTab = document.getElementById('categories-tab');
 const itemsTab = document.getElementById('items-tab');
@@ -37,6 +37,7 @@ const refreshButton = document.querySelector(".refresh-button");
 const profileButton = document.getElementById('profile-button');
 const profileDropdown = document.getElementById('profile-dropdown');
 const userEmailDisplay = document.getElementById('user-email-display');
+const userJobTitleDisplay = document.getElementById('user-job-title');
 const dropdownSignOutButton = document.getElementById('dropdown-sign-out-button');
 
 // Flag to track if initial render happened from cache
@@ -81,22 +82,20 @@ function tryInitialRenderFromCache() {
              if (!parsedData || !parsedData.data) throw new Error("Cached data invalid format");
 
             handleUrlHash(); // Determine and show initial view based on hash
-            if (appLoading) appLoading.style.display = 'none'; // Hide loading indicator
+            // appLoading REMOVED
             initialRenderDone = true; // Mark that we showed something
 
-            // *** Start preloading images if data was found in cache ***
+            // Start preloading images if data was found in cache
             preloadAllItemImages();
 
         } catch (error) {
             console.error("Error parsing or rendering initial cache:", error);
             localStorage.removeItem('dataSheet'); // Clear potentially corrupt data
-            // Keep loading indicator visible
         }
     } else {
         console.log("No cached data found for initial render.");
-        // Keep loading indicator visible
     }
-    // Setup UI interactions immediately after attempting render
+    // *** Setup UI interactions immediately, regardless of cache ***
     setupSearch();
     setupProfileMenu();
 }
@@ -106,13 +105,16 @@ tryInitialRenderFromCache();
 // --- Authentication State Change (Runs when Firebase Auth is ready) ---
 auth.onAuthStateChanged(async (user) => {
     console.log("Auth state changed. User:", user ? user.email : 'None');
+    const mainContent = document.querySelector('.main-content'); // Get ref for error display
+
     if (user) {
         // User is signed in.
-        profileButton.style.display = "block";
-        searchBar.style.display = 'flex';
-        if (!initialRenderDone) setupProfileMenu(); // Setup if not done yet
+        // Elements are already visible via HTML/CSS by default now
+        // profileButton.style.display = "block"; // No longer needed
+        // searchBar.style.display = 'flex'; // No longer needed
 
         try {
+            // Check cache before deciding fetch strategy
             const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
 
             if (!hasCachedData) {
@@ -120,42 +122,42 @@ auth.onAuthStateChanged(async (user) => {
                 console.log("Auth confirmed, NO cached data found. Forcing initial fetch...");
                 await loadDataIntoLocalStorage(true); // Force fetch
 
-                // Now that data is fetched, render the initial view
-                handleUrlHash(); // Render view based on hash
-                if (appLoading) appLoading.style.display = 'none'; // Hide loading
-                initialRenderDone = true; // Mark render as done
-
-                // *** Start preloading images after fresh fetch ***
+                // Now that data is fetched, render the initial view if not done already
+                if (!initialRenderDone) {
+                    handleUrlHash(); // Render view based on hash
+                    initialRenderDone = true; // Mark render as done
+                }
+                // Start preloading images after fresh fetch
                 preloadAllItemImages();
 
             } else {
                 // Cache exists, proceed without fetching
                 console.log("Auth confirmed, cached data found. Using cache (no background fetch).");
-                // If initial render didn't happen, render now
+                // If initial render didn't happen (e.g., auth was faster than initial cache check), render now
                 if (!initialRenderDone) {
                      handleUrlHash();
-                     if (appLoading) appLoading.style.display = 'none';
                      initialRenderDone = true;
-                     // *** Preload images even if initial render was delayed ***
+                     // Preload images even if initial render was delayed
                      preloadAllItemImages();
                 }
-                // If initial render WAS done, images should have already started preloading
             }
+            // Hide loading indicator if it was somehow still visible (e.g., error during initial render)
+             if (appLoading && appLoading.style.display !== 'none') appLoading.style.display = 'none';
 
         } catch (error) {
             // This catch handles errors from loadDataIntoLocalStorage(true) if it was called
             console.error("Error during initial data fetch/setup:", error);
-            if (appLoading) appLoading.style.display = 'none'; // Hide loading even on error
-            const mainContent = document.querySelector('.main-content');
+            if (appLoading && appLoading.style.display !== 'none') appLoading.style.display = 'none';
             if (mainContent) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
             initialRenderDone = true; // Mark as done even on error to prevent loops
         }
     } else {
         // User is signed out.
+        // Hide elements that should only be visible when logged in
         if (profileButton) profileButton.style.display = "none";
-        if (searchBar) searchBar.style.display = 'none';
+        if (searchBar) searchBar.style.display = 'none'; // Hide search bar on logout
         if (profileDropdown) profileDropdown.style.display = 'none';
-        if (appLoading) appLoading.style.display = 'none';
+        if (appLoading && appLoading.style.display !== 'none') appLoading.style.display = 'none';
         // Redirect logic
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
              if (window.location.hash.startsWith('#categories') || window.location.hash.startsWith('#items')) {
@@ -271,48 +273,26 @@ function displayItems(filterCategory = null) {
             itemsFound = true;
             const itemId = String(item[0] || '').trim();
             const itemName = String(item[2] || 'No Name').trim();
-
-            // Get the first valid image URL, or null if none
-            const realImageSrc = [item[4], item[5], item[6]]
-                                 .map(img => img ? String(img).trim() : null)
-                                 .find(img => img && img !== '');
-
+            const realImageSrc = [item[4], item[5], item[6]].map(img => img ? String(img).trim() : null).find(img => img && img !== '');
             const itemDiv = document.createElement('div');
             itemDiv.classList.add('item-container');
             const link = document.createElement('a');
             link.href = `detail.html?id=${encodeURIComponent(itemId)}`;
             link.classList.add('item-row');
             link.dataset.itemId = itemId;
-
-            // --- Image Loading Modification (Placeholder First) ---
             const img = document.createElement('img');
             img.src = "placeholder.png"; // Start with placeholder
             img.alt = itemName;
             img.classList.add('list-image');
-            img.loading = "lazy"; // Still use lazy loading
-
-            // If a real image URL exists, try to load it in the background
+            img.loading = "lazy";
             if (realImageSrc) {
-                img.dataset.realSrc = realImageSrc; // Store the real source
-                const imageLoader = new Image(); // Create an in-memory image
-                imageLoader.onload = () => {
-                    // When the real image loads successfully, update the visible image's src
-                    // Check if the img element still exists and wants this src
-                    if (img && img.dataset.realSrc === realImageSrc) {
-                         img.src = realImageSrc;
-                    }
-                };
-                imageLoader.onerror = () => {
-                    // If the real image fails to load (e.g., 403 error), do nothing.
-                    // The visible image will keep showing the placeholder.
-                    console.warn(`Failed to load image: ${realImageSrc}`);
-                };
-                imageLoader.src = realImageSrc; // Start loading the real image
+                img.dataset.realSrc = realImageSrc;
+                const imageLoader = new Image();
+                imageLoader.onload = () => { if (img && img.dataset.realSrc === realImageSrc) { img.src = realImageSrc; } };
+                imageLoader.onerror = () => { console.warn(`Failed to load image: ${realImageSrc}`); };
+                imageLoader.src = realImageSrc;
             }
-            // --- End Image Loading Modification ---
-
-            link.appendChild(img); // Add the img tag (initially showing placeholder)
-
+            link.appendChild(img);
             const codeDiv = document.createElement('div');
             codeDiv.classList.add('item-code');
             codeDiv.textContent = itemId;
@@ -372,50 +352,29 @@ function displayCategoryButtons() {
     }
 }
 
-// --- NEW: Preload All Item Images ---
+// --- Preload All Item Images ---
 function preloadAllItemImages() {
     console.log("Starting image preloading...");
     const cachedDataString = localStorage.getItem('dataSheet');
-    if (!cachedDataString) {
-        console.warn("Preload: No data in localStorage to find images.");
-        return;
-    }
-
+    if (!cachedDataString) { console.warn("Preload: No data in localStorage."); return; }
     try {
         const cachedData = JSON.parse(cachedDataString);
-        if (!cachedData?.data) {
-             console.warn("Preload: Invalid data format in localStorage.");
-             return;
-        }
-
+        if (!cachedData?.data) { console.warn("Preload: Invalid data format."); return; }
         const dataRows = cachedData.data;
         const uniqueImageUrls = new Set();
-
-        // Start from 1 to skip header row
         for (let i = 1; i < dataRows.length; i++) {
             const item = dataRows[i];
-             if (!Array.isArray(item) || item.length < 7) continue; // Basic validation
-
-            // Extract potential image URLs from columns 4, 5, 6 (indices 4, 5, 6)
+             if (!Array.isArray(item) || item.length < 7) continue;
             [item[4], item[5], item[6]].forEach(url => {
-                if (url && typeof url === 'string' && url.trim() !== '') {
-                    uniqueImageUrls.add(url.trim());
-                }
+                if (url && typeof url === 'string' && url.trim() !== '') { uniqueImageUrls.add(url.trim()); }
             });
         }
-
         console.log(`Preloading ${uniqueImageUrls.size} unique images...`);
         uniqueImageUrls.forEach(url => {
             const imgPreloader = new Image();
-            // Optional: Add handlers to see if preloading works/fails
-            // imgPreloader.onload = () => console.log(`Preloaded: ${url}`);
-            // imgPreloader.onerror = () => console.warn(`Preload failed: ${url}`);
-            imgPreloader.src = url; // This initiates the fetch request
+            imgPreloader.src = url;
         });
-
-    } catch (error) {
-        console.error("Error during image preloading:", error);
-    }
+    } catch (error) { console.error("Error during image preloading:", error); }
 }
 
 
@@ -426,9 +385,9 @@ function showCategoriesViewUI() {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab) return;
     console.log(`Updating UI for Categories View`);
     itemsListContainer.style.display = 'none';
-    itemsListContainer.classList.add('content-hidden');
+    // itemsListContainer.classList.add('content-hidden'); // No longer needed
     categoryButtonsContainer.style.display = 'block';
-    categoryButtonsContainer.classList.remove('content-hidden'); // Reveal
+    // categoryButtonsContainer.classList.remove('content-hidden'); // No longer needed
     categoriesTab.classList.add('active');
     itemsTab.classList.remove('active');
     categoriesTab.setAttribute('aria-selected', 'true');
@@ -441,9 +400,9 @@ function showAllItemsViewUI() {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
     console.log(`Updating UI for All Items View`);
     categoryButtonsContainer.style.display = 'none';
-    categoryButtonsContainer.classList.add('content-hidden');
+    // categoryButtonsContainer.classList.add('content-hidden'); // No longer needed
     itemsListContainer.style.display = 'block';
-    itemsListContainer.classList.remove('content-hidden'); // Reveal
+    // itemsListContainer.classList.remove('content-hidden'); // No longer needed
     itemsListTitle.textContent = 'جميع العناصر';
     itemsTab.classList.add('active');
     categoriesTab.classList.remove('active');
@@ -458,9 +417,9 @@ function showItemsByCategory(categoryName, isPopState = false) {
      console.log(`showItemsByCategory called for "${categoryName}" (isPopState: ${isPopState})`);
     // Update UI
     categoryButtonsContainer.style.display = 'none';
-    categoryButtonsContainer.classList.add('content-hidden');
+    // categoryButtonsContainer.classList.add('content-hidden'); // No longer needed
     itemsListContainer.style.display = 'block';
-    itemsListContainer.classList.remove('content-hidden'); // Reveal
+    // itemsListContainer.classList.remove('content-hidden'); // No longer needed
     itemsListTitle.textContent = categoryName;
     itemsTab.classList.add('active');
     categoriesTab.classList.remove('active');
@@ -555,7 +514,7 @@ refreshButton.addEventListener("click", async function() {
              showCategoriesViewUI(); // Default fallback
         }
 
-        // *** Preload images again after refresh ***
+        // Preload images again after refresh if data changed
          if (dataWasRefreshed) {
             preloadAllItemImages();
          }
@@ -618,7 +577,7 @@ function filterDisplayedItems(searchTerm) {
 // --- Profile Menu Setup ---
 function setupProfileMenu() {
     // Ensure elements exist before adding listeners
-    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton) {
+    if (!profileButton || !profileDropdown || !userEmailDisplay || !dropdownSignOutButton || !userJobTitleDisplay) {
          console.warn("Profile menu elements not found during setup.");
          return;
     }
@@ -631,12 +590,43 @@ function setupProfileMenu() {
         // *** Update dropdown content based on current auth state ***
         const user = auth.currentUser; // Check auth status *at time of click*
         if (user) {
+            // Display Email
             userEmailDisplay.textContent = user.email;
             userEmailDisplay.title = user.email;
+
+            // --- Display Job Title ---
+            let jobTitle = "ضيف"; // Default to Guest
+            const permissionsDataString = localStorage.getItem('permissionRows');
+            if (permissionsDataString) {
+                try {
+                    const permissionsData = JSON.parse(permissionsDataString);
+                    if (permissionsData && permissionsData.data) {
+                        // Find user row (assuming column 0 is email, column 1 is job title)
+                        const userPermissionRow = getUserPermissions(permissionsData.data, user.email);
+                        if (userPermissionRow && userPermissionRow[1] && String(userPermissionRow[1]).trim() !== '') {
+                            jobTitle = String(userPermissionRow[1]).trim();
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing permissions data for job title", e);
+                    jobTitle = "Error"; // Indicate error state
+                }
+            } else {
+                console.warn("Permissions data not found in localStorage for job title lookup.");
+                // Keep default "ضيف" or maybe indicate loading if fetch is pending
+            }
+            userJobTitleDisplay.textContent = jobTitle;
+            userJobTitleDisplay.style.display = 'block'; // Show job title element
+            // --- End Job Title Logic ---
+
             dropdownSignOutButton.style.display = 'block'; // Show sign out button
+
         } else {
-            userEmailDisplay.textContent = "Authenticating..."; // Or "Not signed in"
+            // Not authenticated or still authenticating
+            userEmailDisplay.textContent = "Authenticating...";
             userEmailDisplay.title = '';
+            userJobTitleDisplay.textContent = ''; // Clear job title
+            userJobTitleDisplay.style.display = 'none'; // Hide job title element
             dropdownSignOutButton.style.display = 'none'; // Hide sign out button
         }
     });
@@ -700,11 +690,14 @@ if (categoriesTab && itemsTab) {
 function getUserPermissions(permissions, userEmail) {
     if (!permissions || !userEmail) return null;
     userEmail = userEmail.trim().toLowerCase();
-    for (let i = 1; i < permissions.length; i++) {
-        if (permissions[i]?.[0]) { // Check if row and first cell exist
+    for (let i = 1; i < permissions.length; i++) { // Start from 1 to skip header
+        if (permissions[i]?.[0]) { // Check if row and first cell (email) exist
             let storedEmail = String(permissions[i][0]).trim().toLowerCase();
-            if (storedEmail === userEmail) return permissions[i];
+            if (storedEmail === userEmail) {
+                return permissions[i]; // Return the entire row
+            }
         }
     }
-    return null;
+    console.log(`Permissions not found for email: ${userEmail}`);
+    return null; // Return null if no match found
 }
