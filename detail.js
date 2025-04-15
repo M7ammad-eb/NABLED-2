@@ -1,227 +1,364 @@
-// detail.js (FINAL - Correct Offline Handling)
+// detail.js
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
-  authDomain: "nab-led.firebaseapp.com",
-  projectId: "nab-led",
-  storageBucket: "nab-led.firebasestorage.app",
-  messagingSenderId: "789022171426",
-  appId: "1:789022171426:web:2d8dda594b1495be26457b",
-  measurementId: "G-W58SF16RJ6"
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace
+    authDomain: "nab-led.firebaseapp.com",
+    projectId: "nab-led",
+    storageBucket: "nab-led.firebasestorage.app",
+    messagingSenderId: "789022171426",
+    appId: "1:789022171426:web:2d8dda594b1495be26457b",
+    measurementId: "G-W58SF16RJ6"
 };
 
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// Check for user authentication
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    displayItemDetails();
-  } else {
-    window.location.href = 'signin.html';
-  }
+// --- DOM Elements ---
+const wrapper = document.querySelector('.detail-page-wrapper');
+const backButton = document.getElementById('back-button');
+const itemDetailsDiv = document.getElementById('item-details');
+const transitionDuration = 350; // Match CSS transition duration in milliseconds
+
+// --- Initial Setup ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Check for user authentication
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            displayItemDetails(); // Load content
+        } else {
+            // If user gets logged out while viewing detail, redirect
+            window.location.href = 'signin.html';
+        }
+    });
+
+    // Add Back Button Listener
+    if (backButton && wrapper) {
+        backButton.addEventListener('click', () => {
+            // Start slide down animation
+            wrapper.classList.remove('visible');
+            // Wait for animation to finish before going back
+            setTimeout(() => {
+                window.history.back();
+            }, transitionDuration); // Use timeout matching CSS transition
+        });
+    } else {
+        console.error("Back button or wrapper not found");
+    }
 });
 
+
+// --- Functions ---
+
 async function displayItemDetails() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const itemId = urlParams.get('id');
+    if (!itemDetailsDiv) {
+        console.error("Item details container not found");
+        return;
+    }
+    itemDetailsDiv.innerHTML = '<p>Loading details...</p>'; // Show loading message
 
-  if (!itemId) {
-    document.getElementById('item-details').innerHTML = '<p>Item ID not found.</p>';
-    return;
-  }
+    const urlParams = new URLSearchParams(window.location.search);
+    const itemId = urlParams.get('id');
 
-  // Get data from localStorage (populated by script.js)
-  const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
-  const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
+    if (!itemId) {
+        itemDetailsDiv.innerHTML = '<p>Item ID not found in URL.</p>';
+         // Trigger slide-in even for error message
+         if (wrapper) {
+            requestAnimationFrame(() => { // Ensure element is ready
+                 wrapper.classList.add('visible');
+            });
+         }
+        return;
+    }
 
+    // Get data from localStorage (populated by script.js)
+    const cachedDataString = localStorage.getItem('dataSheet');
+    const cachedPermissionString = localStorage.getItem('permissionRows');
 
-  if (cachedData && cachedData.data && cachedPermission && cachedPermission.data) {
-    const dataRows = cachedData.data;
-    const permissionRows = cachedPermission.data;
+    if (!cachedDataString || !cachedPermissionString) {
+         // Data not found in cache - show offline message
+         displayOfflineMessage();
+         // Trigger slide-in for the offline message
+         if (wrapper) {
+             requestAnimationFrame(() => {
+                 wrapper.classList.add('visible');
+             });
+         }
+         return; // Stop execution
+    }
 
+    try {
+        const cachedData = JSON.parse(cachedDataString);
+        const cachedPermission = JSON.parse(cachedPermissionString);
 
-    const item = findItemById(dataRows, itemId);
-    if (item) {
-      const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-        const visibleColumns = userPermissions
-          ? userPermissions.slice(2).filter(val => !isNaN(val)).map(Number)
-          : [];
-      // Display the item
-      displayItem(item, visibleColumns, dataRows[0]); // Pass columnNames
-    } else {
-      // Item not found in data (should be very rare)
-      displayOfflineMessage(); // Use a helper function
-    }
-  } else {
-    // localStorage is empty (should be very rare)
-    displayOfflineMessage(); // Use a helper function
-  }
+        if (cachedData && cachedData.data && cachedPermission && cachedPermission.data) {
+            const dataRows = cachedData.data;
+            const permissionRows = cachedPermission.data;
+
+            const item = findItemById(dataRows, itemId);
+
+            if (item && auth.currentUser) { // Ensure user is still available
+                const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
+                const visibleColumns = userPermissions
+                    ? userPermissions.slice(8).map(val => val ? String(val).trim() : '0').map(Number) // Assuming prices start at index 8, map permissions
+                    : []; // Default to no price columns visible if no permissions
+
+                // Display the item
+                displayItem(item, visibleColumns, dataRows[0]); // Pass columnNames (header row)
+
+            } else if (!item) {
+                // Item not found in data
+                 itemDetailsDiv.innerHTML = `<p>Item with ID "${itemId}" not found.</p>`;
+                 console.warn(`Item with ID ${itemId} not found in cached data.`);
+            } else {
+                 // Should not happen if auth listener works, but handle anyway
+                 window.location.href = 'signin.html';
+                 return; // Stop before triggering animation
+            }
+        } else {
+            // Should not happen if initial check passed, but handle anyway
+            displayOfflineMessage();
+        }
+
+    } catch (error) {
+        console.error("Error processing item details:", error);
+        itemDetailsDiv.innerHTML = `<p>Error displaying item details.</p>`;
+    }
+
+     // Trigger slide-in animation AFTER content might be ready
+     if (wrapper) {
+        requestAnimationFrame(() => { // Use rAF for smoother start
+             wrapper.classList.add('visible');
+        });
+     }
 }
 
 function findItemById(items, itemId) {
-  for (let i = 1; i < items.length; i++) {
-    if (items[i][0] === itemId) {
-      return items[i];
-    }
-  }
-  return null;
+    // Start from 1 to skip header row
+    for (let i = 1; i < items.length; i++) {
+        // Assuming item ID is in the first column (index 0)
+        if (items[i] && items[i][0] === itemId) {
+            return items[i];
+        }
+    }
+    return null; // Not found
 }
 
 function getUserPermissions(permissions, userEmail) {
-    if (!permissions) {
-        return null;
-    }
-    userEmail = userEmail.trim().toLowerCase();
-    for (let i = 1; i < permissions.length; i++) {
-        let storedEmail = permissions[i][0].trim().toLowerCase();
-        if (storedEmail === userEmail) {
-            return permissions[i];
-        }
-    }
-    return null;
+    if (!permissions || !userEmail) return null;
+    userEmail = userEmail.trim().toLowerCase();
+    // Start from 1 to skip header row
+    for (let i = 1; i < permissions.length; i++) {
+        // Assuming email is in the first column (index 0)
+        if (permissions[i]?.[0]) { // Check row and email cell exist
+            let storedEmail = String(permissions[i][0]).trim().toLowerCase();
+            if (storedEmail === userEmail) {
+                return permissions[i]; // Return the full permission row
+            }
+        }
+    }
+    console.log(`Permissions not found for email: ${userEmail}`);
+    return null;
 }
 
 
-function displayItem(item, visibleColumns, columnNames) {
-  const itemDetailsDiv = document.getElementById('item-details');
-  itemDetailsDiv.innerHTML = '';
+function displayItem(item, visiblePriceIndices, columnNames) {
+    // Ensure columnNames is an array, default to empty if not
+    const headers = Array.isArray(columnNames) ? columnNames : [];
 
-  // === 1. IMAGE CAROUSEL ===
-  const carouselContainer = document.createElement('div');
-  carouselContainer.className = 'carousel-container';
+    itemDetailsDiv.innerHTML = ''; // Clear loading message
 
-  const images = [item[4], item[5], item[6]].filter(Boolean); 
+    // === 1. IMAGE CAROUSEL ===
+    const carouselContainer = document.createElement('div');
+    carouselContainer.className = 'carousel-container';
 
-  // If no images, add a single placeholder
-  if (images.length === 0) {
-    images.push('placeholder.png');
-  }
+    // Assuming images are in columns 4, 5, 6 (indices 4, 5, 6)
+    const images = [item[4], item[5], item[6]]
+                   .map(img => img ? String(img).trim() : null) // Trim and handle null/empty
+                   .filter(img => img); // Filter out null/empty strings
 
-  const slidesWrapper = document.createElement('div');
-  slidesWrapper.className = 'slides-wrapper';
+    // If no images, add a single placeholder
+    if (images.length === 0) {
+        images.push('placeholder.png'); // Use the actual placeholder filename
+    }
 
-  images.forEach((src, index) => {
-    const slide = document.createElement('div');
-    slide.className = 'slide';
-    if (index === 0) slide.classList.add('active');
+    const slidesWrapper = document.createElement('div');
+    slidesWrapper.className = 'slides-wrapper';
 
-    const img = document.createElement('img');
-    img.src = src === 'placeholder.png' ? src : 'placeholder.png'; // Use real src only after loading
-    img.alt = item[2] || 'Product Name';
-    img.classList.add('carousel-image');
-    img.dataset.src = src;
+    images.forEach((src, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'slide';
+        if (index === 0) slide.classList.add('active'); // Make first slide active
 
-    slide.appendChild(img);
-    slidesWrapper.appendChild(slide);
+        const img = document.createElement('img');
+        img.src = 'placeholder.png'; // Start with placeholder
+        img.alt = String(item[2] || headers[2] || 'Product Image'); // Use item name (col 2) or header as alt
+        img.classList.add('carousel-image');
+        img.loading = 'lazy'; // Lazy load carousel images too
 
-    if (src !== 'placeholder.png') {
-      const realImageLoader = new Image();
-      realImageLoader.src = src;
-      realImageLoader.onload = () => { img.src = realImageLoader.src; };
-    }
-  });
+        // Try loading real image in background
+        if (src !== 'placeholder.png') {
+            img.dataset.realSrc = src;
+            const imageLoader = new Image();
+            imageLoader.onload = () => {
+                if (img && img.dataset.realSrc === src) {
+                    img.src = src; // Update if loaded successfully
+                }
+            };
+            imageLoader.onerror = () => console.warn(`Carousel img failed: ${src}`);
+            imageLoader.src = src;
+        } else {
+            img.src = src; // Directly use placeholder if it's the only one
+        }
 
-  carouselContainer.appendChild(slidesWrapper);
-    
-  // Dots
-  if (images.length > 1) {
-    const dots = document.createElement('div');
-    dots.className = 'carousel-dots';
-    images.forEach((_, i) => {
-      const dot = document.createElement('span');
-      dot.className = 'dot' + (i === 0 ? ' active' : '');
-      dots.appendChild(dot);
-    });
-    carouselContainer.appendChild(dots);
-  }
+        slide.appendChild(img);
+        slidesWrapper.appendChild(slide);
+    });
 
-  itemDetailsDiv.appendChild(carouselContainer);
+    carouselContainer.appendChild(slidesWrapper);
 
-  // === 2. ITEM DATA  ===
-  // Item Name
-  const itemName = document.createElement('p');
-  itemName.innerHTML = `<h2>${item[2] || ""}</h2><br>`; // Use empty string if item[1] is undefined.  Good practice for ALL data.
-  itemDetailsDiv.appendChild(itemName);
+    // Dots (only if more than one image)
+    if (images.length > 1) {
+        const dots = document.createElement('div');
+        dots.className = 'carousel-dots';
+        images.forEach((_, i) => {
+            const dot = document.createElement('span');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dot.dataset.slideIndex = i; // Add index for click handling
+            dots.appendChild(dot);
+        });
+        carouselContainer.appendChild(dots);
+    }
 
-  // Item ID
-  const itemId = document.createElement('p');
-  itemId.innerHTML = `${columnNames[0] || ""} <br><strong>${item[0] || ""}</strong><br>`; // Handle potential undefined values.
-  itemDetailsDiv.appendChild(itemId);
+    itemDetailsDiv.appendChild(carouselContainer);
 
-  // Specifications
-  const specs = document.createElement('p');
-  specs.innerHTML = item[3] ? `${columnNames[3]} <br><strong>${item[3]}</strong><br>` : '';
-  itemDetailsDiv.appendChild(specs);
+    // === 2. ITEM DATA ===
+    // Item Name (Column 2, index 2)
+    const itemName = document.createElement('h2');
+    itemName.textContent = String(item[2] || 'N/A');
+    itemDetailsDiv.appendChild(itemName);
 
-  // Cataloge Link
-  const catalog = document.createElement('p');
-  catalog.innerHTML = item[7] ? `<a href="${item[7]}">${columnNames[7] || ""}</a><br>` : ''; // Make link conditional.  Handle undefined columnNames[6] too
-  itemDetailsDiv.appendChild(catalog);
+    // Item ID (Column 0, index 0)
+    const itemIdP = document.createElement('p');
+    itemIdP.innerHTML = `${headers[0] || "ID"}: <br><strong>${String(item[0] || 'N/A')}</strong>`;
+    itemDetailsDiv.appendChild(itemIdP);
 
+    // Specifications (Column 3, index 3)
+    if (item[3] && String(item[3]).trim()) {
+        const specs = document.createElement('p');
+        specs.innerHTML = `${headers[3] || "Specifications"}: <br><strong>${String(item[3])}</strong>`;
+        itemDetailsDiv.appendChild(specs);
+    }
 
-  // Prices (Corrected visibility check)
-  for (let i = 8; i < item.length; i++) {
-      if (visibleColumns[i-3] === 1) { // Corrected check!
-          const key = columnNames[i];
-          const value = item[i];
-          const prices = document.createElement('p');
-          prices.innerHTML = `${key}<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol"><br>`;
-          itemDetailsDiv.appendChild(prices);
-      }
-  }
+    // Catalog Link (Column 7, index 7)
+    if (item[7] && String(item[7]).trim()) {
+        const catalog = document.createElement('p');
+        const catalogLink = document.createElement('a');
+        catalogLink.href = String(item[7]);
+        catalogLink.textContent = headers[7] || "Catalog";
+        catalogLink.target = "_blank"; // Open in new tab
+        catalog.appendChild(catalogLink);
+        itemDetailsDiv.appendChild(catalog);
+    }
 
-  // === 3. CAROUSEL LOGIC ===
-  addCarouselFunctionality();
+    // Prices (Assuming they start from Column 8, index 8)
+    const priceStartIndex = 8;
+    for (let i = priceStartIndex; i < item.length; i++) {
+        // Check if the permission for this price column (relative index) is 1
+        const permissionIndex = i - priceStartIndex; // 0-based index for permissions array
+        if (visiblePriceIndices[permissionIndex] === 1) {
+            const key = headers[i] || `Price ${permissionIndex + 1}`; // Header for the price column
+            const value = item[i] ? String(item[i]).trim() : 'N/A'; // Price value
+            if (value !== 'N/A') { // Only display if there's a value
+                const pricesP = document.createElement('p');
+                pricesP.innerHTML = `${key}:<br><strong>${value}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR">`;
+                itemDetailsDiv.appendChild(pricesP);
+            }
+        }
+    }
+
+    // === 3. CAROUSEL LOGIC ===
+    if (images.length > 1) {
+        addCarouselFunctionality();
+    }
 }
 
 
 //Helper function to display offline message
 function displayOfflineMessage() {
-    document.getElementById('item-details').innerHTML = `
-        <p>Item details are not available offline.</p>
-        <p>Please connect to the internet to view this item.</p>
-        <img src="placeholder.png" alt="Placeholder Image">
-    `;
+    if (!itemDetailsDiv) return;
+    itemDetailsDiv.innerHTML = `
+        <p>تفاصيل العنصر غير متاحة حاليا.</p>
+        <p>يرجى الاتصال بالإنترنت لعرض هذا العنصر.</p>
+        <img src="placeholder.png" alt="Placeholder Image" style="display: block; margin: 20px auto; max-width: 80%;">
+    `;
 }
 
-function parseCSV(csvText) {
-    return Papa.parse(csvText, { header: false }).data;
-}
+// Helper function to parse CSV (needed if fetching directly, but here we use localStorage)
+// function parseCSV(csvText) { ... } - Not needed here if data comes from localStorage
 
+// --- Carousel Functionality ---
 function addCarouselFunctionality() {
-  let currentSlide = 0;
-  const slides = document.querySelectorAll('.slide');
-  const dots = document.querySelectorAll('.dot');
-  const slidesWrapper = document.querySelector('.slides-wrapper');
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    const slidesWrapper = document.querySelector('.slides-wrapper'); // Needed for swipe calculation
 
-  function showSlide(index) {
-    if (index < 0) index = slides.length - 1;
-    if (index >= slides.length) index = 0;
+    if (!slidesWrapper || slides.length <= 1) return; // No functionality needed for 0 or 1 slide
 
-    // Update the active slide and dot
-    slides.forEach(s => s.classList.remove('active'));
-    dots.forEach(d => d.classList.remove('active'));
-    slides[index].classList.add('active');
-    if (dots[index]) dots[index].classList.add('active');
+    function showSlide(index) {
+        // Loop index
+        if (index < 0) index = slides.length - 1;
+        if (index >= slides.length) index = 0;
 
-    // Slide the wrapper by translating it
-    slidesWrapper.style.transform = `translateX(${index * 100}%)`;
+        // Update active slide class (handles visibility/opacity via CSS)
+        slides.forEach((s, i) => {
+            s.classList.toggle('active', i === index);
+        });
 
-    currentSlide = index;
-  }
+        // Update active dot class
+        dots.forEach((d, i) => {
+            d.classList.toggle('active', i === index);
+        });
 
-  /*document.querySelector('.carousel-arrow.left')?.addEventListener('click', () => showSlide(currentSlide - 1));
-  document.querySelector('.carousel-arrow.right')?.addEventListener('click', () => showSlide(currentSlide + 1));*/
-  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
+        currentSlideIndex = index;
+    }
 
-  // Swipe support
-  let touchStartX = 0;
-  slidesWrapper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-  slidesWrapper.addEventListener('touchend', e => {
-    const diff = e.changedTouches[0].clientX - touchStartX;
-    if (diff > 30) showSlide(currentSlide + 1);
-    else if (diff < -30) showSlide(currentSlide - 1);
-  });
+    // Dot click listeners
+    dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            showSlide(parseInt(dot.dataset.slideIndex, 10));
+        });
+    });
+
+    // Swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const swipeThreshold = 50; // Min distance for swipe action
+
+    slidesWrapper.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].clientX;
+    }, { passive: true });
+
+    slidesWrapper.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].clientX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const diff = touchEndX - touchStartX;
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) { // Swipe Right (RTL: Previous)
+                showSlide(currentSlideIndex - 1);
+            } else { // Swipe Left (RTL: Next)
+                showSlide(currentSlideIndex + 1);
+            }
+        }
+         // Reset
+         touchStartX = 0;
+         touchEndX = 0;
+    }
+
+    // Show the initial slide correctly
+    showSlide(0);
 }
