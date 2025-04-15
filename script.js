@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -33,17 +33,18 @@ const searchInput = document.querySelector('.search-input');
 const clearSearchButton = document.getElementById('clear-search-button');
 const refreshButton = document.querySelector(".refresh-button");
 const profileButton = document.getElementById('profile-button');
-const backButton = document.getElementById('back-button'); // New Back Button
+const backButton = document.getElementById('back-button');
+const headerLogo = document.getElementById('header-logo'); // Added logo ref
 const profileDropdown = document.getElementById('profile-dropdown');
 const userEmailDisplay = document.getElementById('user-email-display');
 const userJobTitleDisplay = document.getElementById('user-job-title');
 const dropdownSignOutButton = document.getElementById('dropdown-sign-out-button');
-const detailFooterTitle = document.getElementById('detail-footer-title'); // New Detail Footer
+// Removed detailFooterTitle reference
 
 // --- State Variables ---
 let initialRenderDone = false;
 let lastListViewState = { view: 'categories', filter: null };
-let itemsListScrollPos = 0; // Variable to store scroll position
+let itemsListScrollPos = 0;
 
 // --- Sign Out Function ---
 function signOut() {
@@ -102,11 +103,11 @@ function setupUIInteractions() {
     setupSearch();
     setupProfileMenu();
     setupSwipeGestures();
-    setupBackButton(); // Setup listener for the new back button
-    setupTabNav(); // Setup tab listeners
+    setupBackButton();
+    setupTabNav();
+    setupRefreshButton(); // Added setup for refresh button listener
     console.log("UI Interactions Setup.");
 }
-
 
 // --- Run initial cache check and setup ---
 initialRenderDone = tryInitialRenderFromCache();
@@ -117,14 +118,14 @@ auth.onAuthStateChanged(async (user) => {
     const mainContent = document.querySelector('.main-content');
 
     if (user) {
-        // User is signed in. Update UI elements visibility controlled by auth state
-        profileButton.style.display = "flex"; // Use flex as it's a flex item
+        // Show elements relevant when logged in (visibility might be toggled later by detail view state)
+        profileButton.style.display = "flex";
         searchBar.style.display = 'flex';
+        refreshButton.style.display = 'flex'; // Ensure refresh is potentially visible
 
         try {
             const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
             let needsRender = false;
-
             if (!hasCachedData) {
                 console.log("Auth confirmed, NO cached data. Forcing fetch...");
                 await loadDataIntoLocalStorage(true);
@@ -138,23 +139,24 @@ auth.onAuthStateChanged(async (user) => {
                     console.log("Initial render already done.");
                 }
             }
-
             if (needsRender) {
-                 handleUrlHash(); // Render view based on hash
+                 handleUrlHash();
                  initialRenderDone = true;
             }
-            preloadAllItemImages(); // Preload after data confirmed
+            preloadAllItemImages();
         } catch (error) {
             console.error("Error during initial data fetch/setup:", error);
             if (mainContent) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
             initialRenderDone = true;
         }
     } else {
-        // User is signed out.
+        // User is signed out. Hide elements, redirect.
         profileButton.style.display = "none";
-        searchBar.style.display = 'none'; // Hide search bar if needed on signout
+        searchBar.style.display = 'none';
+        refreshButton.style.display = 'none';
         if (profileDropdown) profileDropdown.style.display = 'none';
-        // Redirect logic
+        document.body.classList.remove('is-detail-active'); // Ensure detail state is cleared
+
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
             if (window.location.hash) {
                  history.replaceState({ view: 'categories', filter: null }, '', window.location.pathname);
@@ -181,12 +183,10 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
             const permissionRows = parseCSV(permissionsCsvText);
             if (!dataRows?.length) throw new Error("Fetched data empty.");
             if (!permissionRows?.length) throw new Error("Fetched permissions empty.");
-
             const newDataString = JSON.stringify({ data: dataRows });
             const newPermsString = JSON.stringify({ data: permissionRows });
             const currentData = localStorage.getItem('dataSheet');
             const currentPerms = localStorage.getItem('permissionRows');
-
             if (newDataString !== currentData || newPermsString !== currentPerms) {
                 localStorage.setItem('dataSheet', newDataString);
                 localStorage.setItem('permissionRows', newPermsString);
@@ -200,7 +200,7 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
         }
     } catch (error) {
         console.error("Error in loadDataIntoLocalStorage:", error);
-        throw error; // Re-throw for the caller (e.g., refresh button)
+        throw error;
     }
     return dataChanged;
 }
@@ -247,31 +247,24 @@ function displayItems(filterCategory = null) {
         const { data: dataRows } = JSON.parse(cachedDataString);
         if (!dataRows) throw new Error("Invalid data format");
         let itemsFound = false;
-        const fragment = document.createDocumentFragment(); // Use fragment for better performance
-
+        const fragment = document.createDocumentFragment();
         for (let i = 1; i < dataRows.length; i++) {
             const item = dataRows[i];
             if (!Array.isArray(item) || item.length < 7 || item.every(cell => !cell || String(cell).trim() === '')) continue;
             const itemCategory = item[1]?.trim() || '';
             if (filterCategory && itemCategory !== filterCategory) continue;
-
             itemsFound = true;
             const itemId = String(item[0] || '').trim();
             const itemName = String(item[2] || 'No Name').trim();
             const realImageSrc = [item[4], item[5], item[6]].map(img => img?.trim() || null).find(img => img);
-
             const itemDiv = document.createElement('div');
             itemDiv.className = 'item-container';
             const clickableElement = document.createElement('button');
             clickableElement.className = 'item-row';
             clickableElement.dataset.itemId = itemId;
             clickableElement.setAttribute('aria-label', `View details for ${itemName}`);
-
             const img = document.createElement('img');
-            img.src = "placeholder.png";
-            img.alt = itemName;
-            img.className = 'list-image';
-            img.loading = "lazy";
+            img.src = "placeholder.png"; img.alt = itemName; img.className = 'list-image'; img.loading = "lazy";
             if (realImageSrc) {
                 img.dataset.realSrc = realImageSrc;
                 const imageLoader = new Image();
@@ -280,35 +273,26 @@ function displayItems(filterCategory = null) {
                 imageLoader.src = realImageSrc;
             }
             clickableElement.appendChild(img);
-
             const codeDiv = document.createElement('div');
-            codeDiv.className = 'item-code';
-            codeDiv.textContent = itemId;
+            codeDiv.className = 'item-code'; codeDiv.textContent = itemId;
             clickableElement.appendChild(codeDiv);
-
             const descDiv = document.createElement('div');
-            descDiv.className = 'item-description';
-            descDiv.textContent = itemName;
+            descDiv.className = 'item-description'; descDiv.textContent = itemName;
             clickableElement.appendChild(descDiv);
-
             clickableElement.addEventListener('click', (e) => {
                 e.preventDefault();
                 clickableElement.classList.add('item-clicked');
                 setTimeout(() => clickableElement.classList.remove('item-clicked'), 300);
                 showItemDetailView(itemId);
             });
-
             itemDiv.appendChild(clickableElement);
-            fragment.appendChild(itemDiv); // Append to fragment
+            fragment.appendChild(itemDiv);
         }
-
-        itemsList.innerHTML = ''; // Clear previous content/loading
+        itemsList.innerHTML = ''; // Clear loading
         if (itemsFound) {
-            itemsList.appendChild(fragment); // Append all items at once
+            itemsList.appendChild(fragment);
         } else {
-             itemsList.innerHTML = filterCategory
-                ? `<p>No items found in category "${filterCategory}".</p>`
-                : (dataRows.length <= 1 ? '<p>No item data found.</p>' : '<p>No items to display.</p>');
+             itemsList.innerHTML = filterCategory ? `<p>No items found in category "${filterCategory}".</p>` : '<p>No items to display.</p>';
         }
     } catch (error) {
          itemsList.innerHTML = '<p>Error displaying item data.</p>';
@@ -324,19 +308,13 @@ function displayCategoryButtons() {
      if (!cachedDataString) { actualButtonList.innerHTML = '<p>No data available.</p>'; return; }
     try {
         const categories = getUniqueCategories();
-        if (categories.length === 0) {
-            actualButtonList.innerHTML = '<p>No categories found.</p>'; return;
-        }
-        actualButtonList.innerHTML = ''; // Clear loading
+        if (categories.length === 0) { actualButtonList.innerHTML = '<p>No categories found.</p>'; return; }
+        actualButtonList.innerHTML = '';
         const fragment = document.createDocumentFragment();
         categories.forEach(category => {
             const button = document.createElement('button');
-            button.textContent = category;
-            button.className = 'category-button';
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                showItemsByCategory(category, false);
-            });
+            button.textContent = category; button.className = 'category-button';
+            button.addEventListener('click', (e) => { e.preventDefault(); showItemsByCategory(category, false); });
             fragment.appendChild(button);
         });
         actualButtonList.appendChild(fragment);
@@ -358,9 +336,7 @@ function preloadAllItemImages() {
         for (let i = 1; i < dataRows.length; i++) {
             const item = dataRows[i];
              if (!Array.isArray(item) || item.length < 7) continue;
-            [item[4], item[5], item[6]].forEach(url => {
-                if (url?.trim()) uniqueImageUrls.add(url.trim());
-            });
+            [item[4], item[5], item[6]].forEach(url => { if (url?.trim()) uniqueImageUrls.add(url.trim()); });
         }
         console.log(`Preloading ${uniqueImageUrls.size} unique images...`);
         uniqueImageUrls.forEach(url => { (new Image()).src = url; });
@@ -374,27 +350,29 @@ function updateViewClasses(activeViewId) {
     const views = [categoryButtonsContainer, itemsListContainer, itemDetailView];
     const isDetail = activeViewId === 'item-detail-view';
 
-    // Add/Remove body class to control overall UI state (header, footer)
+    // Toggle body class first to control header/footer visibility via CSS
     document.body.classList.toggle('is-detail-active', isDetail);
 
-    // --- Store Scroll Position BEFORE changing view ---
+    // Store Scroll Position BEFORE changing view classes
     if (itemsListContainer.classList.contains('view-active') && activeViewId !== 'items-list-container') {
         itemsListScrollPos = itemsListContainer.scrollTop;
         console.log(`Stored items list scroll position: ${itemsListScrollPos}`);
     }
 
+    // Set view active/left/right classes
     views.forEach(view => {
         if (!view) return;
         const isActive = view.id === activeViewId;
         view.classList.toggle('view-active', isActive);
-        view.classList.toggle('view-left', !isActive && (activeViewId === 'category-buttons-container' || (activeViewId === 'items-list-container' && view.id === 'item-detail-view')));
-        view.classList.toggle('view-right', !isActive && (activeViewId === 'item-detail-view' || (activeViewId === 'items-list-container' && view.id === 'category-buttons-container')));
+        // Simplified logic: If not active, determine left/right based on target view
+        // This assumes Categories <-> Items <-> Detail flow
+        const isLeft = !isActive && ((activeViewId === 'items-list-container' && view.id === 'item-detail-view') || activeViewId === 'category-buttons-container');
+        const isRight = !isActive && ((activeViewId === 'items-list-container' && view.id === 'category-buttons-container') || activeViewId === 'item-detail-view');
+        view.classList.toggle('view-left', isLeft);
+        view.classList.toggle('view-right', isRight);
 
-        if (isActive) {
-            // Don't reset scroll on detail view activation, content loads async
-            if (activeViewId !== 'item-detail-view') {
-                view.scrollTop = 0; // Scroll non-detail views to top
-            }
+        if (isActive && activeViewId !== 'item-detail-view') {
+            view.scrollTop = 0; // Scroll non-detail views to top
         }
     });
 
@@ -416,7 +394,7 @@ function showCategoriesViewUI() {
     console.log(`Updating UI for Categories View`);
     updateViewClasses('category-buttons-container');
     displayCategoryButtons();
-    lastListViewState = { view: 'categories', filter: null }; // Update last list state
+    lastListViewState = { view: 'categories', filter: null };
 }
 
 // Show All Items View
@@ -426,12 +404,12 @@ function showAllItemsViewUI() {
     itemsListTitle.textContent = 'جميع العناصر';
     updateViewClasses('items-list-container');
     displayItems();
-    // --- Restore Scroll Position ---
+    // Restore Scroll Position after displayItems and transition starts
     requestAnimationFrame(() => {
         itemsListContainer.scrollTop = itemsListScrollPos;
         console.log(`Restored items list scroll position to: ${itemsListScrollPos}`);
     });
-    lastListViewState = { view: 'items', filter: null }; // Update last list state
+    lastListViewState = { view: 'items', filter: null };
 }
 
 // Show Items Filtered by Category
@@ -441,12 +419,12 @@ function showItemsByCategory(categoryName, isPopState = false) {
     itemsListTitle.textContent = categoryName;
     updateViewClasses('items-list-container');
     displayItems(categoryName);
-    // --- Restore Scroll Position ---
+    // Restore Scroll Position
     requestAnimationFrame(() => {
         itemsListContainer.scrollTop = itemsListScrollPos;
         console.log(`Restored items list scroll position to: ${itemsListScrollPos}`);
     });
-    lastListViewState = { view: 'items', filter: categoryName }; // Update last list state
+    lastListViewState = { view: 'items', filter: categoryName };
 
     // Manage History
     const newState = { view: 'items', filter: categoryName };
@@ -486,17 +464,16 @@ function showItemDetailView(itemId, isPopState = false) {
         ? userPermissions.slice(2).map((val, index) => (val === '1' ? index + 8 : -1)).filter(val => val !== -1)
         : [];
 
-    // Render Details & Update Footer Title
+    // Render Details
     itemDetailsContent.innerHTML = renderItemDetailsHTML(item, visiblePriceColumns, dataRows[0]);
-    const itemName = item[2] || 'Item Details'; // Get item name for footer
-    detailFooterTitle.textContent = itemName; // Set footer text
+    // Removed footer title update
 
     // Activate Carousel
     addCarouselFunctionality('#item-detail-view');
 
-    // Update UI (make detail view active)
+    // Update UI
     updateViewClasses('item-detail-view');
-    itemDetailView.scrollTop = 0; // Ensure detail view starts at top
+    itemDetailView.scrollTop = 0; // Scroll detail view to top
 
     // Manage History
     const newState = { view: 'detail', itemId: itemId };
@@ -519,9 +496,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     // Carousel
     html += `<div class="carousel-container"><div class="slides-wrapper">`;
     if (hasImages) {
-        images.forEach((src, index) => {
-            html += `<div class="slide ${index === 0 ? 'active' : ''}" data-src="${src}"><img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-image"></div>`;
-        });
+        images.forEach((src, index) => { html += `<div class="slide ${index === 0 ? 'active' : ''}" data-src="${src}"><img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-image"></div>`; });
     } else {
         html += `<div class="slide active" data-src="${placeholder}"><img src="${placeholder}" alt="Placeholder" class="carousel-image"></div>`;
     }
@@ -534,10 +509,10 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     html += `</div>`; // carousel-container
 
     // Item Data
-    html += `<h2>${item[2] || ""}</h2><br>`; // Name
-    html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`; // ID
-    if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`; // Specs
-    if (item[7]) html += `<p><a href="${item[7]}" target="_blank" rel="noopener noreferrer">${columnNames[7] || "Catalog"}</a></p>`; // Catalog
+    html += `<h2>${item[2] || ""}</h2><br>`;
+    html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`;
+    if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`;
+    if (item[7]) html += `<p><a href="${item[7]}" target="_blank" rel="noopener noreferrer">${columnNames[7] || "Catalog"}</a></p>`;
 
     // Prices
     visiblePriceColumnIndices.forEach(index => {
@@ -569,39 +544,30 @@ function addCarouselFunctionality(parentSelector) {
             realImageLoader.onload = () => { img.src = realSrc; };
             realImageLoader.onerror = () => console.warn(`Failed carousel image: ${realSrc}`);
             realImageLoader.src = realSrc;
-        } else if (img) {
-            img.src = realSrc || 'placeholder.png'; // Ensure src is set
-        }
+        } else if (img) { img.src = realSrc || 'placeholder.png'; }
     });
 
     function showSlide(index) {
         if (slides.length <= 1) return;
-        index = (index + slides.length) % slides.length; // Wrap index
+        index = (index + slides.length) % slides.length;
         slides.forEach((s, i) => s.classList.toggle('active', i === index));
         dots.forEach((d, i) => d.classList.toggle('active', i === index));
         currentSlide = index;
     }
-
     dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
     // Swipe support for Carousel
     let touchStartX = 0;
-    slidesWrapper.addEventListener('touchstart', e => {
-        if (slides.length <= 1) return;
-        touchStartX = e.touches[0].clientX;
-    }, { passive: true });
-
+    slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
     slidesWrapper.addEventListener('touchend', e => {
         if (slides.length <= 1 || touchStartX === 0) return;
         const touchEndX = e.changedTouches[0].clientX;
         const diff = touchEndX - touchStartX;
-        // RTL: L->R swipe (positive diff) = Previous; R->L swipe (negative diff) = Next
         if (diff > 50) showSlide(currentSlide - 1); // Swipe Right (L->R) -> Previous
         else if (diff < -50) showSlide(currentSlide + 1); // Swipe Left (R->L) -> Next
         touchStartX = 0;
     }, { passive: true });
-
-    showSlide(0); // Initialize
+    showSlide(0);
     console.log("Carousel functionality added.");
 }
 
@@ -630,24 +596,19 @@ function handleUrlHash() {
     console.log("Handling initial hash:", hash);
     let initialState = { view: 'categories', filter: null };
     let targetHash = '#categories';
-
     if (hash.startsWith('#detail/')) {
         const itemId = decodeURIComponent(hash.substring(8));
-        initialState = { view: 'detail', itemId: itemId };
-        targetHash = `#detail/${encodeURIComponent(itemId)}`;
-        showItemDetailView(itemId, true); // Show UI, mark as popstate init
+        initialState = { view: 'detail', itemId: itemId }; targetHash = `#detail/${encodeURIComponent(itemId)}`;
+        showItemDetailView(itemId, true);
     } else if (hash.startsWith('#items/')) {
         const category = decodeURIComponent(hash.substring(7));
-        initialState = { view: 'items', filter: category };
-        targetHash = `#items/${encodeURIComponent(category)}`;
+        initialState = { view: 'items', filter: category }; targetHash = `#items/${encodeURIComponent(category)}`;
         showItemsByCategory(category, true);
     } else if (hash === '#items') {
-        initialState = { view: 'items', filter: null };
-        targetHash = '#items';
+        initialState = { view: 'items', filter: null }; targetHash = '#items';
         showAllItemsViewUI();
-    } else { // Default or #categories
-        initialState = { view: 'categories', filter: null };
-        targetHash = '#categories';
+    } else {
+        initialState = { view: 'categories', filter: null }; targetHash = '#categories';
         showCategoriesViewUI();
     }
     console.log("Replacing initial state:", initialState);
@@ -656,37 +617,38 @@ function handleUrlHash() {
 
 
 // --- Refresh Button Logic ---
-refreshButton.addEventListener("click", async function() {
-    const button = this;
-    console.log("Refresh button clicked");
-    button.disabled = true; button.classList.add('loading');
-    const currentState = history.state || { view: 'categories', filter: null };
-    try {
-        const dataWasRefreshed = await loadDataIntoLocalStorage(true);
-        console.log("Refresh fetch complete. Data changed:", dataWasRefreshed);
-        // Re-render the view that was current BEFORE refresh
-        console.log("Refresh complete, restoring view for state:", currentState);
-        if (currentState.view === 'categories') showCategoriesViewUI();
-        else if (currentState.view === 'items') {
-            if (currentState.filter) showItemsByCategory(currentState.filter, true);
-            else showAllItemsViewUI();
-        } else if (currentState.view === 'detail') {
-             if (currentState.itemId) showItemDetailView(currentState.itemId, true);
-             else showCategoriesViewUI(); // Fallback
-        } else showCategoriesViewUI(); // Default fallback
-        if (dataWasRefreshed) preloadAllItemImages();
-    } catch (error) {
-        console.error("Error during refresh:", error);
-        // Show error in appropriate view
-        if (currentState.view === 'categories' && actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data.</p>';
-        else if (currentState.view === 'items' && itemsList) itemsList.innerHTML = '<p>Error refreshing data.</p>';
-        else if (currentState.view === 'detail' && itemDetailsContent) itemDetailsContent.innerHTML = '<p>Error refreshing data.</p>';
-        else showCategoriesViewUI();
-    } finally {
-        button.disabled = false; button.classList.remove('loading');
-        console.log("Refresh attempt complete.");
-    }
-});
+function setupRefreshButton() {
+    refreshButton.addEventListener("click", async function() {
+        const button = this;
+        console.log("Refresh button clicked");
+        button.disabled = true; button.classList.add('loading');
+        const currentState = history.state || { view: 'categories', filter: null };
+        try {
+            const dataWasRefreshed = await loadDataIntoLocalStorage(true);
+            console.log("Refresh fetch complete. Data changed:", dataWasRefreshed);
+            // Re-render the view that was current BEFORE refresh
+            console.log("Refresh complete, restoring view for state:", currentState);
+            if (currentState.view === 'categories') showCategoriesViewUI();
+            else if (currentState.view === 'items') {
+                if (currentState.filter) showItemsByCategory(currentState.filter, true);
+                else showAllItemsViewUI();
+            } else if (currentState.view === 'detail') {
+                 if (currentState.itemId) showItemDetailView(currentState.itemId, true);
+                 else showCategoriesViewUI(); // Fallback
+            } else showCategoriesViewUI(); // Default fallback
+            if (dataWasRefreshed) preloadAllItemImages();
+        } catch (error) {
+            console.error("Error during refresh:", error);
+            if (currentState.view === 'categories' && actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data.</p>';
+            else if (currentState.view === 'items' && itemsList) itemsList.innerHTML = '<p>Error refreshing data.</p>';
+            else if (currentState.view === 'detail' && itemDetailsContent) itemDetailsContent.innerHTML = '<p>Error refreshing data.</p>';
+            else showCategoriesViewUI();
+        } finally {
+            button.disabled = false; button.classList.remove('loading');
+            console.log("Refresh attempt complete.");
+        }
+    });
+}
 
 // --- Search Functionality ---
 function setupSearch() {
@@ -695,23 +657,17 @@ function setupSearch() {
         const searchTerm = searchInput.value;
         clearSearchButton.style.display = searchTerm ? 'block' : 'none';
         const currentView = history.state?.view;
-        // If searching from Categories or Detail, switch to All Items first
         if ((currentView === 'categories' || currentView === 'detail') && searchTerm) {
              console.log(`Search from ${currentView}, switching to All Items.`);
              const newState = { view: 'items', filter: null };
-             history.pushState(newState, '', '#items'); // Push state so back goes to prev view
-             showAllItemsViewUI();
-             filterDisplayedItems(searchTerm);
-             return;
+             history.pushState(newState, '', '#items');
+             showAllItemsViewUI(); filterDisplayedItems(searchTerm); return;
         }
-        // If already in items view, just filter
         if (currentView === 'items') filterDisplayedItems(searchTerm);
     });
     clearSearchButton.addEventListener('click', () => {
-        searchInput.value = '';
-        clearSearchButton.style.display = 'none';
-        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        searchInput.focus();
+        searchInput.value = ''; clearSearchButton.style.display = 'none';
+        searchInput.dispatchEvent(new Event('input', { bubbles: true })); searchInput.focus();
     });
 }
 function filterDisplayedItems(searchTerm) {
@@ -720,30 +676,19 @@ function filterDisplayedItems(searchTerm) {
     if (!currentItemsList) return;
     const itemElements = currentItemsList.querySelectorAll('.item-container');
     let visibleCount = 0;
-    let noResultsMsg = currentItemsList.querySelector('.no-search-results'); // Find existing message
-
+    let noResultsMsg = currentItemsList.querySelector('.no-search-results');
     itemElements.forEach(itemElement => {
-        const itemButton = itemElement.querySelector('button.item-row');
-        if (!itemButton) return;
+        const itemButton = itemElement.querySelector('button.item-row'); if (!itemButton) return;
         const itemCode = (itemButton.querySelector('.item-code')?.textContent || '').toLowerCase();
         const itemDescription = (itemButton.querySelector('.item-description')?.textContent || '').toLowerCase();
         const isMatch = term === '' || itemCode.includes(term) || itemDescription.includes(term);
         itemElement.style.display = isMatch ? 'block' : 'none';
         if (isMatch) visibleCount++;
     });
-
-    // Manage "No results" message
     if (visibleCount === 0 && term !== '') {
-        if (!noResultsMsg) { // Create message if it doesn't exist
-            noResultsMsg = document.createElement('p');
-            noResultsMsg.className = 'no-search-results';
-            currentItemsList.appendChild(noResultsMsg); // Append once
-        }
-        noResultsMsg.textContent = `No items match "${searchTerm}".`;
-        noResultsMsg.style.display = 'block'; // Show message
-    } else if (noResultsMsg) {
-        noResultsMsg.style.display = 'none'; // Hide message if results or empty search
-    }
+        if (!noResultsMsg) { noResultsMsg = document.createElement('p'); noResultsMsg.className = 'no-search-results'; currentItemsList.appendChild(noResultsMsg); }
+        noResultsMsg.textContent = `No items match "${searchTerm}".`; noResultsMsg.style.display = 'block';
+    } else if (noResultsMsg) { noResultsMsg.style.display = 'none'; }
 }
 
 // --- Profile Menu Setup ---
@@ -753,7 +698,7 @@ function setupProfileMenu() {
         event.stopPropagation();
         const isVisible = profileDropdown.style.display === 'block';
         profileDropdown.style.display = isVisible ? 'none' : 'block';
-        if (!isVisible) { // Update content only when opening
+        if (!isVisible) {
              const user = auth.currentUser;
              if (user) {
                  userEmailDisplay.textContent = user.email; userEmailDisplay.title = user.email;
@@ -766,14 +711,12 @@ function setupProfileMenu() {
                          if (userPermissionRow?.[1]?.trim()) jobTitle = userPermissionRow[1].trim();
                      } catch (e) { console.error("Error parsing permissions", e); jobTitle = "Error"; }
                  }
-                 userJobTitleDisplay.textContent = jobTitle;
-                 userJobTitleDisplay.style.display = 'block';
+                 userJobTitleDisplay.textContent = jobTitle; userJobTitleDisplay.style.display = 'block';
                  dropdownSignOutButton.style.display = 'block';
-             } else { /* Handle case where user somehow becomes null */ }
+             }
         }
     });
     dropdownSignOutButton.addEventListener('click', signOut);
-    // Close dropdown on outside click
     document.addEventListener('click', (event) => {
         if (profileDropdown.style.display === 'block' && !profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
             profileDropdown.style.display = 'none';
@@ -784,44 +727,25 @@ function setupProfileMenu() {
 // --- Setup Back Button Listener ---
 function setupBackButton() {
     if (!backButton) return;
-    backButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        console.log("Back button clicked");
-        history.back(); // Simulate browser back action
-    });
+    backButton.addEventListener('click', (e) => { e.preventDefault(); console.log("Back button clicked"); history.back(); });
 }
 
 // --- Tab Event Listeners ---
 function setupTabNav() {
     if (!categoriesTab || !itemsTab) { console.error("Tab elements missing."); return; }
-
     categoriesTab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const newState = { view: 'categories', filter: null };
+        e.preventDefault(); const newState = { view: 'categories', filter: null };
         console.log("Tab Click (Categories): Replacing state");
-        // --- Always use replaceState for Categories Tab ---
-        history.replaceState(newState, '', '#categories');
-        showCategoriesViewUI(); // Update UI
+        history.replaceState(newState, '', '#categories'); // Always replace
+        showCategoriesViewUI();
     });
-
     itemsTab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const currentState = history.state;
-        const newState = { view: 'items', filter: null }; // Target: All items
-        // Only change history if not already on the exact target state
+        e.preventDefault(); const currentState = history.state; const newState = { view: 'items', filter: null };
         if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
-             // Replace state if coming from detail, push otherwise
-             if (currentState?.view === 'detail') {
-                 console.log("Tab Click (Items): Replacing detail state");
-                 history.replaceState(newState, '', '#items');
-             } else {
-                 console.log("Tab Click (Items): Pushing state");
-                 history.pushState(newState, '', '#items');
-             }
-        } else {
-            console.log("Tab Click (Items): Already on all items view.");
-        }
-        showAllItemsViewUI(); // Update UI
+             if (currentState?.view === 'detail') { console.log("Tab Click (Items): Replacing detail state"); history.replaceState(newState, '', '#items'); }
+             else { console.log("Tab Click (Items): Pushing state"); history.pushState(newState, '', '#items'); }
+        } else { console.log("Tab Click (Items): Already on all items view."); }
+        showAllItemsViewUI();
     });
     console.log("Tab listeners added.");
 }
@@ -834,56 +758,74 @@ function setupSwipeGestures() {
     if (!viewWrapper) { console.error("View wrapper missing."); return; }
 
     viewWrapper.addEventListener('touchstart', (event) => {
-        // --- Disable view swipe if detail view is active ---
+        // Disable view swipe if detail view is active
         if (document.body.classList.contains('is-detail-active')) {
             isSwiping = false;
-            console.log("View swipe disabled in detail view.");
+            // console.log("View swipe disabled in detail view.");
             return;
         }
-        // Allow swipe only if not touching explicitly interactive elements
-        const isInteractive = event.target.closest('button, input, a, .dot'); // Removed item-row/category-button
-        if (isInteractive) { isSwiping = false; return; }
+        // Block swipe if starting on truly interactive elements (input, links, non-list buttons, dots)
+        // Allows swipe starting on item rows or category buttons.
+        const swipeTarget = event.target;
+        let blockSwipe = false;
+        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) {
+             blockSwipe = true;
+        }
 
+        if (blockSwipe) {
+             isSwiping = false;
+             // console.log("Swipe blocked on interactive element:", event.target);
+             return;
+        }
+
+        // If swipe not blocked, initialize coordinates
         touchStartX = event.changedTouches[0].screenX;
         touchStartY = event.changedTouches[0].screenY;
         isSwiping = true;
+        // console.log("Swipe initiated");
+
     }, { passive: true });
 
      viewWrapper.addEventListener('touchmove', (event) => {
          if (!isSwiping) return;
          touchEndX = event.changedTouches[0].screenX;
          touchEndY = event.changedTouches[0].screenY;
-         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 10) {
-             isSwiping = false; // Cancel if too vertical
+         // Cancel if swipe becomes too vertical
+         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) { // Increased vertical tolerance slightly
+             // console.log("Swipe cancelled: Too vertical.");
+             isSwiping = false;
          }
      }, { passive: true });
 
     viewWrapper.addEventListener('touchend', (event) => {
          if (!isSwiping) return;
-         isSwiping = false;
+         isSwiping = false; // Mark swipe attempt as finished
          touchEndX = event.changedTouches[0].screenX;
          touchEndY = event.changedTouches[0].screenY;
-         handleSwipeGesture();
+         handleSwipeGesture(); // Process the swipe
     }, { passive: true });
 
     function handleSwipeGesture() {
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
-        touchStartX = touchEndX = touchStartY = touchEndY = 0; // Reset
+        const absDeltaX = Math.abs(deltaX);
+        const absDeltaY = Math.abs(deltaY);
 
-        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaY) < maxVerticalThreshold) {
+        // Reset coordinates for next swipe
+        touchStartX = touchEndX = touchStartY = touchEndY = 0;
+
+        // Check if it's a valid horizontal swipe
+        if (absDeltaX > swipeThreshold && absDeltaY < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
+            console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`); // Log delta and state
 
             // --- Corrected RTL Swipe Logic ---
             // Swipe Right (Finger L -> R, positive deltaX): Navigate "backward"
             if (deltaX > 0) {
                 console.log("Swipe Right (L->R) detected - Navigating Back");
-                if (currentState.view === 'items') { // If on items (all or filtered)
+                if (currentState.view === 'items') {
                     console.log("Action: Triggering Categories Tab");
-                    if(categoriesTab) categoriesTab.click(); // Go back to Categories
-                } else if (currentState.view === 'detail') { // Should not happen due to disable check, but safe fallback
-                    console.log("Action: Simulating Back Button from Detail");
-                    history.back();
+                    if(categoriesTab) categoriesTab.click();
                 } else { console.log("Action: No swipe back action from categories."); }
             }
             // Swipe Left (Finger R -> L, negative deltaX): Navigate "forward"
@@ -891,9 +833,11 @@ function setupSwipeGestures() {
                 console.log("Swipe Left (R->L) detected - Navigating Forward");
                 if (currentState.view === 'categories') {
                     console.log("Action: Triggering Items Tab (All Items)");
-                    if(itemsTab) itemsTab.click(); // Go to All Items
-                } else { console.log("Action: No swipe forward action from items/detail."); }
+                    if(itemsTab) itemsTab.click();
+                } else { console.log("Action: No swipe forward action from items."); }
             }
+        } else {
+            // console.log(`Swipe ignored: dX=${deltaX.toFixed(0)}, dY=${deltaY.toFixed(0)}`);
         }
     }
      console.log("Swipe gestures setup.");
@@ -908,6 +852,6 @@ function getUserPermissions(permissions, userEmail) {
             return permissions[i];
         }
     }
-    // console.log(`Permissions not found for: ${userEmail}`); // Reduce noise
     return null;
 }
+
