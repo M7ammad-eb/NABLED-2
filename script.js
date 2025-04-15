@@ -1,6 +1,6 @@
 // Firebase configuration (replace with your actual config)
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -83,6 +83,10 @@ function tryInitialRenderFromCache() {
             handleUrlHash(); // Determine and show initial view based on hash
             if (appLoading) appLoading.style.display = 'none'; // Hide loading indicator
             initialRenderDone = true; // Mark that we showed something
+
+            // *** Start preloading images if data was found in cache ***
+            preloadAllItemImages();
+
         } catch (error) {
             console.error("Error parsing or rendering initial cache:", error);
             localStorage.removeItem('dataSheet'); // Clear potentially corrupt data
@@ -109,7 +113,6 @@ auth.onAuthStateChanged(async (user) => {
         if (!initialRenderDone) setupProfileMenu(); // Setup if not done yet
 
         try {
-            // *** MODIFIED LOGIC: Check cache before deciding fetch strategy ***
             const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
 
             if (!hasCachedData) {
@@ -121,20 +124,23 @@ auth.onAuthStateChanged(async (user) => {
                 handleUrlHash(); // Render view based on hash
                 if (appLoading) appLoading.style.display = 'none'; // Hide loading
                 initialRenderDone = true; // Mark render as done
-                // Search/Profile menu already set up by tryInitialRenderFromCache
+
+                // *** Start preloading images after fresh fetch ***
+                preloadAllItemImages();
 
             } else {
-                // Cache exists, proceed without fetching (as per previous logic)
+                // Cache exists, proceed without fetching
                 console.log("Auth confirmed, cached data found. Using cache (no background fetch).");
-                // If initial render didn't happen (e.g., auth was faster than initial cache check), render now
+                // If initial render didn't happen, render now
                 if (!initialRenderDone) {
                      handleUrlHash();
                      if (appLoading) appLoading.style.display = 'none';
                      initialRenderDone = true;
+                     // *** Preload images even if initial render was delayed ***
+                     preloadAllItemImages();
                 }
-                // We don't call loadDataIntoLocalStorage(false) as it does nothing in this flow
+                // If initial render WAS done, images should have already started preloading
             }
-             // *** END OF MODIFIED LOGIC ***
 
         } catch (error) {
             // This catch handles errors from loadDataIntoLocalStorage(true) if it was called
@@ -278,7 +284,7 @@ function displayItems(filterCategory = null) {
             link.classList.add('item-row');
             link.dataset.itemId = itemId;
 
-            // --- Start Image Loading Modification ---
+            // --- Image Loading Modification (Placeholder First) ---
             const img = document.createElement('img');
             img.src = "placeholder.png"; // Start with placeholder
             img.alt = itemName;
@@ -363,6 +369,52 @@ function displayCategoryButtons() {
     } catch (error) {
         console.error("Error getting/displaying categories:", error);
         actualButtonList.innerHTML = '<p>Error loading categories.</p>';
+    }
+}
+
+// --- NEW: Preload All Item Images ---
+function preloadAllItemImages() {
+    console.log("Starting image preloading...");
+    const cachedDataString = localStorage.getItem('dataSheet');
+    if (!cachedDataString) {
+        console.warn("Preload: No data in localStorage to find images.");
+        return;
+    }
+
+    try {
+        const cachedData = JSON.parse(cachedDataString);
+        if (!cachedData?.data) {
+             console.warn("Preload: Invalid data format in localStorage.");
+             return;
+        }
+
+        const dataRows = cachedData.data;
+        const uniqueImageUrls = new Set();
+
+        // Start from 1 to skip header row
+        for (let i = 1; i < dataRows.length; i++) {
+            const item = dataRows[i];
+             if (!Array.isArray(item) || item.length < 7) continue; // Basic validation
+
+            // Extract potential image URLs from columns 4, 5, 6 (indices 4, 5, 6)
+            [item[4], item[5], item[6]].forEach(url => {
+                if (url && typeof url === 'string' && url.trim() !== '') {
+                    uniqueImageUrls.add(url.trim());
+                }
+            });
+        }
+
+        console.log(`Preloading ${uniqueImageUrls.size} unique images...`);
+        uniqueImageUrls.forEach(url => {
+            const imgPreloader = new Image();
+            // Optional: Add handlers to see if preloading works/fails
+            // imgPreloader.onload = () => console.log(`Preloaded: ${url}`);
+            // imgPreloader.onerror = () => console.warn(`Preload failed: ${url}`);
+            imgPreloader.src = url; // This initiates the fetch request
+        });
+
+    } catch (error) {
+        console.error("Error during image preloading:", error);
     }
 }
 
@@ -502,6 +554,12 @@ refreshButton.addEventListener("click", async function() {
         } else {
              showCategoriesViewUI(); // Default fallback
         }
+
+        // *** Preload images again after refresh ***
+         if (dataWasRefreshed) {
+            preloadAllItemImages();
+         }
+
     } catch (error) {
         console.error("Error during refresh:", error);
          if(actualButtonList) actualButtonList.innerHTML = '<p>Error refreshing data.</p>';
