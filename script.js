@@ -19,7 +19,6 @@ const permissionsSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRL
 
 // --- DOM Element References ---
 // Loading Indicator REMOVED
-// const appLoading = document.getElementById('app-loading');
 // Tabs and Views
 const categoriesTab = document.getElementById('categories-tab');
 const itemsTab = document.getElementById('items-tab');
@@ -28,6 +27,7 @@ const actualButtonList = document.getElementById('actual-button-list');
 const itemsListContainer = document.getElementById('items-list-container');
 const itemsList = document.getElementById('items-list');
 const itemsListTitle = document.getElementById('items-list-title');
+const viewWrapper = document.getElementById('view-wrapper'); // New wrapper
 // Search Bar Elements
 const searchBar = document.querySelector('.search-bar');
 const searchInput = document.querySelector('.search-input');
@@ -82,22 +82,23 @@ function tryInitialRenderFromCache() {
              if (!parsedData || !parsedData.data) throw new Error("Cached data invalid format");
 
             handleUrlHash(); // Determine and show initial view based on hash
-            // appLoading REMOVED
             initialRenderDone = true; // Mark that we showed something
-
-            // Start preloading images if data was found in cache
             preloadAllItemImages();
 
         } catch (error) {
             console.error("Error parsing or rendering initial cache:", error);
-            localStorage.removeItem('dataSheet'); // Clear potentially corrupt data
+            localStorage.removeItem('dataSheet');
         }
     } else {
         console.log("No cached data found for initial render.");
+        // Show categories container structure but with message
+        showCategoriesViewUI(); // Show the structure
+        if(actualButtonList) actualButtonList.innerHTML = '<p>Loading data...</p>'; // Show loading inside
     }
-    // *** Setup UI interactions immediately, regardless of cache ***
+    // Setup UI interactions immediately
     setupSearch();
     setupProfileMenu();
+    setupSwipeGestures(); // Setup swipe
 }
 // --- Run initial cache check and setup immediately ---
 tryInitialRenderFromCache();
@@ -105,59 +106,44 @@ tryInitialRenderFromCache();
 // --- Authentication State Change (Runs when Firebase Auth is ready) ---
 auth.onAuthStateChanged(async (user) => {
     console.log("Auth state changed. User:", user ? user.email : 'None');
-    const mainContent = document.querySelector('.main-content'); // Get ref for error display
+    const mainContent = document.querySelector('.main-content');
 
     if (user) {
         // User is signed in.
-        // Elements are already visible via HTML/CSS by default now
-        // profileButton.style.display = "block"; // No longer needed
-        // searchBar.style.display = 'flex'; // No longer needed
+        profileButton.style.display = "block"; // Show profile button now
+        searchBar.style.display = 'flex'; // Show search bar now
 
         try {
-            // Check cache before deciding fetch strategy
             const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
 
             if (!hasCachedData) {
-                // If no cache exists (fresh sign-in or cleared cache), force fetch
                 console.log("Auth confirmed, NO cached data found. Forcing initial fetch...");
                 await loadDataIntoLocalStorage(true); // Force fetch
-
-                // Now that data is fetched, render the initial view if not done already
                 if (!initialRenderDone) {
                     handleUrlHash(); // Render view based on hash
-                    initialRenderDone = true; // Mark render as done
+                    initialRenderDone = true;
                 }
-                // Start preloading images after fresh fetch
                 preloadAllItemImages();
-
             } else {
-                // Cache exists, proceed without fetching
-                console.log("Auth confirmed, cached data found. Using cache (no background fetch).");
-                // If initial render didn't happen (e.g., auth was faster than initial cache check), render now
+                console.log("Auth confirmed, cached data found. Using cache.");
                 if (!initialRenderDone) {
                      handleUrlHash();
                      initialRenderDone = true;
-                     // Preload images even if initial render was delayed
                      preloadAllItemImages();
                 }
+                 // Optional: Trigger a non-forced check in background if desired
+                 // loadDataIntoLocalStorage(false).then(...)
             }
-            // Hide loading indicator if it was somehow still visible (e.g., error during initial render)
-             if (appLoading && appLoading.style.display !== 'none') appLoading.style.display = 'none';
-
         } catch (error) {
-            // This catch handles errors from loadDataIntoLocalStorage(true) if it was called
             console.error("Error during initial data fetch/setup:", error);
-            if (appLoading && appLoading.style.display !== 'none') appLoading.style.display = 'none';
             if (mainContent) mainContent.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Error loading initial data. Please refresh.</p>';
-            initialRenderDone = true; // Mark as done even on error to prevent loops
+            initialRenderDone = true;
         }
     } else {
         // User is signed out.
-        // Hide elements that should only be visible when logged in
         if (profileButton) profileButton.style.display = "none";
-        if (searchBar) searchBar.style.display = 'none'; // Hide search bar on logout
+        if (searchBar) searchBar.style.display = 'none';
         if (profileDropdown) profileDropdown.style.display = 'none';
-        if (appLoading && appLoading.style.display !== 'none') appLoading.style.display = 'none';
         // Redirect logic
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
              if (window.location.hash.startsWith('#categories') || window.location.hash.startsWith('#items')) {
@@ -173,7 +159,6 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
     let dataChanged = false;
     try {
         if (forceRefresh) {
-            // --- Fetching logic ---
             console.log("Forcing refresh: Fetching data from network...");
             const cacheBuster = `&_=${Date.now()}`;
             const currentSheetUrl = `${sheetUrl}${cacheBuster}`;
@@ -201,17 +186,11 @@ async function loadDataIntoLocalStorage(forceRefresh = false) {
             } else {
                  console.log("Fetched data is the same as cached data. No update stored.");
             }
-            // --- End of Fetching Logic ---
         } else {
-            // --- Cache Check Logic ---
             const currentData = localStorage.getItem('dataSheet');
             const currentPerms = localStorage.getItem('permissionRows');
-            if (currentData && currentPerms) {
-                console.log("Using data from localStorage (background check).");
-            } else {
-                console.log("No cached data found (background check).");
-            }
-            // --- End of Cache Check Logic ---
+            if (currentData && currentPerms) console.log("Using data from localStorage (background check).");
+            else console.log("No cached data found (background check).");
         }
     } catch (error) {
         console.error("Error in loadDataIntoLocalStorage:", error);
@@ -380,52 +359,74 @@ function preloadAllItemImages() {
 
 // --- View Switching & History Management ---
 
-// Show Categories View - Updates UI only
+// Show Categories View - Manages Classes and UI Update
 function showCategoriesViewUI() {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab) return;
     console.log(`Updating UI for Categories View`);
-    itemsListContainer.style.display = 'none';
-    // itemsListContainer.classList.add('content-hidden'); // No longer needed
-    categoryButtonsContainer.style.display = 'block';
-    // categoryButtonsContainer.classList.remove('content-hidden'); // No longer needed
+
+    // Set classes for positioning/transition
+    categoryButtonsContainer.classList.remove('view-hidden-right', 'view-hidden-left');
+    categoryButtonsContainer.classList.add('view-active');
+    itemsListContainer.classList.remove('view-active');
+    // Determine direction for transition (optional, simpler to just set end state)
+     itemsListContainer.classList.add('view-hidden-right'); // Slide items right (for RTL)
+     itemsListContainer.classList.remove('view-hidden-left');
+
+
+    // Update Tabs
     categoriesTab.classList.add('active');
     itemsTab.classList.remove('active');
     categoriesTab.setAttribute('aria-selected', 'true');
     itemsTab.setAttribute('aria-selected', 'false');
+
+    // Update Content
     displayCategoryButtons();
 }
 
-// Show All Items View - Updates UI only
+// Show All Items View - Manages Classes and UI Update
 function showAllItemsViewUI() {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
     console.log(`Updating UI for All Items View`);
-    categoryButtonsContainer.style.display = 'none';
-    // categoryButtonsContainer.classList.add('content-hidden'); // No longer needed
-    itemsListContainer.style.display = 'block';
-    // itemsListContainer.classList.remove('content-hidden'); // No longer needed
-    itemsListTitle.textContent = 'جميع العناصر';
+
+     // Set classes for positioning/transition
+    itemsListContainer.classList.remove('view-hidden-right', 'view-hidden-left');
+    itemsListContainer.classList.add('view-active');
+    categoryButtonsContainer.classList.remove('view-active');
+    // Determine direction for transition (optional, simpler to just set end state)
+    categoryButtonsContainer.classList.add('view-hidden-left'); // Slide categories left (for RTL)
+    categoryButtonsContainer.classList.remove('view-hidden-right');
+
+
+    // Update Tabs
     itemsTab.classList.add('active');
     categoriesTab.classList.remove('active');
     itemsTab.setAttribute('aria-selected', 'true');
     categoriesTab.setAttribute('aria-selected', 'false');
+
+    // Update Content
+    itemsListTitle.textContent = 'جميع العناصر';
     displayItems();
 }
 
-// Show Items Filtered by Category - Updates UI and PUSHES state if not popstate
+// Show Items Filtered by Category - Manages Classes, UI, and PUSHES state if not popstate
 function showItemsByCategory(categoryName, isPopState = false) {
     if (!itemsListContainer || !categoryButtonsContainer || !categoriesTab || !itemsTab || !itemsListTitle) return;
      console.log(`showItemsByCategory called for "${categoryName}" (isPopState: ${isPopState})`);
-    // Update UI
-    categoryButtonsContainer.style.display = 'none';
-    // categoryButtonsContainer.classList.add('content-hidden'); // No longer needed
-    itemsListContainer.style.display = 'block';
-    // itemsListContainer.classList.remove('content-hidden'); // No longer needed
+
+    // Update UI Classes and Content
+    itemsListContainer.classList.remove('view-hidden-right', 'view-hidden-left');
+    itemsListContainer.classList.add('view-active');
+    categoryButtonsContainer.classList.remove('view-active');
+    categoryButtonsContainer.classList.add('view-hidden-left'); // Slide categories left (for RTL)
+    categoryButtonsContainer.classList.remove('view-hidden-right');
+
     itemsListTitle.textContent = categoryName;
     itemsTab.classList.add('active');
     categoriesTab.classList.remove('active');
     itemsTab.setAttribute('aria-selected', 'true');
     categoriesTab.setAttribute('aria-selected', 'false');
     displayItems(categoryName);
+
     // PUSH history state ONLY if called directly (not by popstate)
     const newState = { view: 'items', filter: categoryName };
     const currentState = history.state;
@@ -443,14 +444,14 @@ function handlePopState(event) {
     const state = event.state;
     if (!state || state.view === 'categories') {
         console.log("Popstate: updating UI to categories view");
-        showCategoriesViewUI();
+        showCategoriesViewUI(); // Update UI only
     } else if (state.view === 'items') {
         if (state.filter) {
             console.log(`Popstate: updating UI to items for category: ${state.filter}`);
-            showItemsByCategory(state.filter, true);
+            showItemsByCategory(state.filter, true); // Update UI, mark as popstate
         } else {
             console.log("Popstate: updating UI to all items view");
-            showAllItemsViewUI();
+            showAllItemsViewUI(); // Update UI only
         }
     } else {
          console.warn("Popstate: Unknown state received, defaulting to categories UI", state);
@@ -467,19 +468,20 @@ function handleUrlHash() {
     let initialState = { view: 'categories', filter: null };
     let targetHash = '#categories';
 
+    // Determine initial view based on hash AND call the appropriate UI function
     if (hash === '#items') {
         initialState = { view: 'items', filter: null };
         targetHash = '#items';
-        showAllItemsViewUI(); // Show UI immediately if cache was available
+        showAllItemsViewUI(); // Show UI
     } else if (hash.startsWith('#items/')) {
         const category = decodeURIComponent(hash.substring(7));
         initialState = { view: 'items', filter: category };
         targetHash = `#items/${encodeURIComponent(category)}`;
-        showItemsByCategory(category, true); // Show UI immediately if cache was available
+        showItemsByCategory(category, true); // Show UI, mark as popstate
     } else {
         initialState = { view: 'categories', filter: null };
         targetHash = '#categories';
-        showCategoriesViewUI(); // Show UI immediately if cache was available
+        showCategoriesViewUI(); // Show UI
     }
 
     // Replace initial history entry once after determining the view
@@ -537,7 +539,7 @@ function setupSearch() {
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value;
         clearSearchButton.style.display = searchTerm ? 'block' : 'none';
-        if (categoryButtonsContainer.style.display === 'block' && searchTerm) {
+        if (categoryButtonsContainer.classList.contains('view-active') && searchTerm) { // Check active view using class
              console.log("Search initiated from Categories view, switching to All Items.");
              const currentState = history.state;
              const newState = { view: 'items', filter: null };
@@ -545,11 +547,14 @@ function setupSearch() {
                  console.log("Pushing state for all items view (from search)");
                  history.pushState(newState, '', '#items');
              }
-             showAllItemsViewUI();
-             filterDisplayedItems(searchTerm);
+             showAllItemsViewUI(); // Update UI only
+             filterDisplayedItems(searchTerm); // Filter the newly displayed items
              return;
         }
-        filterDisplayedItems(searchTerm);
+        // Filter items only if the items view is active
+        if (itemsListContainer.classList.contains('view-active')) {
+             filterDisplayedItems(searchTerm);
+        }
     });
     clearSearchButton.addEventListener('click', () => {
         searchInput.value = '';
@@ -587,56 +592,39 @@ function setupProfileMenu() {
         const isVisible = profileDropdown.style.display === 'block';
         profileDropdown.style.display = isVisible ? 'none' : 'block';
 
-        // *** Update dropdown content based on current auth state ***
+        // Update dropdown content based on current auth state
         const user = auth.currentUser; // Check auth status *at time of click*
         if (user) {
-            // Display Email
             userEmailDisplay.textContent = user.email;
             userEmailDisplay.title = user.email;
-
-            // --- Display Job Title ---
             let jobTitle = "ضيف"; // Default to Guest
             const permissionsDataString = localStorage.getItem('permissionRows');
             if (permissionsDataString) {
                 try {
                     const permissionsData = JSON.parse(permissionsDataString);
                     if (permissionsData && permissionsData.data) {
-                        // Find user row (assuming column 0 is email, column 1 is job title)
                         const userPermissionRow = getUserPermissions(permissionsData.data, user.email);
                         if (userPermissionRow && userPermissionRow[1] && String(userPermissionRow[1]).trim() !== '') {
                             jobTitle = String(userPermissionRow[1]).trim();
                         }
                     }
-                } catch (e) {
-                    console.error("Error parsing permissions data for job title", e);
-                    jobTitle = "Error"; // Indicate error state
-                }
-            } else {
-                console.warn("Permissions data not found in localStorage for job title lookup.");
-                // Keep default "ضيف" or maybe indicate loading if fetch is pending
-            }
+                } catch (e) { console.error("Error parsing permissions data for job title", e); jobTitle = "Error"; }
+            } else { console.warn("Permissions data not found in localStorage for job title lookup."); }
             userJobTitleDisplay.textContent = jobTitle;
-            userJobTitleDisplay.style.display = 'block'; // Show job title element
-            // --- End Job Title Logic ---
-
-            dropdownSignOutButton.style.display = 'block'; // Show sign out button
-
+            userJobTitleDisplay.style.display = 'block';
+            dropdownSignOutButton.style.display = 'block';
         } else {
-            // Not authenticated or still authenticating
             userEmailDisplay.textContent = "Authenticating...";
             userEmailDisplay.title = '';
-            userJobTitleDisplay.textContent = ''; // Clear job title
-            userJobTitleDisplay.style.display = 'none'; // Hide job title element
-            dropdownSignOutButton.style.display = 'none'; // Hide sign out button
+            userJobTitleDisplay.textContent = '';
+            userJobTitleDisplay.style.display = 'none';
+            dropdownSignOutButton.style.display = 'none';
         }
     });
 
-    // Attach sign out listener
     dropdownSignOutButton.addEventListener('click', signOut);
 
-    // Close dropdown if clicking outside
     document.addEventListener('click', (event) => {
-        // Check if the dropdown exists and if the click was outside relevant elements
         if (profileDropdown && profileDropdown.style.display === 'block' &&
             !profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
             profileDropdown.style.display = 'none';
@@ -647,8 +635,6 @@ function setupProfileMenu() {
 
 
 // --- Tab Event Listeners (Using Balanced History Logic) ---
-// This version uses replaceState for Categories tab click,
-// and conditional replace/push for Items tab click.
 if (categoriesTab && itemsTab) {
     categoriesTab.addEventListener('click', (e) => {
         e.preventDefault();
@@ -667,12 +653,10 @@ if (categoriesTab && itemsTab) {
         if (!(currentState?.view === newState.view && currentState?.filter === newState.filter)) {
             // Logic to ensure back goes to categories
             if (currentState && currentState.view === 'items' && currentState.filter !== null) {
-                // If coming from a filtered item view, REPLACE the filtered state with Categories first, then PUSH All Items
                 console.log("Tab Click: Replacing filtered item state with Categories, then Pushing All Items");
                 history.replaceState({ view: 'categories', filter: null }, '', '#categories');
                 history.pushState(newState, '', '#items');
             } else {
-                // Otherwise (coming from categories, null, or unknown), just PUSH the All Items state
                 console.log("Tab Click: Pushing state for all items view");
                 history.pushState(newState, '', '#items');
             }
@@ -685,6 +669,66 @@ if (categoriesTab && itemsTab) {
 } else {
     console.error("Tab elements not found, listeners not added.");
 }
+
+// --- NEW: Swipe Gesture Handling ---
+function setupSwipeGestures() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    const swipeThreshold = 50; // Minimum horizontal distance for a swipe
+    const maxVerticalThreshold = 75; // Maximum vertical distance allowed for a horizontal swipe
+
+    // Use viewWrapper for swipe detection
+    if (!viewWrapper) return;
+
+    viewWrapper.addEventListener('touchstart', (event) => {
+        // Use event.changedTouches[0] for multi-touch compatibility
+        touchStartX = event.changedTouches[0].screenX;
+        touchStartY = event.changedTouches[0].screenY;
+    }, { passive: true }); // Use passive for performance if not preventing scroll
+
+    viewWrapper.addEventListener('touchend', (event) => {
+        touchEndX = event.changedTouches[0].screenX;
+        touchEndY = event.changedTouches[0].screenY;
+        handleSwipeGesture();
+    }, { passive: true });
+
+    function handleSwipeGesture() {
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        // Check if it's primarily a horizontal swipe and meets threshold
+        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaY) < maxVerticalThreshold) {
+            const currentState = history.state || { view: 'categories', filter: null };
+
+            // Swipe Right (->): Navigate towards Categories (if on Items)
+            if (deltaX > 0) {
+                console.log("Swipe Right detected");
+                // Check if currently on an items view (All or Filtered)
+                 if (currentState.view === 'items') {
+                     console.log("Swiping from Items to Categories");
+                     categoriesTab.click(); // Simulate click to trigger state change and UI update
+                 }
+            }
+            // Swipe Left (<-): Navigate towards Items (if on Categories)
+            else if (deltaX < 0) {
+                 console.log("Swipe Left detected");
+                 // Check if currently on Categories view
+                 if (currentState.view === 'categories') {
+                     console.log("Swiping from Categories to Items");
+                     itemsTab.click(); // Simulate click to trigger state change and UI update
+                 }
+            }
+        } else {
+             console.log("Swipe ignored (thresholds not met)");
+        }
+        // Reset values (optional, happens on next touchstart anyway)
+        touchStartX = 0; touchStartY = 0; touchEndX = 0; touchEndY = 0;
+    }
+     console.log("Swipe gestures setup.");
+}
+
 
 // --- Helper: Get User Permissions ---
 function getUserPermissions(permissions, userEmail) {
