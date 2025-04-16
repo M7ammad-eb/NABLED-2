@@ -227,26 +227,35 @@ body.is-detail-active #sort-button { /* Hides sort button */
 
 /* --- Styles for Item Detail View --- */
 #item-detail-view { }
-#item-details-content { max-width: 600px; margin: 0 auto; padding: 20px; background: white; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border-radius: 8px; line-height: 1.6; }
+#item-details-content {
+    max-width: 600px; /* Default max width for mobile */
+    margin: 0 auto; padding: 20px; background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border-radius: 8px;
+    line-height: 1.6;
+}
 #item-detail-view h2 { color: #007bff; margin-bottom: 10px; margin-top: 0; text-align: right; }
 #item-detail-view p { margin-bottom: 10px; font-size: 1em; text-align: right; }
-#item-detail-view > #item-details-content > p > strong { font-weight: 600; color: #555; }
+#item-detail-view > #item-details-content > .item-text-details > p > strong { font-weight: 600; color: #555; } /* Adjusted selector */
 #item-detail-view a { color: #007bff; text-decoration: none; }
 #item-detail-view a:hover { text-decoration: underline; }
 
-/* --- Price Section Styles --- */
-#item-detail-view .price-section {
+/* --- Price Section Styles (within item-text-details) --- */
+#item-detail-view .item-text-details .price-section { /* Adjusted selector */
     display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 15px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;
 }
-#item-detail-view .price-item { background-color: #f9f9f9; padding: 10px; border-radius: 6px; text-align: right; border: 1px solid #eee; }
-#item-detail-view .price-label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
-#item-detail-view .price-value-line { display: flex; align-items: baseline; justify-content: flex-end; line-height: 1.2; }
-#item-detail-view .price-value-line strong { font-size: 1.8em; font-weight: 600; color: #333; margin-left: 5px; }
-#item-detail-view .price-value-line .currency-symbol { height: 1em; width: auto; }
+#item-detail-view .item-text-details .price-item { background-color: #f9f9f9; padding: 10px; border-radius: 6px; text-align: right; border: 1px solid #eee; } /* Adjusted selector */
+#item-detail-view .item-text-details .price-label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; } /* Adjusted selector */
+#item-detail-view .item-text-details .price-value-line { display: flex; align-items: baseline; justify-content: flex-end; line-height: 1.2; } /* Adjusted selector */
+#item-detail-view .item-text-details .price-value-line strong { font-size: 1.8em; font-weight: 600; color: #333; margin-left: 5px; } /* Adjusted selector */
+#item-detail-view .item-text-details .price-value-line .currency-symbol { height: 1em; width: auto; } /* Adjusted selector */
 
 /* Carousel Styles */
-#item-detail-view .carousel-container { position: relative; overflow: hidden; width: 100%; height: 300px; border-radius: 8px; margin-bottom: 20px; background-color: #eee; }
+#item-detail-view .carousel-container {
+    position: relative; overflow: hidden; width: 100%;
+    height: 300px; /* Default height for mobile */
+    border-radius: 8px; margin-bottom: 20px; background-color: #eee;
+}
 #item-detail-view .slides-wrapper { display: flex; height: 100%; width: 100%; transition: transform 0.4s ease-in-out; }
 #item-detail-view .slide { flex: 0 0 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
 #item-detail-view .carousel-image { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -272,7 +281,7 @@ body.is-detail-active #sort-button { /* Hides sort button */
 
 
 /* Responsive Adjustments */
-@media (max-width: 600px) {
+@media (max-width: 767px) { /* Styles for screens smaller than the desktop breakpoint */
   .view { padding-bottom: 70px; }
   #items-list { grid-template-columns: 1fr; gap: 8px; }
   .item-row { padding: 8px; min-height: 60px; }
@@ -284,18 +293,16 @@ body.is-detail-active #sort-button { /* Hides sort button */
   .category-button { padding: 15px 12px; font-size: 1em; }
   #profile-dropdown { left: 10px; right: auto; min-width: 180px; } /* Ensure profile aligns left */
   #item-details-content { padding: 15px; margin: 10px auto; }
-  #item-detail-view .carousel-container { height: 400px; }
+  #item-detail-view .carousel-container { height: 400px; } /* Taller carousel on mobile */
   #item-detail-view .carousel-image {object-fit: cover; }
   #header-logo { height: 70%; }
-  #item-detail-view .price-value-line strong { font-size: 1.6em; }
-  #item-detail-view .price-section { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;}
-  /* Remove mobile-specific alignment override for sort dropdown */
-  /* #sort-dropdown { left: auto; right: 0; } */ /* Removed this line */
+  #item-detail-view .item-text-details .price-value-line strong { font-size: 1.6em; } /* Adjusted selector */
+  #item-detail-view .item-text-details .price-section { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;} /* Adjusted selector */
 }
 
 @media (max-width: 480px) {
     #item-details-content { padding: 10px; }
-    #item-detail-view .price-value-line strong { font-size: 1.5em; }
+    #item-detail-view .item-text-details .price-value-line strong { font-size: 1.5em; } /* Adjusted selector */
     #item-detail-view .carousel-image {object-fit: cover; }
 }
 
@@ -312,10 +319,51 @@ body.is-detail-active #sort-button { /* Hides sort button */
     .tab-bar { height: 54px; }
     .view { padding-bottom: 70px; } /* Increased padding for smaller tab bar */
     #header-logo { height: 65%; }
-    #item-detail-view .price-section { grid-template-columns: 1fr; }
-    /* Remove mobile-specific alignment override for sort dropdown */
-    /* #sort-dropdown { left: auto; right: 0; } */ /* Removed this line */
+    #item-detail-view .item-text-details .price-section { grid-template-columns: 1fr; } /* Adjusted selector */
 }
 
 /* Item Click Transition */
 .item-clicked { transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0.5; transform: scale(0.98); }
+
+
+/* --- NEW: Desktop Layout for Item Detail View --- */
+@media (min-width: 768px) {
+    #item-detail-view {
+        /* Allow scrolling within the detail view on desktop if content overflows */
+        overflow-y: auto;
+    }
+
+    #item-details-content {
+        display: grid;
+        /* Two columns: Carousel on right (RTL), Text on left. Adjust fr units as needed */
+        grid-template-columns: 1fr 1fr; /* Equal columns */
+        /* Or, for image smaller: grid-template-columns: 2fr 1fr; */
+        gap: 30px; /* Space between columns */
+        max-width: 1100px; /* Allow wider content on desktop */
+        margin: 20px auto; /* Add some top/bottom margin */
+        padding: 30px; /* More padding on desktop */
+        align-items: start; /* Align items to the top of their grid cells */
+    }
+
+    #item-detail-view .carousel-container {
+        /* Carousel takes the second column (right side in RTL) */
+        grid-column: 2 / 3;
+        width: 100%; /* Ensure it fills its grid area */
+        height: 500px; /* Taller carousel on desktop */
+        margin-bottom: 0; /* Remove bottom margin as gap handles spacing */
+    }
+
+    #item-detail-view .item-text-details {
+        /* Text details take the first column (left side in RTL) */
+        grid-column: 1 / 2;
+    }
+
+    #item-detail-view .item-text-details h2 {
+        margin-top: 0; /* Remove default top margin if needed */
+    }
+
+    #item-detail-view .item-text-details .price-section {
+        /* Adjust price layout if needed for desktop, e.g., more columns */
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
