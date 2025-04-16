@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -34,7 +34,7 @@ const clearSearchButton = document.getElementById('clear-search-button');
 const refreshButton = document.querySelector(".refresh-button");
 const profileButton = document.getElementById('profile-button');
 const backButton = document.getElementById('back-button');
-const headerLogo = document.getElementById('header-logo'); // Added logo ref
+const headerLogo = document.getElementById('header-logo');
 const profileDropdown = document.getElementById('profile-dropdown');
 const userEmailDisplay = document.getElementById('user-email-display');
 const userJobTitleDisplay = document.getElementById('user-job-title');
@@ -364,16 +364,11 @@ function updateViewClasses(activeViewId) {
         if (!view) return;
         const isActive = view.id === activeViewId;
         view.classList.toggle('view-active', isActive);
-        // Simplified logic: If not active, determine left/right based on target view
-        // This assumes Categories <-> Items <-> Detail flow
         const isLeft = !isActive && ((activeViewId === 'items-list-container' && view.id === 'item-detail-view') || activeViewId === 'category-buttons-container');
         const isRight = !isActive && ((activeViewId === 'items-list-container' && view.id === 'category-buttons-container') || activeViewId === 'item-detail-view');
         view.classList.toggle('view-left', isLeft);
         view.classList.toggle('view-right', isRight);
-
-        if (isActive && activeViewId !== 'item-detail-view') {
-            view.scrollTop = 0; // Scroll non-detail views to top
-        }
+        if (isActive && activeViewId !== 'item-detail-view') view.scrollTop = 0;
     });
 
     // Update Tab states (only relevant if not in detail view)
@@ -404,7 +399,6 @@ function showAllItemsViewUI() {
     itemsListTitle.textContent = 'جميع العناصر';
     updateViewClasses('items-list-container');
     displayItems();
-    // Restore Scroll Position after displayItems and transition starts
     requestAnimationFrame(() => {
         itemsListContainer.scrollTop = itemsListScrollPos;
         console.log(`Restored items list scroll position to: ${itemsListScrollPos}`);
@@ -419,14 +413,11 @@ function showItemsByCategory(categoryName, isPopState = false) {
     itemsListTitle.textContent = categoryName;
     updateViewClasses('items-list-container');
     displayItems(categoryName);
-    // Restore Scroll Position
     requestAnimationFrame(() => {
         itemsListContainer.scrollTop = itemsListScrollPos;
         console.log(`Restored items list scroll position to: ${itemsListScrollPos}`);
     });
     lastListViewState = { view: 'items', filter: categoryName };
-
-    // Manage History
     const newState = { view: 'items', filter: categoryName };
     const currentState = history.state;
     const stateChanged = !(currentState?.view === newState.view && currentState?.filter === newState.filter);
@@ -442,8 +433,6 @@ function showItemDetailView(itemId, isPopState = false) {
         console.error("Detail view elements or user not available."); return;
     }
     console.log(`showItemDetailView: ID "${itemId}" (isPopState: ${isPopState})`);
-
-    // Get Data
     const cachedData = JSON.parse(localStorage.getItem('dataSheet'));
     const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
     if (!cachedData?.data || !cachedPermission?.data) {
@@ -457,25 +446,14 @@ function showItemDetailView(itemId, isPopState = false) {
         itemDetailsContent.innerHTML = `<p>Error: Item with ID ${itemId} not found.</p>`;
         updateViewClasses('item-detail-view'); return;
     }
-
-    // Get Permissions
     const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
     const visiblePriceColumns = userPermissions
         ? userPermissions.slice(2).map((val, index) => (val === '1' ? index + 8 : -1)).filter(val => val !== -1)
         : [];
-
-    // Render Details
     itemDetailsContent.innerHTML = renderItemDetailsHTML(item, visiblePriceColumns, dataRows[0]);
-    // Removed footer title update
-
-    // Activate Carousel
     addCarouselFunctionality('#item-detail-view');
-
-    // Update UI
     updateViewClasses('item-detail-view');
     itemDetailView.scrollTop = 0; // Scroll detail view to top
-
-    // Manage History
     const newState = { view: 'detail', itemId: itemId };
     const currentState = history.state;
     const stateChanged = !(currentState?.view === newState.view && currentState?.itemId === newState.itemId);
@@ -485,7 +463,7 @@ function showItemDetailView(itemId, isPopState = false) {
     }
 }
 
-// Render Item Details HTML
+// Render Item Details HTML (Price section updated)
 function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     if (!item || !columnNames) return '<p>Error rendering item details.</p>';
     let html = '';
@@ -493,7 +471,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     const placeholder = 'placeholder.png';
     const hasImages = images.length > 0;
 
-    // Carousel
+    // Carousel (same as before)
     html += `<div class="carousel-container"><div class="slides-wrapper">`;
     if (hasImages) {
         images.forEach((src, index) => { html += `<div class="slide ${index === 0 ? 'active' : ''}" data-src="${src}"><img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-image"></div>`; });
@@ -508,124 +486,83 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     }
     html += `</div>`; // carousel-container
 
-    // Item Data
+    // Item Data (same as before)
     html += `<h2>${item[2] || ""}</h2><br>`;
     html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`;
     if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`;
     if (item[7]) html += `<p><a href="${item[7]}" target="_blank" rel="noopener noreferrer">${columnNames[7] || "Catalog"}</a></p>`;
 
-    // Prices
+    // --- NEW Price Section ---
+    html += `<div class="price-section">`; // Grid container
     visiblePriceColumnIndices.forEach(index => {
         if (index < item.length && item[index] != null && item[index] !== '') {
             const key = columnNames[index] || `Price ${index + 1}`;
-            html += `<p>${key}<br><strong>${item[index]}</strong> <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR"></p>`;
+            const value = item[index];
+            // Each price is an item in the grid
+            html += `<div class="price-item">
+                       <span class="price-label">${key}</span>
+                       <div class="price-value-line">
+                         <strong>${value}</strong>
+                         <img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR">
+                       </div>
+                     </div>`;
         }
     });
-    html += `<br>`;
+    html += `</div>`; // end price-section
+    html += `<br>`; // Spacing after prices
     return html;
 }
 
-// Carousel Functionality (Updated for Sliding Animation)
+// Carousel Functionality (Sliding version)
 function addCarouselFunctionality(parentSelector) {
     const container = document.querySelector(parentSelector);
-    if (!container) {
-        console.warn("Carousel container not found:", parentSelector);
-        return;
-    }
-
+    if (!container) { console.warn("Carousel container not found:", parentSelector); return; }
     let currentSlide = 0;
     const slides = container.querySelectorAll('.slide');
     const dots = container.querySelectorAll('.dot');
     const slidesWrapper = container.querySelector('.slides-wrapper');
+    if (!slides.length || !slidesWrapper) return;
 
-    if (!slides.length || !slidesWrapper) {
-        // console.log("Carousel elements not found or no slides.");
-        return; // No carousel to set up
-    }
-
-    // --- Image Loading (remains the same) ---
+    // Image Loading
     slides.forEach(slide => {
         const img = slide.querySelector('img');
         const realSrc = slide.dataset.src;
         if (img && realSrc && realSrc !== 'placeholder.png') {
             const realImageLoader = new Image();
             realImageLoader.onload = () => { img.src = realSrc; };
-            realImageLoader.onerror = () => { console.warn(`Failed to load carousel image: ${realSrc}`); /* Keep placeholder */ };
+            realImageLoader.onerror = () => console.warn(`Failed carousel image: ${realSrc}`);
             realImageLoader.src = realSrc;
-        } else if (img) {
-            // Ensure placeholder is set if it's the only source or loading fails
-            img.src = realSrc || 'placeholder.png';
-        }
+        } else if (img) { img.src = realSrc || 'placeholder.png'; }
     });
 
-    // --- Inner function to show a specific slide ---
+    // Inner function to show slide
     function showSlide(index) {
-        if (slides.length <= 1) return; // No sliding needed for 0 or 1 slide
-
-        // Wrap index around if it goes out of bounds
+        if (slides.length <= 1) return;
         index = (index + slides.length) % slides.length;
-
-        console.log(`Showing slide index: ${index}`); // Debug log
-
-        // --- Apply CSS Transform for Sliding ---
-        // For RTL layout, positive translateX moves the wrapper right (showing previous items)
-        // Negative translateX moves the wrapper left (showing next items)
-        // To show slide `index`, we need to move the wrapper right by `index * 100%`.
+        // Apply CSS Transform for Sliding (RTL)
         slidesWrapper.style.transform = `translateX(${index * 100}%)`;
-
-        // --- Update Dots ---
-        // Still useful to indicate the active slide visually
+        // Update Dots
         dots.forEach((d, i) => d.classList.toggle('active', i === index));
-
-        currentSlide = index; // Update the current slide index
+        currentSlide = index;
     }
 
-    // --- Dot navigation ---
-    dots.forEach((dot, i) => {
-        dot.addEventListener('click', () => {
-            console.log(`Dot clicked: index ${i}`); // Debug log
-            showSlide(i);
-        });
-    });
+    // Dot navigation
+    dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
-    // --- Swipe support for Carousel (remains the same) ---
+    // Swipe support for Carousel
     let touchStartX = 0;
-    slidesWrapper.addEventListener('touchstart', e => {
-        // Only start swipe if there are multiple slides
-        if (slides.length > 1) {
-            touchStartX = e.touches[0].clientX;
-            // Temporarily disable the transition during swipe for better responsiveness
-            // slidesWrapper.style.transition = 'none';
-        }
-    }, { passive: true });
-
+    slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
     slidesWrapper.addEventListener('touchend', e => {
         if (slides.length <= 1 || touchStartX === 0) return;
-
         const touchEndX = e.changedTouches[0].clientX;
         const diff = touchEndX - touchStartX;
-
-        // Re-enable transition after swipe ends
-       // slidesWrapper.style.transition = 'transform 0.4s ease-in-out'; // Ensure this matches CSS
-
-        // Determine swipe direction and change slide
         // RTL: L->R swipe (positive diff) = Previous; R->L swipe (negative diff) = Next
-        if (diff < -50) { // Swipe Right (L->R) -> Go to Previous slide
-             console.log("Carousel Swipe Right (L->R) -> Previous");
-             showSlide(currentSlide - 1);
-        } else if (diff > 50) { // Swipe Left (R->L) -> Go to Next slide
-             console.log("Carousel Swipe Left (R->L) -> Next");
-             showSlide(currentSlide + 1);
-        } else {
-            // Optional: Snap back if swipe wasn't enough
-            // showSlide(currentSlide); // Or just do nothing
-        }
-
-        touchStartX = 0; // Reset start position for next swipe
+        if (diff > 50) showSlide(currentSlide - 1); // Swipe Right (L->R) -> Previous
+        else if (diff < -50) showSlide(currentSlide + 1); // Swipe Left (R->L) -> Next
+        touchStartX = 0;
     }, { passive: true });
 
-    // Initialize first slide
-    showSlide(0);
+    showSlide(0); // Initialize
     console.log("Carousel functionality (sliding) added.");
 }
 
@@ -684,7 +621,6 @@ function setupRefreshButton() {
         try {
             const dataWasRefreshed = await loadDataIntoLocalStorage(true);
             console.log("Refresh fetch complete. Data changed:", dataWasRefreshed);
-            // Re-render the view that was current BEFORE refresh
             console.log("Refresh complete, restoring view for state:", currentState);
             if (currentState.view === 'categories') showCategoriesViewUI();
             else if (currentState.view === 'items') {
@@ -692,8 +628,8 @@ function setupRefreshButton() {
                 else showAllItemsViewUI();
             } else if (currentState.view === 'detail') {
                  if (currentState.itemId) showItemDetailView(currentState.itemId, true);
-                 else showCategoriesViewUI(); // Fallback
-            } else showCategoriesViewUI(); // Default fallback
+                 else showCategoriesViewUI();
+            } else showCategoriesViewUI();
             if (dataWasRefreshed) preloadAllItemImages();
         } catch (error) {
             console.error("Error during refresh:", error);
@@ -818,49 +754,37 @@ function setupSwipeGestures() {
     viewWrapper.addEventListener('touchstart', (event) => {
         // Disable view swipe if detail view is active
         if (document.body.classList.contains('is-detail-active')) {
-            isSwiping = false;
-            // console.log("View swipe disabled in detail view.");
-            return;
+            isSwiping = false; return;
         }
-        // Block swipe if starting on truly interactive elements (input, links, non-list buttons, dots)
-        // Allows swipe starting on item rows or category buttons.
+        // Block swipe if starting on specific interactive elements
         const swipeTarget = event.target;
         let blockSwipe = false;
         if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) {
              blockSwipe = true;
         }
-
-        if (blockSwipe) {
-             isSwiping = false;
-             // console.log("Swipe blocked on interactive element:", event.target);
-             return;
-        }
-
-        // If swipe not blocked, initialize coordinates
+        if (blockSwipe) { isSwiping = false; return; }
+        // Initialize swipe
         touchStartX = event.changedTouches[0].screenX;
         touchStartY = event.changedTouches[0].screenY;
         isSwiping = true;
-        // console.log("Swipe initiated");
-
     }, { passive: true });
 
      viewWrapper.addEventListener('touchmove', (event) => {
          if (!isSwiping) return;
          touchEndX = event.changedTouches[0].screenX;
          touchEndY = event.changedTouches[0].screenY;
-         // Cancel if swipe becomes too vertical
-         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) { // Increased vertical tolerance slightly
-             // console.log("Swipe cancelled: Too vertical.");
+         // Cancel if too vertical
+         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) {
              isSwiping = false;
          }
      }, { passive: true });
 
     viewWrapper.addEventListener('touchend', (event) => {
          if (!isSwiping) return;
-         isSwiping = false; // Mark swipe attempt as finished
+         isSwiping = false;
          touchEndX = event.changedTouches[0].screenX;
          touchEndY = event.changedTouches[0].screenY;
-         handleSwipeGesture(); // Process the swipe
+         handleSwipeGesture();
     }, { passive: true });
 
     function handleSwipeGesture() {
@@ -868,18 +792,15 @@ function setupSwipeGestures() {
         const deltaY = touchEndY - touchStartY;
         const absDeltaX = Math.abs(deltaX);
         const absDeltaY = Math.abs(deltaY);
+        touchStartX = touchEndX = touchStartY = touchEndY = 0; // Reset
 
-        // Reset coordinates for next swipe
-        touchStartX = touchEndX = touchStartY = touchEndY = 0;
-
-        // Check if it's a valid horizontal swipe
         if (absDeltaX > swipeThreshold && absDeltaY < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
-            console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`); // Log delta and state
+            console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`);
 
             // --- Corrected RTL Swipe Logic ---
             // Swipe Right (Finger L -> R, positive deltaX): Navigate "backward"
-            if (deltaX < 0) {
+            if (deltaX > 0) { // Check if deltaX is positive
                 console.log("Swipe Right (L->R) detected - Navigating Back");
                 if (currentState.view === 'items') {
                     console.log("Action: Triggering Categories Tab");
@@ -887,15 +808,13 @@ function setupSwipeGestures() {
                 } else { console.log("Action: No swipe back action from categories."); }
             }
             // Swipe Left (Finger R -> L, negative deltaX): Navigate "forward"
-            else if (deltaX > 0) {
+            else if (deltaX < 0) { // Check if deltaX is negative
                 console.log("Swipe Left (R->L) detected - Navigating Forward");
                 if (currentState.view === 'categories') {
                     console.log("Action: Triggering Items Tab (All Items)");
                     if(itemsTab) itemsTab.click();
                 } else { console.log("Action: No swipe forward action from items."); }
             }
-        } else {
-            // console.log(`Swipe ignored: dX=${deltaX.toFixed(0)}, dY=${deltaY.toFixed(0)}`);
         }
     }
      console.log("Swipe gestures setup.");
@@ -912,4 +831,3 @@ function getUserPermissions(permissions, userEmail) {
     }
     return null;
 }
-
