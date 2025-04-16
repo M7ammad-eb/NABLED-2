@@ -1,5 +1,5 @@
 // Increment version when static assets change
-const CACHE_NAME = 'nabled-cache-v47'; // Updated version
+const CACHE_NAME = 'nabled-cache-v48'; // Updated version
 // Adjust baseURL if deploying to a subdirectory (e.g., '/RepoName')
 const baseURL = '/NABLED-2'; // Example for GitHub Pages subdirectory
 // const baseURL = ''; // Example for root deployment
@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
     `${baseURL}/script.js`,
     `${baseURL}/logo.png`,
     `${baseURL}/placeholder.png`,
+    `${baseURL}/Saudi_Riyal_Symbol-2.svg`,
     `${baseURL}/manifest.json`,
     `${baseURL}/signin.html`, // Cache sign-in page
     // Add signin.css if it exists
