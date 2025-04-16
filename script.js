@@ -228,7 +228,8 @@ function findItemById(items, itemId) {
     if (!items || !itemId) return null;
     // Ensure comparison is string-based if needed, or handle types consistently
     const searchId = String(itemId).trim();
-    for (let i = 1; i < items.length; i++) { // Start from 1 to skip header row if present
+    // Assuming 'items' includes the header row, start loop from 1
+    for (let i = 1; i < items.length; i++) {
         if (items[i]?.[0] && String(items[i][0]).trim() === searchId) {
             return items[i];
         }
@@ -411,7 +412,7 @@ function preloadAllItemImages() {
 function updateViewClasses(activeViewId) {
     const views = [categoryButtonsContainer, itemsListContainer, itemDetailView];
     const isDetail = activeViewId === 'item-detail-view';
-    document.body.classList.toggle('is-detail-active', isDetail);
+    document.body.classList.toggle('is-detail-active', isDetail); // This line controls visibility via CSS
 
     // Store scroll position *before* changing classes if leaving items list
     if (itemsListContainer && itemsListContainer.classList.contains('view-active') && activeViewId !== 'items-list-container') {
@@ -528,15 +529,17 @@ function showItemDetailView(itemId, isPopState = false) {
     const cachedData = JSON.parse(localStorage.getItem('dataSheet')); const cachedPermission = JSON.parse(localStorage.getItem('permissionRows'));
     if (!cachedData?.data || !cachedPermission?.data) { itemDetailsContent.innerHTML = '<p>Error: Item data missing.</p>'; updateViewClasses('item-detail-view'); return; }
 
-    const dataRows = cachedData.data; const permissionRows = cachedPermission.data; const item = findItemById(dataRows, itemId); // Use findItemById
+    const dataRows = cachedData.data; const permissionRows = cachedPermission.data;
+    const item = findItemById(dataRows, itemId); // Use findItemById, passing the full dataRows
 
     if (!item) { itemDetailsContent.innerHTML = `<p>Error: Item ID ${itemId} not found.</p>`; updateViewClasses('item-detail-view'); return; }
 
     const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
     const visiblePriceColumns = userPermissions ? userPermissions.slice(2).map((val, index) => (val === '1' ? index + 8 : -1)).filter(val => val !== -1) : [];
 
-    itemDetailsContent.innerHTML = renderItemDetailsHTML(item, visiblePriceColumns, dataRows[0]);
-    addCarouselFunctionality('#item-detail-view'); updateViewClasses('item-detail-view');
+    itemDetailsContent.innerHTML = renderItemDetailsHTML(item, visiblePriceColumns, dataRows[0]); // Pass header row (dataRows[0])
+    addCarouselFunctionality('#item-detail-view'); // Add carousel logic (now reverted)
+    updateViewClasses('item-detail-view');
     requestAnimationFrame(() => { // Ensure scroll reset happens after render
          if(itemDetailView) itemDetailView.scrollTop = 0;
     });
@@ -568,7 +571,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     visiblePriceColumnIndices.forEach(index => {
         if (index < item.length && item[index] != null && String(item[index]).trim() !== '') { // Check for non-empty string
             const key = columnNames[index] || `Price ${index + 1}`; const value = item[index];
-            html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
+            html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
         }
     });
     html += `</div><br>`; // Price section end
@@ -576,106 +579,62 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
 }
 
 
-// Carousel Functionality
+// Carousel Functionality (REVERTED to Original User-Provided Logic)
 function addCarouselFunctionality(parentSelector) {
     const container = document.querySelector(parentSelector);
     if (!container) { console.warn("Carousel container not found:", parentSelector); return; }
-
-    const slidesWrapper = container.querySelector('.slides-wrapper');
+    let currentSlide = 0;
     const slides = container.querySelectorAll('.slide');
     const dots = container.querySelectorAll('.dot');
+    const slidesWrapper = container.querySelector('.slides-wrapper');
+    if (!slides.length || !slidesWrapper) return;
 
-    if (!slides.length || !slidesWrapper || slides.length <= 1) {
-        // If only one slide (or none), hide dots if they exist
-        const dotsContainer = container.querySelector('.carousel-dots');
-        if (dotsContainer) dotsContainer.style.display = 'none';
-        // Load the single image if present
-        if (slides.length === 1) {
-            const img = slides[0].querySelector('img');
-            const realSrc = slides[0].dataset.src;
-            const placeholderSrc = 'placeholder.png';
-            if (img && realSrc && realSrc !== placeholderSrc) {
-                img.src = realSrc;
-                img.onerror = () => { img.src = placeholderSrc; };
-            } else if (img) {
-                img.src = realSrc || placeholderSrc; // Use placeholder if realSrc is missing
-            }
-        }
-        console.log("Carousel: Not enough slides for full functionality.");
-        return; // Exit if not enough slides
-    }
-
-    let currentSlide = 0;
-    let touchStartX = 0;
-    const placeholderSrc = 'placeholder.png'; // Define placeholder
-
-    // --- Image Loading for Active and Adjacent Slides ---
-    function loadSlideImage(index) {
-        if (index < 0 || index >= slides.length) return; // Bounds check
-        const slide = slides[index];
-        const img = slide.querySelector('img');
-        const realSrc = slide.dataset.src;
-
-        if (img && realSrc && img.src !== realSrc && realSrc !== placeholderSrc) {
-            console.log(`Loading image for slide ${index}: ${realSrc}`);
+    // Image Loading
+    slides.forEach(slide => {
+        const img = slide.querySelector('img'); const realSrc = slide.dataset.src;
+        if (img && realSrc && realSrc !== 'placeholder.png') {
             const realImageLoader = new Image();
             realImageLoader.onload = () => { img.src = realSrc; };
-            realImageLoader.onerror = () => {
-                console.warn(`Failed carousel image: ${realSrc}`);
-                img.src = placeholderSrc; // Fallback on error
-            };
+            realImageLoader.onerror = () => console.warn(`Failed carousel image: ${realSrc}`);
             realImageLoader.src = realSrc;
-        } else if (img && img.src === placeholderSrc && realSrc === placeholderSrc) {
-            // Already showing placeholder, nothing to do
-        } else if (img && !realSrc) {
-             img.src = placeholderSrc; // Ensure placeholder if no real source
-        }
-    }
+        } else if (img) { img.src = realSrc || 'placeholder.png'; }
+    });
 
-    // --- Show Slide Function ---
+    // Inner function to show slide
     function showSlide(index) {
-        index = (index + slides.length) % slides.length; // Wrap around index
-
+        if (slides.length <= 1) return;
+        index = (index + slides.length) % slides.length;
         // Apply transform based on index (RTL - positive translateX moves right)
-        // We are moving the *wrapper*, so to show slide `index`, we need to translate
-        // the wrapper by `-index * 100%`. For RTL, this seems correct as is.
-        slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
-
+        // Original logic used positive translateX for RTL
+        slidesWrapper.style.transform = `translateX(${index * 100}%)`;
         dots.forEach((d, i) => d.classList.toggle('active', i === index));
         currentSlide = index;
-
-        // Preload adjacent slides
-        loadSlideImage(index); // Load current slide image
-        loadSlideImage(index - 1); // Load previous
-        loadSlideImage(index + 1); // Load next
     }
 
-    // --- Event Listeners ---
+    // Dot navigation
     dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
-    slidesWrapper.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-
+    // Swipe support for Carousel (REVERTED to user's original logic)
+    let touchStartX = 0;
+    slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
     slidesWrapper.addEventListener('touchend', e => {
-        if (touchStartX === 0) return;
+        if (slides.length <= 1 || touchStartX === 0) return;
         const touchEndX = e.changedTouches[0].clientX; const diff = touchEndX - touchStartX;
-        const swipeThreshold = 50; // Min distance for swipe
-
-        // Determine direction based on difference
-        // Swipe Left (R -> L, negative diff) -> Go to Next Slide
-        // Swipe Right (L -> R, positive diff) -> Go to Previous Slide
-        if (diff < -swipeThreshold) { // Swiped Left
-            console.log("Carousel Swipe Left (R->L) -> Next");
-            showSlide(currentSlide + 1);
-        } else if (diff > swipeThreshold) { // Swiped Right
-            console.log("Carousel Swipe Right (L->R) -> Previous");
-            showSlide(currentSlide - 1);
+        // Original Logic (assuming this was correct for user):
+        // Swipe Left (R->L, negative diff) -> Previous
+        // Swipe Right (L->R, positive diff) -> Next
+        if (diff < -50) { // Swipe Left (R->L) -> Previous (User's Original)
+             console.log("Carousel Swipe Left (R->L) -> Previous");
+             showSlide(currentSlide - 1);
+        } else if (diff > 50) { // Swipe Right (L->R) -> Next (User's Original)
+             console.log("Carousel Swipe Right (L->R) -> Next");
+             showSlide(currentSlide + 1);
         }
-        touchStartX = 0; // Reset start position
+        touchStartX = 0;
     }, { passive: true });
 
-    // --- Initialization ---
-    showSlide(0); // Show the first slide initially
-    console.log("Carousel functionality added.");
+    showSlide(0); // Initialize
+    console.log("Carousel functionality (reverted swipe) added.");
 }
 
 
@@ -957,49 +916,72 @@ function setupSwipeGestures() {
         if (document.body.classList.contains('is-detail-active')) { isSwiping = false; return; }
         // Block swipe if starting on specific interactive elements
         const swipeTarget = event.target; let blockSwipe = false;
-        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) { blockSwipe = true; }
+        // Allow swiping unless target is input, non-item link, non-item button, or carousel dot
+        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) {
+             blockSwipe = true;
+        }
+        // Explicitly allow swipe if target is the view wrapper itself or the direct list containers
+        if (swipeTarget === viewWrapper || swipeTarget === itemsListContainer || swipeTarget === categoryButtonsContainer) {
+            blockSwipe = false;
+        }
+
         if (blockSwipe) { isSwiping = false; return; }
         // Initialize swipe
-        touchStartX = event.changedTouches[0].screenX; touchStartY = event.changedTouches[0].screenY; isSwiping = true;
+        touchStartX = event.changedTouches[0].screenX;
+        touchStartY = event.changedTouches[0].screenY;
+        isSwiping = true;
     }, { passive: true });
 
      viewWrapper.addEventListener('touchmove', (event) => {
-         if (!isSwiping) return; touchEndX = event.changedTouches[0].screenX; touchEndY = event.changedTouches[0].screenY;
-         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) { isSwiping = false; }
+         if (!isSwiping) return;
+         touchEndX = event.changedTouches[0].screenX;
+         touchEndY = event.changedTouches[0].screenY;
+         // If vertical movement is significant and larger than horizontal, cancel swipe
+         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) {
+             // console.log("Vertical scroll detected, cancelling swipe.");
+             isSwiping = false;
+         }
      }, { passive: true });
 
     viewWrapper.addEventListener('touchend', (event) => {
-         if (!isSwiping) return; isSwiping = false; touchEndX = event.changedTouches[0].screenX; touchEndY = event.changedTouches[0].screenY; handleSwipeGesture();
+         if (!isSwiping) return;
+         isSwiping = false; // Swipe attempt finished
+         touchEndX = event.changedTouches[0].screenX;
+         touchEndY = event.changedTouches[0].screenY;
+         handleSwipeGesture(); // Process the swipe
     }, { passive: true });
 
     function handleSwipeGesture() {
         const deltaX = touchEndX - touchStartX; const deltaY = touchEndY - touchStartY; const absDeltaX = Math.abs(deltaX); const absDeltaY = Math.abs(deltaY);
-        touchStartX = touchEndX = touchStartY = touchEndY = 0; // Reset
+        touchStartX = touchEndX = touchStartY = touchEndY = 0; // Reset coordinates
 
+        // Check if it's a valid horizontal swipe (more horizontal than vertical, and exceeds threshold)
         if (absDeltaX > swipeThreshold && absDeltaY < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
             console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`);
 
-            // --- REVERTED RTL Swipe Logic (Based on user feedback) ---
-            // Swipe Right (Finger L -> R, positive deltaX): Navigate "forward"
+            // --- REVERTED RTL Swipe Logic (Based on user's original code) ---
+            // Swipe Right (Finger L -> R, positive deltaX): Navigate "forward" (Categories -> Items)
             if (deltaX > 0) {
                  console.log("Swipe Right (L->R) detected - Navigating Forward");
                  if (currentState.view === 'categories') {
                      console.log("Action: Triggering Items Tab (All Items)");
-                     if(itemsTab) itemsTab.click();
+                     if(itemsTab && !itemsTab.classList.contains('active')) itemsTab.click(); // Click only if not active
                  } else { console.log("Action: No swipe forward action from items."); }
             }
-            // Swipe Left (Finger R -> L, negative deltaX): Navigate "backward"
+            // Swipe Left (Finger R -> L, negative deltaX): Navigate "backward" (Items -> Categories)
             else if (deltaX < 0) {
                  console.log("Swipe Left (R->L) detected - Navigating Back");
                  if (currentState.view === 'items') {
                      console.log("Action: Triggering Categories Tab");
-                     if(categoriesTab) categoriesTab.click();
+                     if(categoriesTab && !categoriesTab.classList.contains('active')) categoriesTab.click(); // Click only if not active
                  } else { console.log("Action: No swipe back action from categories."); }
             }
+        } else {
+             // console.log("Swipe gesture did not meet criteria.");
         }
     }
-     console.log("Swipe gestures (Reverted logic) setup.");
+     console.log("Swipe gestures (Original user logic) setup.");
 }
 
 
