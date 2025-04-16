@@ -114,7 +114,7 @@ function setupUIInteractions() {
     setupProfileMenu();
     setupSwipeGestures(); // Uses the reverted function now
     setupBackButton();
-    setupTabNav();
+    setupTabNav(); // Contains the updated logic
     setupRefreshButton();
     setupSortButtonAndDropdown();
     console.log("UI Interactions Setup.");
@@ -832,17 +832,32 @@ function setupTabNav() {
         }
     });
 
+    // --- UPDATED Items Tab Logic ---
     itemsTab.addEventListener('click', (e) => {
         e.preventDefault();
-        // Only navigate if not already on items view (or a specific category)
-        if (!itemsTab.classList.contains('active')) {
+        const currentState = history.state || { view: 'categories', filter: null };
+
+        // Check if we are already on the "All Items" view (Items view with no category filter)
+        const isAlreadyOnAllItems = currentState.view === 'items' && currentState.filter === null;
+
+        if (isAlreadyOnAllItems) {
+            // Already on All Items, just scroll to top
+            console.log("Tab Click (Items): Already on All Items view. Scrolling top.");
+            if (itemsListContainer) {
+                itemsListContainer.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scroll to top
+            }
+        } else {
+            // Not on All Items view (could be Categories or Items with a filter), so switch to it
             const newState = { view: 'items', filter: null };
-            console.log("Tab Click (Items): Replacing state");
-             // Use replaceState when switching between main list views via tabs
+            console.log("Tab Click (Items): Switching to All Items view.");
+            // Use replaceState to avoid adding extra history when just switching main views
             history.replaceState(newState, '', '#items');
-            showAllItemsViewUI(false, false); // Show all items, don't restore scroll
+            // Show all items, don't restore previous scroll (scrolls to top by default)
+            showAllItemsViewUI(false, false);
         }
     });
+    // --- END OF UPDATE ---
+
     console.log("Tab listeners added.");
 }
 
@@ -1005,3 +1020,4 @@ function getUserPermissions(permissions, userEmail) {
     }
     return null; // Return null if no match found
 }
+
