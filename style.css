@@ -258,7 +258,7 @@ body.is-detail-active #sort-button { /* Hides sort button */
 }
 #item-detail-view .slides-wrapper { display: flex; height: 100%; width: 100%; transition: transform 0.4s ease-in-out; }
 #item-detail-view .slide { flex: 0 0 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
-#item-detail-view .carousel-image { width: 100%; height: 100%; object-fit: contain; display: block; }
+#item-detail-view .carousel-image { width: 100%; height: 100%; object-fit: contain; display: block; } /* Default object-fit */
 #item-detail-view .carousel-dots { text-align: center; position: absolute; bottom: 10px; width: 100%; z-index: 2; }
 #item-detail-view .dot { height: 10px; width: 10px; margin: 0 3px; background-color: rgba(0, 0, 0, 0.3); border: 1px solid white; border-radius: 50%; display: inline-block; cursor: pointer; transition: background-color 0.3s ease; }
 #item-detail-view .dot.active { background-color: white; border-color: black; }
@@ -294,7 +294,7 @@ body.is-detail-active #sort-button { /* Hides sort button */
   #profile-dropdown { left: 10px; right: auto; min-width: 180px; } /* Ensure profile aligns left */
   #item-details-content { padding: 15px; margin: 10px auto; }
   #item-detail-view .carousel-container { height: 400px; } /* Taller carousel on mobile */
-  #item-detail-view .carousel-image {object-fit: cover; }
+  #item-detail-view .carousel-image {object-fit: cover; } /* Cover on mobile */
   #header-logo { height: 70%; }
   #item-detail-view .item-text-details .price-value-line strong { font-size: 1.6em; } /* Adjusted selector */
   #item-detail-view .item-text-details .price-section { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;} /* Adjusted selector */
@@ -303,7 +303,7 @@ body.is-detail-active #sort-button { /* Hides sort button */
 @media (max-width: 480px) {
     #item-details-content { padding: 10px; }
     #item-detail-view .item-text-details .price-value-line strong { font-size: 1.5em; } /* Adjusted selector */
-    #item-detail-view .carousel-image {object-fit: cover; }
+    #item-detail-view .carousel-image {object-fit: cover; } /* Cover on mobile */
 }
 
 @media (max-width: 400px) {
@@ -315,7 +315,7 @@ body.is-detail-active #sort-button { /* Hides sort button */
     #clear-search-button { font-size: 18px; left: 3px; }
     #profile-dropdown { top: 50px; left: 10px; right: auto; } /* Ensure profile aligns left */
     #item-detail-view .carousel-container { height: 400px; }
-    #item-detail-view .carousel-image {object-fit: cover; }
+    #item-detail-view .carousel-image {object-fit: cover; } /* Cover on mobile */
     .tab-bar { height: 54px; }
     .view { padding-bottom: 70px; } /* Increased padding for smaller tab bar */
     #header-logo { height: 65%; }
@@ -326,18 +326,18 @@ body.is-detail-active #sort-button { /* Hides sort button */
 .item-clicked { transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0.5; transform: scale(0.98); }
 
 
-/* --- NEW: Desktop Layout for Item Detail View --- */
+/* --- UPDATED: Desktop Layout for Item Detail View --- */
 @media (min-width: 768px) {
     #item-detail-view {
-        /* Allow scrolling within the detail view on desktop if content overflows */
         overflow-y: auto;
     }
 
     #item-details-content {
         display: grid;
-        /* Two columns: Carousel on right (RTL), Text on left. Adjust fr units as needed */
+        /* Two columns: Adjust fr units as needed.
+           In RTL, the first element in HTML (.carousel-container) goes right,
+           the second (.item-text-details) goes left. */
         grid-template-columns: 1fr 1fr; /* Equal columns */
-        /* Or, for image smaller: grid-template-columns: 2fr 1fr; */
         gap: 30px; /* Space between columns */
         max-width: 1100px; /* Allow wider content on desktop */
         margin: 20px auto; /* Add some top/bottom margin */
@@ -345,25 +345,28 @@ body.is-detail-active #sort-button { /* Hides sort button */
         align-items: start; /* Align items to the top of their grid cells */
     }
 
+    /* REMOVED grid-column assignments for carousel and text details */
+    /* The natural flow in RTL should place them correctly */
+
     #item-detail-view .carousel-container {
-        /* Carousel takes the second column (right side in RTL) */
-        grid-column: 2 / 3;
         width: 100%; /* Ensure it fills its grid area */
         height: 500px; /* Taller carousel on desktop */
         margin-bottom: 0; /* Remove bottom margin as gap handles spacing */
     }
 
+    #item-detail-view .carousel-image {
+        object-fit: cover; /* Use cover to fill the carousel area better */
+    }
+
     #item-detail-view .item-text-details {
-        /* Text details take the first column (left side in RTL) */
-        grid-column: 1 / 2;
+       /* No specific grid column needed, flows naturally to the left in RTL */
     }
 
     #item-detail-view .item-text-details h2 {
-        margin-top: 0; /* Remove default top margin if needed */
+        margin-top: 0;
     }
 
     #item-detail-view .item-text-details .price-section {
-        /* Adjust price layout if needed for desktop, e.g., more columns */
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 }
