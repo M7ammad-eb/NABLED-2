@@ -22,21 +22,21 @@ body {
 .header-button svg { width: 24px; height: 24px; fill: currentColor; }
 
 /* Back Button Styles */
-#back-button { order: 3; }
+#back-button { order: 4; /* Far right */ }
 #back-button svg { transform: scaleX(-1); /* Mirror the icon for RTL */ }
 
 /* Header Logo Styles */
 #header-logo { display: none; height: 75%; object-fit: contain; margin: 0 auto; order: 2; }
 
 /* Refresh Button Styles */
-.refresh-button { background: #28a745; color: white; order: 1; margin-left: 10px; }
+.refresh-button { background: #28a745; color: white; order: 1; /* Far left */ margin-left: 10px; }
 .refresh-button:hover:enabled { background: #218838; }
 .refresh-button:disabled { cursor: not-allowed; background: #cccccc; }
 .refresh-button.loading svg { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* Search Input Styles */
-.search-container { flex-grow: 1; position: relative; order: 2; margin: 0 10px; }
+.search-container { flex-grow: 1; position: relative; order: 2; /* Between refresh and sort/profile */ margin: 0 10px; }
 .search-input {
   width: 100%; padding: 8px 12px; padding-left: 30px; border: 1px solid #ccc;
   border-radius: 4px; font-size: 16px; box-sizing: border-box; direction: rtl;
@@ -47,8 +47,14 @@ body {
 }
 #clear-search-button:hover { color: #333; }
 
+/* Sort Button Style */
+#sort-button {
+    order: 3; /* Before profile */
+    margin: 0 5px; /* Spacing */
+}
+
 /* Profile Button Style */
-#profile-button { order: 3; margin-right: 0; }
+#profile-button { order: 4; /* Far right */ margin-right: 0; }
 
 /* Profile Dropdown Menu Style */
 #profile-dropdown {
@@ -66,7 +72,12 @@ body {
 /* --- Control Visibility based on Detail View --- */
 #back-button, #header-logo { display: none; }
 body.is-detail-active #back-button, body.is-detail-active #header-logo { display: flex; }
-body.is-detail-active #profile-button, body.is-detail-active .refresh-button, body.is-detail-active .search-container { display: none; }
+body.is-detail-active #profile-button,
+body.is-detail-active .refresh-button,
+body.is-detail-active .search-container,
+body.is-detail-active #sort-button { /* Hide sort button in detail view */
+    display: none;
+}
 
 
 /* Main Content Area */
@@ -80,10 +91,8 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background-color: #f5f5f5; transition: transform 0.25s ease-in-out;
   overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 10px;
-  box-sizing: border-box; visibility: hidden;
-  /* --- Increased padding-bottom to prevent overlap with tab bar --- */
-  padding-bottom: 80px; /* Tab bar height (60px) + 20px breathing room */
+  padding: 10px; box-sizing: border-box; visibility: hidden;
+  padding-bottom: 80px; /* Prevent overlap with tab bar */
 }
 
 /* View Positioning Classes */
@@ -151,10 +160,7 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
     display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 15px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;
 }
-#item-detail-view .price-item {
-    background-color: #f9f9f9; padding: 10px; border-radius: 6px;
-    text-align: right; border: 1px solid #eee;
-}
+#item-detail-view .price-item { background-color: #f9f9f9; padding: 10px; border-radius: 6px; text-align: right; border: 1px solid #eee; }
 #item-detail-view .price-label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
 #item-detail-view .price-value-line { display: flex; align-items: baseline; justify-content: flex-end; line-height: 1.2; }
 #item-detail-view .price-value-line strong { font-size: 1.8em; font-weight: 600; color: #333; margin-left: 5px; }
@@ -188,7 +194,7 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
 
 /* Responsive Adjustments */
 @media (max-width: 600px) {
-  .view { padding-bottom: 70px; } /* Adjust padding for tab bar */
+  .view { padding-bottom: 70px; }
   #items-list { grid-template-columns: 1fr; gap: 8px; }
   .item-row { padding: 8px; min-height: 60px; }
   .list-image { width: 40px; height: 40px; margin-left: 10px; }
@@ -199,7 +205,7 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
   .category-button { padding: 15px 12px; font-size: 1em; }
   #profile-dropdown { left: 10px; min-width: 180px; }
   #item-details-content { padding: 15px; margin: 10px auto; }
-  #item-detail-view .carousel-container { height: 400px; }
+  #item-detail-view .carousel-container { height: 300px; }
   #header-logo { height: 70%; }
   #item-detail-view .price-value-line strong { font-size: 1.6em; }
   #item-detail-view .price-section { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;}
@@ -218,7 +224,7 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
     .search-input { font-size: 14px; padding: 6px 10px; padding-left: 25px; }
     #clear-search-button { font-size: 18px; left: 3px; }
     #profile-dropdown { top: 50px; left: 10px; }
-    #item-detail-view .carousel-container { height: 400px; }
+    #item-detail-view .carousel-container { height: 250px; }
     .tab-bar { height: 54px; }
     .view { padding-bottom: 70px; } /* Increased padding for smaller tab bar */
     #header-logo { height: 65%; }
