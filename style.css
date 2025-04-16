@@ -61,7 +61,7 @@ body {
 #sort-dropdown {
     position: absolute;
     top: calc(100% + 5px); /* Position below the button */
-    left: 0; /* Align with the left of the sort container */
+    left: 0; /* Default alignment (for LTR or wider screens) */
     background-color: white;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -277,16 +277,16 @@ body.is-detail-active .sort-container { /* Hide sort container (and dropdown) in
   .tab-button { font-size: 0.9rem; }
   .view-title { font-size: 1.1em; }
   .category-button { padding: 15px 12px; font-size: 1em; }
-  #profile-dropdown { left: 10px; min-width: 180px; }
+  #profile-dropdown { left: 10px; right: auto; min-width: 180px; } /* Ensure profile aligns left */
   #item-details-content { padding: 15px; margin: 10px auto; }
   #item-detail-view .carousel-container { height: 300px; }
   #header-logo { height: 70%; }
   #item-detail-view .price-value-line strong { font-size: 1.6em; }
   #item-detail-view .price-section { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;}
-  #sort-dropdown { /* Adjust dropdown position slightly on smaller screens if needed */
-      left: auto; /* Let it align naturally */
-      right: 0; /* Align to the right edge of the container */
-      transform: translateX(0); /* Reset any transform */
+  /* --- Mobile Sort Dropdown Fix --- */
+  #sort-dropdown {
+      left: auto; /* Reset left alignment */
+      right: 0; /* Align dropdown to the right edge of its container */
   }
 }
 
@@ -302,12 +302,17 @@ body.is-detail-active .sort-container { /* Hide sort container (and dropdown) in
     .search-container { margin: 0 5px; }
     .search-input { font-size: 14px; padding: 6px 10px; padding-left: 25px; }
     #clear-search-button { font-size: 18px; left: 3px; }
-    #profile-dropdown { top: 50px; left: 10px; }
+    #profile-dropdown { top: 50px; left: 10px; right: auto; } /* Ensure profile aligns left */
     #item-detail-view .carousel-container { height: 250px; }
     .tab-bar { height: 54px; }
     .view { padding-bottom: 70px; } /* Increased padding for smaller tab bar */
     #header-logo { height: 65%; }
     #item-detail-view .price-section { grid-template-columns: 1fr; }
+    /* Ensure sort dropdown still aligns right */
+    #sort-dropdown {
+       left: auto;
+       right: 0;
+    }
 }
 
 /* Item Click Transition */
