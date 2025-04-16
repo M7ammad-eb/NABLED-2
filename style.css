@@ -47,11 +47,85 @@ body {
 }
 #clear-search-button:hover { color: #333; }
 
-/* Sort Button Style */
-#sort-button {
+/* --- Sort Button and Dropdown --- */
+.sort-container {
+    position: relative; /* Needed for absolute positioning of dropdown */
     order: 3; /* Before profile */
     margin: 0 5px; /* Spacing */
 }
+
+#sort-button {
+  /* Styles already defined in .header-button */
+}
+
+#sort-dropdown {
+    position: absolute;
+    top: calc(100% + 5px); /* Position below the button */
+    left: 0; /* Align with the left of the sort container */
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    z-index: 110; /* Above other header elements */
+    min-width: 220px;
+    display: none; /* Initially hidden */
+    border: 1px solid #eee;
+    text-align: right; /* Align content to the right */
+}
+
+.sort-section {
+    margin-bottom: 15px;
+}
+.sort-section:last-of-type {
+    margin-bottom: 10px;
+}
+
+.sort-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 0.95em;
+}
+
+.sort-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.sort-option input[type="radio"] {
+    margin-left: 8px; /* Space between radio and label */
+    cursor: pointer;
+    accent-color: #007bff; /* Style the radio button */
+}
+
+.sort-option label {
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #555;
+}
+
+#apply-sort-button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+
+#apply-sort-button:hover {
+    background-color: #0056b3;
+}
+/* --- End Sort Styles --- */
+
 
 /* Profile Button Style */
 #profile-button { order: 4; /* Far right */ margin-right: 0; }
@@ -75,7 +149,7 @@ body.is-detail-active #back-button, body.is-detail-active #header-logo { display
 body.is-detail-active #profile-button,
 body.is-detail-active .refresh-button,
 body.is-detail-active .search-container,
-body.is-detail-active #sort-button { /* Hide sort button in detail view */
+body.is-detail-active .sort-container { /* Hide sort container (and dropdown) in detail view */
     display: none;
 }
 
@@ -209,6 +283,11 @@ body.is-detail-active #sort-button { /* Hide sort button in detail view */
   #header-logo { height: 70%; }
   #item-detail-view .price-value-line strong { font-size: 1.6em; }
   #item-detail-view .price-section { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;}
+  #sort-dropdown { /* Adjust dropdown position slightly on smaller screens if needed */
+      left: auto; /* Let it align naturally */
+      right: 0; /* Align to the right edge of the container */
+      transform: translateX(0); /* Reset any transform */
+  }
 }
 
 @media (max-width: 480px) {
