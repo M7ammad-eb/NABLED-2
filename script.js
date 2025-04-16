@@ -112,11 +112,11 @@ function tryInitialRenderFromCache() {
 function setupUIInteractions() {
     setupSearch();
     setupProfileMenu();
-    setupSwipeGestures();
+    setupSwipeGestures(); // Uses the reverted function now
     setupBackButton();
     setupTabNav();
     setupRefreshButton();
-    setupSortButtonAndDropdown(); // Updated function name
+    setupSortButtonAndDropdown();
     console.log("UI Interactions Setup.");
 }
 
@@ -228,7 +228,7 @@ function findItemById(items, itemId) {
     if (!items || !itemId) return null;
     // Ensure comparison is string-based if needed, or handle types consistently
     const searchId = String(itemId).trim();
-    for (let i = 1; i < items.length; i++) {
+    for (let i = 1; i < items.length; i++) { // Start from 1 to skip header row if present
         if (items[i]?.[0] && String(items[i][0]).trim() === searchId) {
             return items[i];
         }
@@ -568,7 +568,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     visiblePriceColumnIndices.forEach(index => {
         if (index < item.length && item[index] != null && String(item[index]).trim() !== '') { // Check for non-empty string
             const key = columnNames[index] || `Price ${index + 1}`; const value = item[index];
-            html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
+            html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
         }
     });
     html += `</div><br>`; // Price section end
@@ -945,98 +945,61 @@ function setupSortButtonAndDropdown() {
 }
 
 
-// --- Swipe Gesture Handling ---
+// --- Swipe Gesture Handling (REVERTED to Original User-Provided Logic) ---
 function setupSwipeGestures() {
     let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
     let isSwiping = false;
-    const swipeThreshold = 50, maxVerticalThreshold = 75; // Adjust thresholds as needed
+    const swipeThreshold = 50, maxVerticalThreshold = 75;
     if (!viewWrapper) { console.error("View wrapper missing."); return; }
 
     viewWrapper.addEventListener('touchstart', (event) => {
-        // Disable view swipe if detail view is active OR if sort/profile dropdown is open
-        if (document.body.classList.contains('is-detail-active') ||
-            (sortDropdown && sortDropdown.style.display === 'block') ||
-            (profileDropdown && profileDropdown.style.display === 'block')) {
-            isSwiping = false;
-            return;
-        }
-
-        // Block swipe if starting on specific interactive elements within views
-        const swipeTarget = event.target;
-        let blockSwipe = false;
-        // Allow swiping on item rows/buttons, but block on others like inputs, links, dots etc.
-        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot, .sort-option, #apply-sort-button, #dropdown-sign-out-button')) {
-            blockSwipe = true;
-        }
-        // Allow swiping on the general container background
-        if (swipeTarget === itemsListContainer || swipeTarget === categoryButtonsContainer || swipeTarget === viewWrapper) {
-             blockSwipe = false;
-        }
-
-
+        // Disable view swipe if detail view is active
+        if (document.body.classList.contains('is-detail-active')) { isSwiping = false; return; }
+        // Block swipe if starting on specific interactive elements
+        const swipeTarget = event.target; let blockSwipe = false;
+        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) { blockSwipe = true; }
         if (blockSwipe) { isSwiping = false; return; }
-
         // Initialize swipe
-        touchStartX = event.changedTouches[0].screenX;
-        touchStartY = event.changedTouches[0].screenY;
-        isSwiping = true;
-    }, { passive: true }); // Use passive for performance
+        touchStartX = event.changedTouches[0].screenX; touchStartY = event.changedTouches[0].screenY; isSwiping = true;
+    }, { passive: true });
 
-    viewWrapper.addEventListener('touchmove', (event) => {
-        if (!isSwiping) return;
-        touchEndX = event.changedTouches[0].screenX;
-        touchEndY = event.changedTouches[0].screenY;
-        // Check for vertical scroll dominance to cancel horizontal swipe
-        if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) {
-            // console.log("Vertical scroll detected, cancelling swipe.");
-            isSwiping = false;
-        }
-    }, { passive: true }); // Use passive for performance
+     viewWrapper.addEventListener('touchmove', (event) => {
+         if (!isSwiping) return; touchEndX = event.changedTouches[0].screenX; touchEndY = event.changedTouches[0].screenY;
+         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) { isSwiping = false; }
+     }, { passive: true });
 
     viewWrapper.addEventListener('touchend', (event) => {
-        if (!isSwiping) return;
-        isSwiping = false; // Swipe attempt finished
-        touchEndX = event.changedTouches[0].screenX;
-        touchEndY = event.changedTouches[0].screenY;
-        handleSwipeGesture();
-    }, { passive: true }); // Use passive for performance
+         if (!isSwiping) return; isSwiping = false; touchEndX = event.changedTouches[0].screenX; touchEndY = event.changedTouches[0].screenY; handleSwipeGesture();
+    }, { passive: true });
 
     function handleSwipeGesture() {
-        const deltaX = touchEndX - touchStartX;
-        const deltaY = touchEndY - touchStartY;
-        const absDeltaX = Math.abs(deltaX);
-        const absDeltaY = Math.abs(deltaY);
+        const deltaX = touchEndX - touchStartX; const deltaY = touchEndY - touchStartY; const absDeltaX = Math.abs(deltaX); const absDeltaY = Math.abs(deltaY);
+        touchStartX = touchEndX = touchStartY = touchEndY = 0; // Reset
 
-        // Reset coordinates for next potential swipe
-        touchStartX = touchEndX = touchStartY = touchEndY = 0;
-
-        // Check if it's a valid horizontal swipe
         if (absDeltaX > swipeThreshold && absDeltaY < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
             console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`);
 
-            // --- RTL Swipe Logic ---
-            // Swipe Right (Finger L -> R, positive deltaX): Navigate "forward" (Categories -> Items)
+            // --- REVERTED RTL Swipe Logic (Based on user feedback) ---
+            // Swipe Right (Finger L -> R, positive deltaX): Navigate "forward"
             if (deltaX > 0) {
-                console.log("Swipe Right (L->R) detected - Navigating Forward");
-                if (currentState.view === 'categories') {
-                    console.log("Action: Triggering Items Tab (All Items)");
-                    if(itemsTab && !itemsTab.classList.contains('active')) itemsTab.click(); // Click only if not active
-                } else { console.log("Action: No swipe forward action from items."); }
+                 console.log("Swipe Right (L->R) detected - Navigating Forward");
+                 if (currentState.view === 'categories') {
+                     console.log("Action: Triggering Items Tab (All Items)");
+                     if(itemsTab) itemsTab.click();
+                 } else { console.log("Action: No swipe forward action from items."); }
             }
-            // Swipe Left (Finger R -> L, negative deltaX): Navigate "backward" (Items -> Categories)
+            // Swipe Left (Finger R -> L, negative deltaX): Navigate "backward"
             else if (deltaX < 0) {
-                console.log("Swipe Left (R->L) detected - Navigating Back");
-                if (currentState.view === 'items') {
-                    console.log("Action: Triggering Categories Tab");
-                    if(categoriesTab && !categoriesTab.classList.contains('active')) categoriesTab.click(); // Click only if not active
-                } else { console.log("Action: No swipe back action from categories."); }
+                 console.log("Swipe Left (R->L) detected - Navigating Back");
+                 if (currentState.view === 'items') {
+                     console.log("Action: Triggering Categories Tab");
+                     if(categoriesTab) categoriesTab.click();
+                 } else { console.log("Action: No swipe back action from categories."); }
             }
-        } else {
-            // console.log("Swipe gesture did not meet criteria (threshold or vertical dominance).");
         }
     }
-    console.log("Swipe gestures setup.");
+     console.log("Swipe gestures (Reverted logic) setup.");
 }
 
 
