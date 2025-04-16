@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -364,7 +364,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     return html;
 }
 
-// Carousel Functionality (Sliding version - REVERTED SWIPE LOGIC)
+// Carousel Functionality (Sliding version - LTR SWIPE LOGIC)
 function addCarouselFunctionality(parentSelector) {
     const container = document.querySelector(parentSelector);
     if (!container) { console.warn("Carousel container not found:", parentSelector); return; }
@@ -389,7 +389,8 @@ function addCarouselFunctionality(parentSelector) {
     function showSlide(index) {
         if (slides.length <= 1) return;
         index = (index + slides.length) % slides.length;
-        slidesWrapper.style.transform = `translateX(${index * 100}%)`; // RTL transform
+        // LTR transform: Negative translateX moves left (showing next items)
+        slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
         dots.forEach((d, i) => d.classList.toggle('active', i === index));
         currentSlide = index;
     }
@@ -397,25 +398,25 @@ function addCarouselFunctionality(parentSelector) {
     // Dot navigation
     dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
-    // Swipe support for Carousel (REVERTED DIRECTION LOGIC)
+    // Swipe support for Carousel (LTR DIRECTION LOGIC)
     let touchStartX = 0;
     slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
     slidesWrapper.addEventListener('touchend', e => {
         if (slides.length <= 1 || touchStartX === 0) return;
         const touchEndX = e.changedTouches[0].clientX; const diff = touchEndX - touchStartX;
-        // RTL: L->R swipe (positive diff) = NEXT; R->L swipe (negative diff) = PREVIOUS
-        if (diff < -50) { // Swipe Left (R->L) -> Previous
-             console.log("Carousel Swipe Left (R->L) -> Previous");
-             showSlide(currentSlide - 1);
-        } else if (diff > 50) { // Swipe Right (L->R) -> Next
-             console.log("Carousel Swipe Right (L->R) -> Next");
+        // LTR: Swipe Left (negative diff) = NEXT; Swipe Right (positive diff) = PREVIOUS
+        if (diff < -50) { // Swipe Left -> Next
+             console.log("Carousel Swipe Left -> Next");
              showSlide(currentSlide + 1);
+        } else if (diff > 50) { // Swipe Right -> Previous
+             console.log("Carousel Swipe Right -> Previous");
+             showSlide(currentSlide - 1);
         }
         touchStartX = 0;
     }, { passive: true });
 
     showSlide(0); // Initialize
-    console.log("Carousel functionality (sliding) added.");
+    console.log("Carousel functionality (sliding LTR) added.");
 }
 
 
@@ -545,7 +546,7 @@ function setupTabNav() {
     console.log("Tab listeners added.");
 }
 
-// --- Swipe Gesture Handling (REVERTED DIRECTION LOGIC) ---
+// --- Swipe Gesture Handling (LTR SWIPE LOGIC) ---
 function setupSwipeGestures() {
     let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
     let isSwiping = false;
@@ -580,18 +581,18 @@ function setupSwipeGestures() {
             const currentState = history.state || { view: 'categories', filter: null };
             console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`);
 
-            // --- REVERTED RTL Swipe Logic ---
-            // Swipe Right (Finger L -> R, positive deltaX): Navigate "forward"
-            if (deltaX > 0) {
-                 console.log("Swipe Right (L->R) detected - Navigating Forward");
+            // --- LTR Swipe Logic ---
+            // Swipe Left (Finger R -> L, negative deltaX): Navigate "forward"
+            if (deltaX < 0) {
+                 console.log("Swipe Left (R->L) detected - Navigating Forward");
                  if (currentState.view === 'categories') {
                      console.log("Action: Triggering Items Tab (All Items)");
                      if(itemsTab) itemsTab.click();
                  } else { console.log("Action: No swipe forward action from items."); }
             }
-            // Swipe Left (Finger R -> L, negative deltaX): Navigate "backward"
-            else if (deltaX < 0) {
-                 console.log("Swipe Left (R->L) detected - Navigating Back");
+            // Swipe Right (Finger L -> R, positive deltaX): Navigate "backward"
+            else if (deltaX > 0) {
+                 console.log("Swipe Right (L->R) detected - Navigating Back");
                  if (currentState.view === 'items') {
                      console.log("Action: Triggering Categories Tab");
                      if(categoriesTab) categoriesTab.click();
@@ -599,7 +600,7 @@ function setupSwipeGestures() {
             }
         }
     }
-     console.log("Swipe gestures setup.");
+     console.log("Swipe gestures (LTR) setup.");
 }
 
 // --- Helper: Get User Permissions ---
