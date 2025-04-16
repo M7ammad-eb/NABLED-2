@@ -423,25 +423,33 @@ function updateViewClasses(activeViewId) {
     views.forEach(view => {
         if (!view) return;
         const isActive = view.id === activeViewId;
-        view.classList.toggle('view-active', isActive);
-        // Determine left/right based on the *target* active view
-        const isLeft = !isActive && (
-            (activeViewId === 'items-list-container' && view.id === 'category-buttons-container') ||
-            (activeViewId === 'item-detail-view' && (view.id === 'category-buttons-container' || view.id === 'items-list-container'))
-        );
-         const isRight = !isActive && (
-            (activeViewId === 'category-buttons-container' && (view.id === 'items-list-container' || view.id === 'item-detail-view')) ||
-            (activeViewId === 'items-list-container' && view.id === 'item-detail-view')
-         );
+        view.classList.toggle('view-active', isActive); // Set the active view
 
-        view.classList.toggle('view-left', isLeft); // Should be to the left of active
-        view.classList.toggle('view-right', isRight); // Should be to the right of active
+        // --- CORRECTED RTL POSITIONING LOGIC ---
+        let isLeft = false;  // Should have transform: translateX(-100%)
+        let isRight = false; // Should have transform: translateX(100%)
 
-        // Reset scroll only if becoming active AND it's not the detail view
-        if (isActive && activeViewId !== 'item-detail-view') {
-             // Scroll restoration is handled specifically in showAllItemsViewUI / showItemsByCategory
-             // view.scrollTop = 0; // Avoid resetting scroll here, handle it on view display
+        if (!isActive) {
+            // Determine position relative to the *active* view in RTL flow
+            if (activeViewId === 'category-buttons-container') {
+                // When Categories is active (rightmost), Items and Detail are to its left
+                isLeft = (view.id === 'items-list-container' || view.id === 'item-detail-view');
+            } else if (activeViewId === 'items-list-container') {
+                // When Items is active (middle), Categories is to its right, Detail is to its left
+                isRight = (view.id === 'category-buttons-container');
+                isLeft = (view.id === 'item-detail-view');
+            } else if (activeViewId === 'item-detail-view') {
+                // When Detail is active (leftmost), Categories and Items are to its right
+                isRight = (view.id === 'category-buttons-container' || view.id === 'items-list-container');
+            }
         }
+
+        // Apply the classes based on the calculated positions
+        view.classList.toggle('view-left', isLeft);
+        view.classList.toggle('view-right', isRight);
+        // --- END OF CORRECTION ---
+
+        // Scroll restoration/reset is handled in the show... functions
     });
 
     // Update tab bar state only if not in detail view
@@ -460,6 +468,7 @@ function updateViewClasses(activeViewId) {
 
     console.log(`UI Updated. Active view: ${activeViewId}`);
 }
+
 
 function showCategoriesViewUI() {
     if (!categoryButtonsContainer) return; console.log(`UI: Categories View`);
