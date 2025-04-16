@@ -600,7 +600,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     visiblePriceColumnIndices.forEach(index => {
         if (index < item.length && item[index] != null && String(item[index]).trim() !== '') { // Check for non-empty string
             const key = columnNames[index] || `Price ${index + 1}`; const value = item[index];
-            html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
+            html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
         }
     });
     html += `</div><br>`; // Price section end
