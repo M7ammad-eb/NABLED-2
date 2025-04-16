@@ -82,8 +82,8 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
   overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding: 10px;
   box-sizing: border-box; visibility: hidden;
-  /* --- Add padding-bottom to prevent overlap with tab bar --- */
-  padding-bottom: 70px; /* Tab bar height (60px) + 10px breathing room */
+  /* --- Increased padding-bottom to prevent overlap with tab bar --- */
+  padding-bottom: 80px; /* Tab bar height (60px) + 20px breathing room */
 }
 
 /* View Positioning Classes */
@@ -220,7 +220,7 @@ body.is-detail-active #profile-button, body.is-detail-active .refresh-button, bo
     #profile-dropdown { top: 50px; left: 10px; }
     #item-detail-view .carousel-container { height: 250px; }
     .tab-bar { height: 54px; }
-    .view { padding-bottom: 64px; } /* Adjust padding for smaller tab bar */
+    .view { padding-bottom: 70px; } /* Increased padding for smaller tab bar */
     #header-logo { height: 65%; }
     #item-detail-view .price-section { grid-template-columns: 1fr; }
 }
