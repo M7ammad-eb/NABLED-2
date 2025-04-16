@@ -7,14 +7,15 @@
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
 </head>
-<body> <div class="search-bar">
+<body>
+  <div class="search-bar">
     <button id="back-button" class="header-button" aria-label="Go Back">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
       </svg>
     </button>
 
-    <img id="header-logo" src="logo.png" alt="NABLED Logo">
+    <img id="header-logo" src="logo.png" alt="NABLED Logo" onerror="this.style.display='none'">
 
     <button class="refresh-button header-button" aria-label="Refresh Data">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -27,11 +28,47 @@
       <button id="clear-search-button" aria-label="Clear Search" style="display: none;">&times;</button>
     </div>
 
-    <button id="sort-button" class="header-button" aria-label="Sort Items">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
-      </svg>
-    </button>
+    <div class="sort-container">
+        <button id="sort-button" class="header-button" aria-label="Sort Items">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+          </svg>
+        </button>
+        <div id="sort-dropdown" style="display: none;">
+            <div class="sort-section">
+                <label class="sort-label">الترتيب:</label>
+                <div class="sort-option">
+                    <input type="radio" id="sort-asc" name="sortDirection" value="asc" checked>
+                    <label for="sort-asc">تصاعدي</label>
+                </div>
+                <div class="sort-option">
+                    <input type="radio" id="sort-desc" name="sortDirection" value="desc">
+                    <label for="sort-desc">تنازلي</label>
+                </div>
+            </div>
+            <div class="sort-section">
+                <label class="sort-label">تصنيف حسب:</label>
+                <div class="sort-option">
+                    <input type="radio" id="sort-by-default" name="sortBy" value="default" checked>
+                    <label for="sort-by-default">افتراضي</label>
+                </div>
+                <div class="sort-option">
+                    <input type="radio" id="sort-by-code" name="sortBy" value="code">
+                    <label for="sort-by-code">كود الصنف</label>
+                </div>
+                <div class="sort-option">
+                    <input type="radio" id="sort-by-name" name="sortBy" value="name">
+                    <label for="sort-by-name">اسم الصنف</label>
+                </div>
+                <div class="sort-option">
+                    <input type="radio" id="sort-by-category" name="sortBy" value="category">
+                    <label for="sort-by-category">الفئة</label>
+                </div>
+            </div>
+            <button id="apply-sort-button">تطبيق</button>
+        </div>
+    </div>
+
 
     <button id="profile-button" class="header-button" aria-label="User Menu">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
