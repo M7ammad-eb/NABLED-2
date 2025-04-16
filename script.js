@@ -365,8 +365,8 @@ function displayItems(itemsToRender, filterCategory = null) { // Now accepts sor
         } else {
             // This case should be handled by the initial check, but as a fallback:
              itemsList.innerHTML = filterCategory
-                ? `<p>لا توجد عناصر في الفئة "${filterCategory}".</p>`
-                : '<p>لا توجد عناصر لعرضها.</p>';
+                 ? `<p>لا توجد عناصر في الفئة "${filterCategory}".</p>`
+                 : '<p>لا توجد عناصر لعرضها.</p>';
         }
     } catch (error) {
         itemsList.innerHTML = '<p>حدث خطأ أثناء عرض بيانات العنصر.</p>';
@@ -560,22 +560,42 @@ function showItemDetailView(itemId, isPopState = false) {
 }
 
 
-// Render Item Details HTML
+// Render Item Details HTML - MODIFIED
 function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
-    if (!item || !columnNames) return '<p>Error rendering item details.</p>'; let html = '';
+    if (!item || !columnNames) return '<p>Error rendering item details.</p>';
+    let html = '';
     const images = [item[4], item[5], item[6]].filter(Boolean).map(url => url.trim()); // Ensure URLs are trimmed
-    const placeholder = 'placeholder.png'; const hasImages = images.length > 0;
+    const placeholder = 'placeholder.png';
+    const hasImages = images.length > 0;
 
+    // --- Carousel Section ---
     html += `<div class="carousel-container"><div class="slides-wrapper">`; // Carousel start
-    if (hasImages) { images.forEach((src, index) => { html += `<div class="slide ${index === 0 ? 'active' : ''}" data-src="${src}"><img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-image" onerror="this.onerror=null; this.src='${placeholder}';"></div>`; }); }
-    else { html += `<div class="slide active" data-src="${placeholder}"><img src="${placeholder}" alt="Placeholder" class="carousel-image"></div>`; }
-    html += `</div>`; if (images.length > 1) { html += `<div class="carousel-dots">`; images.forEach((_, i) => { html += `<span class="dot ${i === 0 ? 'active' : ''}" data-slide-index="${i}"></span>`; }); html += `</div>`; } html += `</div>`; // Carousel end
+    if (hasImages) {
+        images.forEach((src, index) => {
+            html += `<div class="slide ${index === 0 ? 'active' : ''}" data-src="${src}"><img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-image" onerror="this.onerror=null; this.src='${placeholder}';"></div>`;
+        });
+    } else {
+        html += `<div class="slide active" data-src="${placeholder}"><img src="${placeholder}" alt="Placeholder" class="carousel-image"></div>`;
+    }
+    html += `</div>`; // End slides-wrapper
+    if (images.length > 1) {
+        html += `<div class="carousel-dots">`;
+        images.forEach((_, i) => {
+            html += `<span class="dot ${i === 0 ? 'active' : ''}" data-slide-index="${i}"></span>`;
+        });
+        html += `</div>`; // End carousel-dots
+    }
+    html += `</div>`; // End carousel-container
+
+    // --- Text Details Section (NEW WRAPPER ADDED) ---
+    html += `<div class="item-text-details">`; // Start of new wrapper
 
     html += `<h2>${item[2] || ""}</h2><br>`; // Name
     html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`; // ID
     if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`; // Specs
     if (item[7]) html += `<p><a href="${item[7]}" target="_blank" rel="noopener noreferrer">${columnNames[7] || "Catalog"}</a></p>`; // Catalog
 
+    // --- Price Section (moved inside the new wrapper) ---
     html += `<div class="price-section">`; // Price section start
     visiblePriceColumnIndices.forEach(index => {
         if (index < item.length && item[index] != null && String(item[index]).trim() !== '') { // Check for non-empty string
@@ -584,6 +604,9 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
         }
     });
     html += `</div><br>`; // Price section end
+
+    html += `</div>`; // End of new wrapper: item-text-details
+
     return html;
 }
 
@@ -1020,4 +1043,3 @@ function getUserPermissions(permissions, userEmail) {
     }
     return null; // Return null if no match found
 }
-
