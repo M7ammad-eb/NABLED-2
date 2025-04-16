@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io",
+    apiKey: "AIzaSyAzgx1Ro6M7Bf58dgshk_7Eflp-EtZc9io", // Replace with your key
     authDomain: "nab-led.firebaseapp.com",
     projectId: "nab-led",
     storageBucket: "nab-led.firebasestorage.app",
@@ -35,6 +35,7 @@ const refreshButton = document.querySelector(".refresh-button");
 const profileButton = document.getElementById('profile-button');
 const backButton = document.getElementById('back-button');
 const headerLogo = document.getElementById('header-logo');
+const sortButton = document.getElementById('sort-button'); // Sort Button Ref
 const profileDropdown = document.getElementById('profile-dropdown');
 const userEmailDisplay = document.getElementById('user-email-display');
 const userJobTitleDisplay = document.getElementById('user-job-title');
@@ -44,6 +45,7 @@ const dropdownSignOutButton = document.getElementById('dropdown-sign-out-button'
 let initialRenderDone = false;
 let lastListViewState = { view: 'categories', filter: null };
 let itemsListScrollPos = 0;
+let currentSortOrder = 'default'; // Sort state: 'default', 'name', 'category', 'code'
 
 // --- Sign Out Function ---
 function signOut() {
@@ -105,6 +107,7 @@ function setupUIInteractions() {
     setupBackButton();
     setupTabNav();
     setupRefreshButton();
+    setupSortButton(); // Added sort button setup
     console.log("UI Interactions Setup.");
 }
 
@@ -116,9 +119,12 @@ auth.onAuthStateChanged(async (user) => {
     console.log("Auth state changed. User:", user ? user.email : 'None');
     const mainContent = document.querySelector('.main-content');
     if (user) {
+        // Show elements relevant when logged in
         profileButton.style.display = "flex";
         searchBar.style.display = 'flex';
         refreshButton.style.display = 'flex';
+        sortButton.style.display = 'flex'; // Show sort button
+
         try {
             const hasCachedData = localStorage.getItem('dataSheet') && localStorage.getItem('permissionRows');
             let needsRender = false;
@@ -141,9 +147,11 @@ auth.onAuthStateChanged(async (user) => {
             initialRenderDone = true;
         }
     } else {
+        // User is signed out. Hide elements, redirect.
         profileButton.style.display = "none";
         searchBar.style.display = 'none';
         refreshButton.style.display = 'none';
+        sortButton.style.display = 'none'; // Hide sort button
         if (profileDropdown) profileDropdown.style.display = 'none';
         document.body.classList.remove('is-detail-active');
         if (window.location.pathname !== '/signin.html' && window.location.pathname !== '/NABLED-2/signin.html') {
@@ -210,21 +218,49 @@ function findItemById(items, itemId) {
     return null;
 }
 
-// --- Display Items ---
+// --- Display Items (Handles Filtering and Sorting) ---
 function displayItems(filterCategory = null) {
-    if (!itemsList) return; itemsList.innerHTML = '<p>Loading items...</p>';
+    if (!itemsList) return;
+    itemsList.innerHTML = '<p>Loading items...</p>';
     const cachedDataString = localStorage.getItem('dataSheet');
     if (!cachedDataString) { itemsList.innerHTML = '<p>No data available. Please refresh.</p>'; return; }
+
     try {
-        const { data: dataRows } = JSON.parse(cachedDataString); if (!dataRows) throw new Error("Invalid data format");
-        let itemsFound = false; const fragment = document.createDocumentFragment();
-        for (let i = 1; i < dataRows.length; i++) {
-            const item = dataRows[i];
-            if (!Array.isArray(item) || item.length < 7 || item.every(cell => !cell || String(cell).trim() === '')) continue;
-            const itemCategory = item[1]?.trim() || '';
-            if (filterCategory && itemCategory !== filterCategory) continue;
-            itemsFound = true; const itemId = String(item[0] || '').trim(); const itemName = String(item[2] || 'No Name').trim();
+        const { data: dataRows } = JSON.parse(cachedDataString);
+        if (!dataRows) throw new Error("Invalid data format");
+
+        let itemsToDisplay = dataRows.slice(1); // Get all items (excluding header)
+
+        // 1. Filter items if a category is specified
+        if (filterCategory) {
+            itemsToDisplay = itemsToDisplay.filter(item => (item[1]?.trim() || '') === filterCategory);
+        }
+
+        // 2. Sort the filtered items based on currentSortOrder
+        console.log(`Sorting items by: ${currentSortOrder}`);
+        if (currentSortOrder === 'name') {
+            // Sort by Name (Column index 2)
+            itemsToDisplay.sort((a, b) => (a[2] || '').localeCompare(b[2] || ''));
+        } else if (currentSortOrder === 'category') {
+            // Sort by Category (Column index 1)
+            itemsToDisplay.sort((a, b) => (a[1] || '').localeCompare(b[1] || ''));
+        } else if (currentSortOrder === 'code') {
+            // Sort by Item Code (Column index 0)
+            itemsToDisplay.sort((a, b) => (a[0] || '').localeCompare(b[0] || ''));
+        }
+        // 'default' order requires no sorting after slicing/filtering
+
+        // 3. Render the filtered and sorted items
+        let itemsFound = false;
+        const fragment = document.createDocumentFragment();
+        itemsToDisplay.forEach(item => {
+            if (!Array.isArray(item) || item.length < 3) return; // Basic check
+
+            itemsFound = true;
+            const itemId = String(item[0] || '').trim();
+            const itemName = String(item[2] || 'No Name').trim();
             const realImageSrc = [item[4], item[5], item[6]].map(img => img?.trim() || null).find(img => img);
+
             const itemDiv = document.createElement('div'); itemDiv.className = 'item-container';
             const clickableElement = document.createElement('button'); clickableElement.className = 'item-row';
             clickableElement.dataset.itemId = itemId; clickableElement.setAttribute('aria-label', `View details for ${itemName}`);
@@ -242,11 +278,18 @@ function displayItems(filterCategory = null) {
                 setTimeout(() => clickableElement.classList.remove('item-clicked'), 300); showItemDetailView(itemId);
             });
             itemDiv.appendChild(clickableElement); fragment.appendChild(itemDiv);
+        });
+
+        itemsList.innerHTML = ''; // Clear loading/previous
+        if (itemsFound) {
+            itemsList.appendChild(fragment);
+        } else {
+            itemsList.innerHTML = filterCategory ? `<p>No items found in category "${filterCategory}".</p>` : '<p>No items to display.</p>';
         }
-        itemsList.innerHTML = '';
-        if (itemsFound) { itemsList.appendChild(fragment); }
-        else { itemsList.innerHTML = filterCategory ? `<p>No items found in category "${filterCategory}".</p>` : '<p>No items to display.</p>'; }
-    } catch (error) { itemsList.innerHTML = '<p>Error displaying item data.</p>'; console.error("DisplayItems error:", error); }
+    } catch (error) {
+        itemsList.innerHTML = '<p>Error displaying item data.</p>';
+        console.error("DisplayItems error:", error);
+    }
 }
 
 // --- Display Category Buttons ---
@@ -312,13 +355,15 @@ function showCategoriesViewUI() {
 }
 function showAllItemsViewUI() {
     if (!itemsListContainer || !itemsListTitle) return; console.log(`UI: All Items View`);
-    itemsListTitle.textContent = 'جميع العناصر'; updateViewClasses('items-list-container'); displayItems();
+    itemsListTitle.textContent = 'جميع العناصر'; updateViewClasses('items-list-container');
+    displayItems(null); // Pass null filter, displayItems will use currentSortOrder
     requestAnimationFrame(() => { itemsListContainer.scrollTop = itemsListScrollPos; console.log(`Restored scroll: ${itemsListScrollPos}`); });
     lastListViewState = { view: 'items', filter: null };
 }
 function showItemsByCategory(categoryName, isPopState = false) {
     if (!itemsListContainer || !itemsListTitle) return; console.log(`UI: Items by Category "${categoryName}"`);
-    itemsListTitle.textContent = categoryName; updateViewClasses('items-list-container'); displayItems(categoryName);
+    itemsListTitle.textContent = categoryName; updateViewClasses('items-list-container');
+    displayItems(categoryName); // Pass category filter, displayItems will use currentSortOrder
     requestAnimationFrame(() => { itemsListContainer.scrollTop = itemsListScrollPos; console.log(`Restored scroll: ${itemsListScrollPos}`); });
     lastListViewState = { view: 'items', filter: categoryName };
     const newState = { view: 'items', filter: categoryName }; const currentState = history.state;
@@ -548,6 +593,47 @@ function setupTabNav() {
     console.log("Tab listeners added.");
 }
 
+// --- Sort Button Logic ---
+function setupSortButton() {
+    if (!sortButton) return;
+    sortButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Cycle through sort orders
+        if (currentSortOrder === 'default') {
+            currentSortOrder = 'name';
+        } else if (currentSortOrder === 'name') {
+            currentSortOrder = 'category';
+        } else if (currentSortOrder === 'category') {
+            currentSortOrder = 'code';
+        } else { // currentSortOrder === 'code'
+            currentSortOrder = 'default';
+        }
+        console.log(`Sort order changed to: ${currentSortOrder}`);
+        // Optionally update button icon/tooltip here
+
+        // Re-render the current items list view if it's active
+        const currentState = history.state || { view: 'categories', filter: null };
+        if (currentState.view === 'items') {
+            console.log(`Re-rendering items list with new sort order. Filter: ${currentState.filter}`);
+            // Re-call the function that displays the items list,
+            // it will use the updated global currentSortOrder
+            if (currentState.filter) {
+                showItemsByCategory(currentState.filter, true); // Pass true to avoid pushing history state again
+            } else {
+                showAllItemsViewUI();
+            }
+             // Scroll to top after sorting
+             requestAnimationFrame(() => {
+                if (itemsListContainer) itemsListContainer.scrollTop = 0;
+             });
+        } else {
+            console.log("Sort button clicked, but items view is not active.");
+        }
+    });
+    console.log("Sort button listener added.");
+}
+
+
 // --- Swipe Gesture Handling (REVERTED to Original User-Provided Logic) ---
 function setupSwipeGestures() {
     let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
@@ -560,10 +646,7 @@ function setupSwipeGestures() {
         if (document.body.classList.contains('is-detail-active')) { isSwiping = false; return; }
         // Block swipe if starting on specific interactive elements
         const swipeTarget = event.target; let blockSwipe = false;
-        // Check for elements that should block view swiping
-        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) {
-             blockSwipe = true;
-        }
+        if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) { blockSwipe = true; }
         if (blockSwipe) { isSwiping = false; return; }
         // Initialize swipe
         touchStartX = event.changedTouches[0].screenX; touchStartY = event.changedTouches[0].screenY; isSwiping = true;
