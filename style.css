@@ -154,6 +154,9 @@ body.is-detail-active .search-container,
 body.is-detail-active .sort-container { /* Hides sort container (button and dropdown) */
     display: none;
 }
+body.is-detail-active #sort-button { /* Hides sort button */
+    display: none;
+}
 
 
 /* Main Content Area */
