@@ -364,7 +364,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     return html;
 }
 
-// Carousel Functionality (Sliding version - LTR SWIPE LOGIC)
+// Carousel Functionality (Sliding version - REVERTED to Original User-Provided Logic)
 function addCarouselFunctionality(parentSelector) {
     const container = document.querySelector(parentSelector);
     if (!container) { console.warn("Carousel container not found:", parentSelector); return; }
@@ -389,8 +389,8 @@ function addCarouselFunctionality(parentSelector) {
     function showSlide(index) {
         if (slides.length <= 1) return;
         index = (index + slides.length) % slides.length;
-        // LTR transform: Negative translateX moves left (showing next items)
-        slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+        // Apply transform based on index (RTL - positive translateX moves right)
+        slidesWrapper.style.transform = `translateX(${index * 100}%)`;
         dots.forEach((d, i) => d.classList.toggle('active', i === index));
         currentSlide = index;
     }
@@ -398,27 +398,27 @@ function addCarouselFunctionality(parentSelector) {
     // Dot navigation
     dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
-    // Swipe support for Carousel (LTR DIRECTION LOGIC)
+    // Swipe support for Carousel (REVERTED to user's original logic)
     let touchStartX = 0;
     slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
     slidesWrapper.addEventListener('touchend', e => {
         if (slides.length <= 1 || touchStartX === 0) return;
         const touchEndX = e.changedTouches[0].clientX; const diff = touchEndX - touchStartX;
-        // LTR: Swipe Left (negative diff) = NEXT; Swipe Right (positive diff) = PREVIOUS
-        if (diff < -50) { // Swipe Right (L->R) -> Go to Previous slide
-             console.log("Carousel Swipe Right (L->R) -> Previous");
+        // Original Logic (assuming this was correct for user):
+        // Swipe Left (R->L, negative diff) -> Previous
+        // Swipe Right (L->R, positive diff) -> Next
+        if (diff < -50) { // Swipe Left (R->L) -> Previous (Reverted)
+             console.log("Carousel Swipe Left (R->L) -> Previous");
              showSlide(currentSlide - 1);
-        } else if (diff > 50) { // Swipe Left (R->L) -> Go to Next slide
-             console.log("Carousel Swipe Left (R->L) -> Next");
+        } else if (diff > 50) { // Swipe Right (L->R) -> Next (Reverted)
+             console.log("Carousel Swipe Right (L->R) -> Next");
              showSlide(currentSlide + 1);
         }
-
-        touchStartX = 0; // Reset start position for next swipe
+        touchStartX = 0;
     }, { passive: true });
 
-
     showSlide(0); // Initialize
-    console.log("Carousel functionality (sliding LTR) added.");
+    console.log("Carousel functionality (sliding - reverted swipe) added.");
 }
 
 
@@ -548,7 +548,7 @@ function setupTabNav() {
     console.log("Tab listeners added.");
 }
 
-// --- Swipe Gesture Handling ---
+// --- Swipe Gesture Handling (REVERTED to Original User-Provided Logic) ---
 function setupSwipeGestures() {
     let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
     let isSwiping = false;
@@ -557,88 +557,55 @@ function setupSwipeGestures() {
 
     viewWrapper.addEventListener('touchstart', (event) => {
         // Disable view swipe if detail view is active
-        if (document.body.classList.contains('is-detail-active')) {
-            isSwiping = false;
-            // console.log("View swipe disabled in detail view.");
-            return;
-        }
-        // Block swipe if starting on truly interactive elements (input, links, non-list buttons, dots)
-        // Allows swipe starting on item rows or category buttons.
-        const swipeTarget = event.target;
-        let blockSwipe = false;
+        if (document.body.classList.contains('is-detail-active')) { isSwiping = false; return; }
+        // Block swipe if starting on specific interactive elements
+        const swipeTarget = event.target; let blockSwipe = false;
+        // Check for elements that should block view swiping
         if (swipeTarget.closest('input, a:not(.item-row):not(.category-button), button:not(.item-row):not(.category-button), .dot')) {
              blockSwipe = true;
         }
-
-        if (blockSwipe) {
-             isSwiping = false;
-             // console.log("Swipe blocked on interactive element:", event.target);
-             return;
-        }
-
-        // If swipe not blocked, initialize coordinates
-        touchStartX = event.changedTouches[0].screenX;
-        touchStartY = event.changedTouches[0].screenY;
-        isSwiping = true;
-        // console.log("Swipe initiated");
-
+        if (blockSwipe) { isSwiping = false; return; }
+        // Initialize swipe
+        touchStartX = event.changedTouches[0].screenX; touchStartY = event.changedTouches[0].screenY; isSwiping = true;
     }, { passive: true });
 
      viewWrapper.addEventListener('touchmove', (event) => {
-         if (!isSwiping) return;
-         touchEndX = event.changedTouches[0].screenX;
-         touchEndY = event.changedTouches[0].screenY;
-         // Cancel if swipe becomes too vertical
-         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) { // Increased vertical tolerance slightly
-             // console.log("Swipe cancelled: Too vertical.");
-             isSwiping = false;
-         }
+         if (!isSwiping) return; touchEndX = event.changedTouches[0].screenX; touchEndY = event.changedTouches[0].screenY;
+         if (Math.abs(touchEndY - touchStartY) > Math.abs(touchEndX - touchStartX) && Math.abs(touchEndY - touchStartY) > 20) { isSwiping = false; }
      }, { passive: true });
 
     viewWrapper.addEventListener('touchend', (event) => {
-         if (!isSwiping) return;
-         isSwiping = false; // Mark swipe attempt as finished
-         touchEndX = event.changedTouches[0].screenX;
-         touchEndY = event.changedTouches[0].screenY;
-         handleSwipeGesture(); // Process the swipe
+         if (!isSwiping) return; isSwiping = false; touchEndX = event.changedTouches[0].screenX; touchEndY = event.changedTouches[0].screenY; handleSwipeGesture();
     }, { passive: true });
 
     function handleSwipeGesture() {
-        const deltaX = touchEndX - touchStartX;
-        const deltaY = touchEndY - touchStartY;
-        const absDeltaX = Math.abs(deltaX);
-        const absDeltaY = Math.abs(deltaY);
+        const deltaX = touchEndX - touchStartX; const deltaY = touchEndY - touchStartY; const absDeltaX = Math.abs(deltaX); const absDeltaY = Math.abs(deltaY);
+        touchStartX = touchEndX = touchStartY = touchEndY = 0; // Reset
 
-        // Reset coordinates for next swipe
-        touchStartX = touchEndX = touchStartY = touchEndY = 0;
-
-        // Check if it's a valid horizontal swipe
         if (absDeltaX > swipeThreshold && absDeltaY < maxVerticalThreshold) {
             const currentState = history.state || { view: 'categories', filter: null };
-            console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`); // Log delta and state
+            console.log(`Processing swipe: deltaX=${deltaX.toFixed(0)}, currentState=${currentState.view}`);
 
-            // --- Corrected RTL Swipe Logic ---
-            // Swipe Right (Finger L -> R, positive deltaX): Navigate "backward"
-            if (deltaX < 0) {
-                console.log("Swipe Right (L->R) detected - Navigating Back");
-                if (currentState.view === 'items') {
-                    console.log("Action: Triggering Categories Tab");
-                    if(categoriesTab) categoriesTab.click();
-                } else { console.log("Action: No swipe back action from categories."); }
+            // --- REVERTED RTL Swipe Logic (Based on user feedback) ---
+            // Swipe Right (Finger L -> R, positive deltaX): Navigate "forward"
+            if (deltaX > 0) {
+                 console.log("Swipe Right (L->R) detected - Navigating Forward");
+                 if (currentState.view === 'categories') {
+                     console.log("Action: Triggering Items Tab (All Items)");
+                     if(itemsTab) itemsTab.click();
+                 } else { console.log("Action: No swipe forward action from items."); }
             }
-            // Swipe Left (Finger R -> L, negative deltaX): Navigate "forward"
-            else if (deltaX > 0) {
-                console.log("Swipe Left (R->L) detected - Navigating Forward");
-                if (currentState.view === 'categories') {
-                    console.log("Action: Triggering Items Tab (All Items)");
-                    if(itemsTab) itemsTab.click();
-                } else { console.log("Action: No swipe forward action from items."); }
+            // Swipe Left (Finger R -> L, negative deltaX): Navigate "backward"
+            else if (deltaX < 0) {
+                 console.log("Swipe Left (R->L) detected - Navigating Back");
+                 if (currentState.view === 'items') {
+                     console.log("Action: Triggering Categories Tab");
+                     if(categoriesTab) categoriesTab.click();
+                 } else { console.log("Action: No swipe back action from categories."); }
             }
-        } else {
-            // console.log(`Swipe ignored: dX=${deltaX.toFixed(0)}, dY=${deltaY.toFixed(0)}`);
         }
     }
-     console.log("Swipe gestures setup.");
+     console.log("Swipe gestures (Reverted logic) setup.");
 }
 
 // --- Helper: Get User Permissions ---
