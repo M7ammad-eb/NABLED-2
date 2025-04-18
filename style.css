@@ -704,7 +704,7 @@ body.is-detail-active #sort-button { display: none; }
 #item-detail-view .item-text-details .price-section {
   display: grid;
   /* Mobile: Adjust columns based on available space */
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
   padding-top: var(--spacing-md);
