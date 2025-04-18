@@ -735,7 +735,7 @@ body.is-detail-active #sort-button { display: none; }
   color: var(--text-color-primary);
 }
 #item-detail-view .item-text-details .price-value-line .currency-symbol {
-  height: 1em;
+  height: 1.05em;
   width: auto;
   /* Add styles if using SVG/Image currency symbols */
 }
