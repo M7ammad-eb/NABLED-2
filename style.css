@@ -176,7 +176,7 @@ svg {
 
 #header-logo {
   display: none; /* Hidden by default, shown in detail view */
-  height: 70%; /* Relative height */
+  height: 90%; /* Relative height */
   object-fit: contain;
   margin: 0 auto; /* Center horizontally */
   order: 2;
@@ -258,13 +258,14 @@ svg {
 #sort-dropdown {
   position: absolute;
   top: calc(100% + var(--spacing-xs)); /* Position below button */
-  inset-inline-start: 0; /* Align start edge (works for LTR/RTL) */
+  left: 0;
+  right: auto;
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-lg);
   padding: var(--spacing-md);
   z-index: 110;
-  min-width: 220px;
+  min-width: 250px;
   display: none; /* Initially hidden */
   border: 1px solid var(--border-color-light);
   text-align: start; /* Use logical alignment */
@@ -332,7 +333,6 @@ svg {
 #profile-dropdown {
   position: absolute;
   top: calc(100% + var(--spacing-xs)); /* Position below button */
-  inset-inline-start: var(--spacing-md); /* Align start edge */
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-lg);
@@ -394,12 +394,10 @@ body.is-detail-active #header-logo {
   display: flex; /* Show back button and logo */
 }
 
-body.is-detail-active #profile-button,
-body.is-detail-active .refresh-button,
-body.is-detail-active .search-container,
-body.is-detail-active .sort-container {
-  display: none; /* Hide other header elements */
-}
+body.is-detail-active #profile-button { display: none; }
+body.is-detail-active .search-container { display: none; }
+body.is-detail-active .sort-container { display: none; }
+body.is-detail-active #sort-button { display: none; }
 
 /* ============================================= */
 /* === Main Content & Views === */
@@ -622,7 +620,7 @@ body.is-detail-active .sort-container {
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 300px; /* Mobile height */
+  height: 350px; /* Mobile height */
   border-radius: var(--border-radius-md);
   margin-bottom: var(--spacing-lg);
   background-color: var(--border-color-light); /* Placeholder bg */
@@ -631,7 +629,7 @@ body.is-detail-active .sort-container {
   display: flex;
   height: 100%;
   width: 100%;
-  transition: transform 0.4s ease-in-out;
+  transition: transform 0.25s ease-in-out;
 }
 #item-detail-view .slide {
   flex: 0 0 100%;
