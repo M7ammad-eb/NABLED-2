@@ -167,10 +167,10 @@ svg {
 }
 
 /* Specific Header Buttons */
-#back-button {
-  order: 4; /* Far right */
+/*#back-button {
+  order: 4; / Far right /
 }
-/*#back-button svg {
+#back-button svg {
   transform: scaleX(-1); / Mirror the icon for RTL /
 }*/
 
@@ -333,6 +333,8 @@ svg {
 #profile-dropdown {
   position: absolute;
   top: calc(100% + var(--spacing-xs)); /* Position below button */
+  left: 0;
+  right: auto;
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-lg);
@@ -846,7 +848,7 @@ body.is-detail-active #sort-button { display: none; }
   }
 
   #item-detail-view .carousel-image {
-    object-fit: contain; /* Contain might be better on desktop */
+    object-fit: cover; /* Contain might be better on desktop */
   }
 
   #item-detail-view .item-text-details {
@@ -869,6 +871,6 @@ body.is-detail-active #sort-button { display: none; }
 @media (min-width: 1024px) {
    /* Optional: Further adjustments for very large screens */
    #item-details-content {
-      gap: calc(var(--spacing-xl) * 1.5); /* Even more gap */
+      gap: calc(var(--spacing-xl) * 1.25); /* Even more gap */
    }
 }
