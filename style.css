@@ -136,12 +136,11 @@ svg {
   box-shadow: var(--shadow-md);
   height: var(--header-height);
   flex-shrink: 0; /* Prevent header from shrinking */
-  gap: var(--spacing-sm); /* Use gap for spacing between items */
 }
 
 /* Common Header Button Styles */
 .header-button {
-  background: none;
+  background: #d2b071;
   border: none;
   padding: var(--spacing-xs);
   margin: 0;
@@ -151,7 +150,7 @@ svg {
   justify-content: center;
   border-radius: var(--border-radius-circle); /* Circle */
   flex-shrink: 0;
-  color: var(--text-color-secondary);
+  color: var(--text-color-on-primary);
   transition: background-color var(--transition-speed) var(--transition-timing), color var(--transition-speed) var(--transition-timing);
   width: 40px; /* Fixed size for consistency */
   height: 40px;
@@ -183,10 +182,11 @@ svg {
 
 #header-logo {
   display: none; /* Hidden by default, shown in detail view */
-  height: 90%; /* Relative height */
-  object-fit: contain;
-  margin: 0 auto; /* Center horizontally */
-  order: 2;
+  height: 90%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .refresh-button {
@@ -390,12 +390,6 @@ svg {
 #dropdown-sign-out-button:hover {
   background-color: var(--danger-color);
   color: var(--text-color-on-primary); /* White text on hover */
-}
-
-/* Header Visibility Control (Detail View) */
-#back-button,
-#header-logo {
-  display: none; /* Hidden by default */
 }
 
 body.is-detail-active #header-logo {
