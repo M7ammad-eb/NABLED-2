@@ -6,6 +6,7 @@
   --primary-color: #0e717d; /* Your specified primary color */
   --primary-color-dark: #0a5660; /* Darker shade for hover/active states */
   --primary-color-light: #e7f1f2; /* Lighter shade for backgrounds/borders */
+  --accent-color: #d2b071; /* the second color in the logo */
   --secondary-color: #f5f5f5; /* Main background */
   --surface-color: #ffffff; /* Card/container backgrounds */
   --text-color-primary: #333333;
@@ -136,11 +137,13 @@ svg {
   box-shadow: var(--shadow-md);
   height: var(--header-height);
   flex-shrink: 0; /* Prevent header from shrinking */
+  border-bottom: 3px solid var(--accent-color);
+  gap: var(--spacing-sm);
 }
 
 /* Common Header Button Styles */
 .header-button {
-  background: #d2b071;
+  background: var(--primary-color);
   border: none;
   padding: var(--spacing-xs);
   margin: 0;
@@ -157,7 +160,7 @@ svg {
 }
 
 .header-button:hover:not(:disabled) {
-  background-color: var(--overlay-bg-color);
+  background-color: var(--primary-color-light);
   color: var(--text-color-primary);
 }
 
@@ -197,7 +200,8 @@ svg {
 }
 
 .refresh-button:hover:enabled {
-  background-color: var(--primary-color-dark);
+  background-color: var(--primary-color-light);
+  color: var(--text-color-primary);
 }
 
 .refresh-button:disabled {
@@ -396,7 +400,6 @@ body.is-detail-active #header-logo {
   display: flex; /* Show back button and logo */
 }
 
-body.is-detail-active #profile-button.header-button { display: none; }
 body.is-detail-active .search-container { display: none; }
 body.is-detail-active .sort-container { display: none; }
 body.is-detail-active #sort-button { display: none; }
@@ -770,9 +773,9 @@ body.is-detail-active #sort-button { display: none; }
 }
 
 .tab-button.active {
-  color: var(--primary-color);
+  color: var(--accent-color);
   font-weight: bold;
-  border-top-color: var(--primary-color);
+  border-top-color: var(--accent-color);
 }
 
 .tab-button:hover:not(.active) {
