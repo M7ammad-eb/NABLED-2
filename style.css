@@ -189,7 +189,7 @@ svg {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-55%, -50%);
 }
 
 .refresh-button {
@@ -391,6 +391,10 @@ svg {
   font-size: 0.9em;
   transition: background-color var(--transition-speed) var(--transition-timing), color var(--transition-speed) var(--transition-timing);
 }
+
+/* cancelled back button */
+#back-button { display: none; }
+
 #dropdown-sign-out-button:hover {
   background-color: var(--danger-color);
   color: var(--text-color-on-primary); /* White text on hover */
@@ -721,18 +725,18 @@ body.is-detail-active #sort-button { display: none; }
 }
 #item-detail-view .item-text-details .price-value-line {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-end;
   line-height: 1.2;
   gap: var(--spacing-xs);
 }
 #item-detail-view .item-text-details .price-value-line strong {
-  font-size: 1.6em; /* Larger price */
+  font-size: 1.8em; /* Larger price */
   font-weight: 600;
   color: var(--text-color-primary);
 }
 #item-detail-view .item-text-details .price-value-line .currency-symbol {
-  height: 1.1em;
+  height: 1lh;
   width: auto;
   /* Add styles if using SVG/Image currency symbols */
 }
