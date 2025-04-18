@@ -727,16 +727,16 @@ body.is-detail-active #sort-button { display: none; }
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
-  line-height: 1.2;
+  line-height: 0.9;
   gap: var(--spacing-xs);
 }
 #item-detail-view .item-text-details .price-value-line strong {
-  font-size: 1.8em; /* Larger price */
+  font-size: 1.1em; /* Larger price */
   font-weight: 600;
   color: var(--text-color-primary);
 }
 #item-detail-view .item-text-details .price-value-line .currency-symbol {
-  height: 1lh;
+  height: 0.7lh;
   width: auto;
   /* Add styles if using SVG/Image currency symbols */
 }
@@ -870,9 +870,18 @@ body.is-detail-active #sort-button { display: none; }
   #item-detail-view .item-text-details .price-section {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
-   #item-detail-view .item-text-details .price-value-line strong {
-     font-size: 1.8em; /* Larger price on desktop */
-   }
+  #item-detail-view .item-text-details .price-value-line {
+    line-height: 1.2;
+  }
+  #item-detail-view .item-text-details .price-value-line strong {
+    font-size: 1.8em; /* Larger price on desktop */
+  }
+  
+  #item-detail-view .item-text-details .price-value-line .currency-symbol {
+    height: 1lh;
+    width: auto;
+    /* Add styles if using SVG/Image currency symbols */
+  }
 }
 
 /* Larger screens (Desktops) */
