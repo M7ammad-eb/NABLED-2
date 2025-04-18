@@ -1,5 +1,5 @@
 // Increment version when static assets change
-const CACHE_NAME = 'nabled-cache-v81'; // Updated version
+const CACHE_NAME = 'nabled-cache-v82'; // Updated version
 // Adjust baseURL if deploying to a subdirectory (e.g., '/RepoName')
 const baseURL = '/NABLED-2'; // Example for GitHub Pages subdirectory
 // const baseURL = ''; // Example for root deployment
