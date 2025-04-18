@@ -170,9 +170,9 @@ svg {
 #back-button {
   order: 4; /* Far right */
 }
-#back-button svg {
-  transform: scaleX(-1); /* Mirror the icon for RTL */
-}
+/*#back-button svg {
+  transform: scaleX(-1); / Mirror the icon for RTL /
+}*/
 
 #header-logo {
   display: none; /* Hidden by default, shown in detail view */
@@ -394,7 +394,7 @@ body.is-detail-active #header-logo {
   display: flex; /* Show back button and logo */
 }
 
-body.is-detail-active #profile-button { display: none; }
+body.is-detail-active #profile-button.header-button { display: none; }
 body.is-detail-active .search-container { display: none; }
 body.is-detail-active .sort-container { display: none; }
 body.is-detail-active #sort-button { display: none; }
