@@ -705,21 +705,21 @@ body.is-detail-active #sort-button { display: none; }
   display: grid;
   /* Mobile: Adjust columns based on available space */
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--spacing-md);
+  gap: var(--spacing-md)*0.75;
   margin-top: var(--spacing-lg);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-color-light);
 }
 #item-detail-view .item-text-details .price-item {
   background-color: var(--secondary-color); /* Use main bg for contrast */
-  padding: var(--spacing-sm);
+  padding: var(--spacing-sm)*0.8;
   border-radius: var(--border-radius-sm);
   text-align: start; /* Logical alignment */
   border: 1px solid var(--border-color-light);
 }
 #item-detail-view .item-text-details .price-label {
   display: block;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-sm)*1.1;
   color: var(--text-color-muted);
   margin-bottom: var(--spacing-xs);
 }
@@ -727,16 +727,16 @@ body.is-detail-active #sort-button { display: none; }
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
-  line-height: 0.9;
-  gap: var(--spacing-xs);
+  line-height: 1;
+  gap: var(--spacing-xs)*0.8;
 }
 #item-detail-view .item-text-details .price-value-line strong {
-  font-size: 1.1em; /* Larger price */
+  font-size: 1.2em; /* Larger price */
   font-weight: 600;
   color: var(--text-color-primary);
 }
 #item-detail-view .item-text-details .price-value-line .currency-symbol {
-  height: 0.7lh;
+  height: 0.8lh;
   width: auto;
   /* Add styles if using SVG/Image currency symbols */
 }
