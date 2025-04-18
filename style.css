@@ -731,12 +731,12 @@ body.is-detail-active #sort-button { display: none; }
   gap: var(--spacing-xs);
 }
 #item-detail-view .item-text-details .price-value-line strong {
-  font-size: 1.2em; /* Larger price */
+  font-size: 1.4em; /* Larger price */
   font-weight: 600;
   color: var(--text-color-primary);
 }
 #item-detail-view .item-text-details .price-value-line .currency-symbol {
-  height: 0.8lh;
+  height: 0.9lh;
   width: auto;
   /* Add styles if using SVG/Image currency symbols */
 }
