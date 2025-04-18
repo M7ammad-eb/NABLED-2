@@ -724,8 +724,8 @@ body.is-detail-active #sort-button { display: none; }
 }
 #item-detail-view .item-text-details .price-value-line {
   display: flex;
-  align-items: baseline;
-  justify-content: flex-start; /* Logical alignment */
+  align-items: center;
+  justify-content: flex-end;
   line-height: 1.2;
   gap: var(--spacing-xs);
 }
@@ -735,7 +735,7 @@ body.is-detail-active #sort-button { display: none; }
   color: var(--text-color-primary);
 }
 #item-detail-view .item-text-details .price-value-line .currency-symbol {
-  height: 1.05em;
+  height: 1.1em;
   width: auto;
   /* Add styles if using SVG/Image currency symbols */
 }
