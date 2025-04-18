@@ -389,7 +389,6 @@ svg {
   display: none; /* Hidden by default */
 }
 
-body.is-detail-active #back-button,
 body.is-detail-active #header-logo {
   display: flex; /* Show back button and logo */
 }
