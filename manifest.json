@@ -132,7 +132,7 @@
     }
   ],
   "theme_color": "#0e717d",
-  "background_color": "#f8f8f8",
+  "background_color": "#0e717d",
   "display": "standalone",
   "start_url": "index.html",
   "id": "/",
