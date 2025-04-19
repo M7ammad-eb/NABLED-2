@@ -590,7 +590,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     // --- Text Details Section (NEW WRAPPER ADDED) ---
     html += `<div class="item-text-details">`; // Start of new wrapper
 
-    html += `<h2>${item[2] || ""}</h2><br>`; // Name
+    html += `<h2>${item[2] || ""}</h2>`; // Name
     html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`; // ID
     if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`; // Specs
     if (item[7]) html += `<p><a href="${item[7]}" target="_blank" rel="noopener noreferrer">${columnNames[7] || "Catalog"}</a></p>`; // Catalog
