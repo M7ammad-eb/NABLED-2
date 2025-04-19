@@ -35,7 +35,7 @@
   --spacing-sm: 10px;
   --spacing-md: 15px;
   --spacing-lg: 20px;
-  --spacing-xl: 30px;
+  --spacing-xl: 25px;
 
   /* Borders & Shadows */
   --border-radius-sm: 4px;
@@ -49,7 +49,7 @@
   /* Layout */
   --header-height: 60px;
   --tab-bar-height: 60px;
-  --max-content-width: 1100px; /* Max width for content on larger screens */
+  --max-content-width: 1300px; /* Max width for content on larger screens */
 
   /* Transitions */
   --transition-speed: 0.2s;
@@ -634,7 +634,7 @@ body.is-detail-active #sort-button { display: none; }
   /* Mobile first: single column layout */
   max-width: 600px; /* Max width for mobile readability */
   margin: 0 auto;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   background: var(--surface-color);
   box-shadow: var(--shadow-md);
   border-radius: var(--border-radius-md);
@@ -710,10 +710,11 @@ body.is-detail-active #sort-button { display: none; }
 #item-detail-view .item-text-details p {
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-sm);
-  text-align: center; /* Logical alignment */
+  text-align: justify; /* Logical alignment */
+  text-align-last: center;
   color: var(--text-color-secondary); /* Slightly lighter text for descriptions */
   background-color: var(--secondary-color);
-  padding: calc(var(--spacing-sm)* 0.8);
+  padding: calc(var(--spacing-sm)* 0.8) var(--spacing-md);
   border-radius: var(--border-radius-sm);
   border: 1px solid var(--border-color-light);
 }
@@ -862,8 +863,9 @@ body.is-detail-active #sort-button { display: none; }
     grid-template-columns: 1fr 1.2fr; /* Text slightly wider */
     gap: var(--spacing-xl); /* More space between columns */
     max-width: var(--max-content-width);
-    margin: var(--spacing-lg) auto; /* Center with margin */
-    padding: var(--spacing-xl); /* More padding */
+     /* Center with margin */
+    padding: var(
+    --spacing-lg); /* More padding */
     align-items: start; /* Align items to the top */
   }
 
@@ -877,10 +879,6 @@ body.is-detail-active #sort-button { display: none; }
     grid-column: 1 / 2; /* Explicitly place carousel in the first column (right in RTL) */
     position: sticky; /* Make carousel sticky */
     top: var(--spacing-lg); /* Add some space from the top */
-  }
-
-  #item-detail-view .carousel-image {
-    object-fit: cover; /* Contain might be better on desktop */
   }
 
   #item-detail-view .item-text-details {
@@ -898,20 +896,12 @@ body.is-detail-active #sort-button { display: none; }
     line-height: 1.2;
   }
   #item-detail-view .item-text-details .price-value-line strong {
-    font-size: 1.8em; /* Larger price on desktop */
+    font-size: var(--font-size-lg); /* Larger price on desktop */
   }
   
   #item-detail-view .item-text-details .price-value-line .currency-symbol {
-    height: 1lh;
+    height: 0.7lh;
     width: auto;
     /* Add styles if using SVG/Image currency symbols */
   }
-}
-
-/* Larger screens (Desktops) */
-@media (min-width: 1024px) {
-   /* Optional: Further adjustments for very large screens */
-   #item-details-content {
-      gap: calc(var(--spacing-xl) * 1.25); /* Even more gap */
-   }
 }
