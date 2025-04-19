@@ -603,7 +603,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
             html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
         }
     });
-    html += `</div><br>`; // Price section end
+    html += `</div>`; // Price section end
 
     html += `</div>`; // End of new wrapper: item-text-details
 
