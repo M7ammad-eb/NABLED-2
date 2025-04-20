@@ -630,8 +630,8 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     html += `<div class="item-text-details">`; // Start of new wrapper
 
     html += `<h2>${item[2] || ""}</h2>`; // Name (Index 2)
-    if (item[1]) html += `<br>${columnNames[1]}: ${item[0]}`; // Item Category
-    html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`; // ID (Index 0)
+    html += `<p>${columnNames[0] || "ID"}: <strong>${item[0] || ""}</strong>`; // ID (Index 0)
+    if (item[1]) html += `<br>${columnNames[1]}: <strong>${item[1]}</strong></p>`; // Item Category
     if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`; // Specs (Index 3)
     // Catalog is now in Column I (index 8)
     if (item[8]) html += `<p><a href="${item[8]}" target="_blank" rel="noopener noreferrer">${columnNames[8] || "Catalog"}</a></p>`; // Catalog
