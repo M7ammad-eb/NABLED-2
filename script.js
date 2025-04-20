@@ -418,6 +418,20 @@ function preloadAllItemImages() {
 function updateViewClasses(activeViewId) {
     const views = [categoryButtonsContainer, itemsListContainer, itemDetailView];
     const isDetail = activeViewId === 'item-detail-view';
+
+    // --- Pause video when navigating AWAY from detail view ---
+    if (itemDetailView && itemDetailView.classList.contains('view-active') && !isDetail) {
+        const videos = itemDetailView.querySelectorAll('video');
+        if (videos.length > 0) {
+            console.log(`Navigating away from detail view, pausing ${videos.length} video(s).`);
+            videos.forEach(video => {
+                if (video && !video.paused) {
+                    video.pause();
+                }
+            });
+        }
+    }
+    
     document.body.classList.toggle('is-detail-active', isDetail); // This line controls visibility via CSS
 
     // Store scroll position *before* changing classes if leaving items list
