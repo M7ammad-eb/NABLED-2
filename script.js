@@ -419,27 +419,37 @@ function updateViewClasses(activeViewId) {
     const views = [categoryButtonsContainer, itemsListContainer, itemDetailView];
     const isDetail = activeViewId === 'item-detail-view';
 
-    // --- MODIFIED: Pause video AND remove src when navigating AWAY from detail view ---
+    // --- Pause video AND remove src when navigating AWAY from detail view ---
     if (itemDetailView && itemDetailView.classList.contains('view-active') && !isDetail) {
-        const videos = itemDetailView.querySelectorAll('video');
-        if (videos.length > 0) {
-            console.log(`Navigating away from detail view, stopping ${videos.length} video(s).`);
-            videos.forEach(video => {
-                if (video) {
-                    if (!video.paused) {
-                        video.pause(); // Pause playback
-                    }
-                    // Remove the source to effectively stop and unload
-                    video.removeAttribute('src'); // Remove src attribute
-                    // Remove <source> elements if they exist
-                    const sources = video.querySelectorAll('source');
-                    sources.forEach(source => source.remove());
-                    video.load(); // Ask the browser to load the now-empty source
-                    console.log('Video source removed and loaded empty.');
+    const videos = itemDetailView.querySelectorAll('video');
+    if (videos.length > 0) {
+        console.log(`Navigating away from detail view, stopping ${videos.length} video(s).`);
+        videos.forEach(video => {
+            if (video) {
+                if (!video.paused) {
+                    video.pause(); // Pause playback
                 }
-            });
+                // Remove the source to effectively stop and unload
+                video.removeAttribute('src'); // Remove src attribute
+                const sources = video.querySelectorAll('source');
+                sources.forEach(source => source.remove());
+                video.load(); // Ask the browser to load the now-empty source
+                console.log('Video source removed and loaded empty.');
+            }
+        });
+
+        // Clear Media Session
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = null;
+            navigator.mediaSession.setActionHandler('play', null);
+            navigator.mediaSession.setActionHandler('pause', null);
+            navigator.mediaSession.setActionHandler('seekbackward', null);
+            navigator.mediaSession.setActionHandler('seekforward', null);
+            navigator.mediaSession.setActionHandler('previoustrack', null);
+            navigator.mediaSession.setActionHandler('nexttrack', null);
         }
     }
+}
     
     document.body.classList.toggle('is-detail-active', isDetail); // This line controls visibility via CSS
 
