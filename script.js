@@ -230,6 +230,7 @@ function findItemById(items, itemId) {
     const searchId = String(itemId).trim();
     // Assuming 'items' includes the header row, start loop from 1
     for (let i = 1; i < items.length; i++) {
+        // Index 0 is the item ID/Code
         if (items[i]?.[0] && String(items[i][0]).trim() === searchId) {
             return items[i];
         }
@@ -250,6 +251,7 @@ function getSortedItems(filterCategory = null) {
 
         // 1. Filter items if a category is specified
         if (filterCategory) {
+            // Index 1 is the Category
             itemsToDisplay = itemsToDisplay.filter(item => (item[1]?.trim() || '') === filterCategory);
         }
 
@@ -318,11 +320,13 @@ function displayItems(itemsToRender, filterCategory = null) { // Now accepts sor
         let itemsFound = false;
         const fragment = document.createDocumentFragment();
         itemsToRender.forEach(item => {
+            // Check for basic item structure (ID and Name at least)
             if (!Array.isArray(item) || item.length < 3) return; // Basic check
 
             itemsFound = true;
-            const itemId = String(item[0] || '').trim();
-            const itemName = String(item[2] || 'No Name').trim();
+            const itemId = String(item[0] || '').trim(); // Index 0: Item Code/ID
+            const itemName = String(item[2] || 'No Name').trim(); // Index 2: Item Name
+            // Indices 4, 5, 6 are images
             const realImageSrc = [item[4], item[5], item[6]].map(img => img?.trim() || null).find(img => img);
             const placeholderSrc = "placeholder.png"; // Define placeholder
 
@@ -399,7 +403,9 @@ function preloadAllItemImages() {
         const { data: dataRows } = JSON.parse(cachedDataString); if (!dataRows) { console.warn("Preload: Invalid data."); return; }
         const uniqueImageUrls = new Set();
         for (let i = 1; i < dataRows.length; i++) {
-            const item = dataRows[i]; if (!Array.isArray(item) || item.length < 7) continue;
+            const item = dataRows[i];
+            // Check if item exists and has enough columns for images (indices 4, 5, 6)
+            if (!Array.isArray(item) || item.length < 7) continue;
             [item[4], item[5], item[6]].forEach(url => { if (url?.trim()) uniqueImageUrls.add(url.trim()); });
         }
         console.log(`Preloading ${uniqueImageUrls.size} unique images...`);
@@ -544,10 +550,11 @@ function showItemDetailView(itemId, isPopState = false) {
     if (!item) { itemDetailsContent.innerHTML = `<p>Error: Item ID ${itemId} not found.</p>`; updateViewClasses('item-detail-view'); return; }
 
     const userPermissions = getUserPermissions(permissionRows, auth.currentUser.email);
-    const visiblePriceColumns = userPermissions ? userPermissions.slice(2).map((val, index) => (val === '1' ? index + 8 : -1)).filter(val => val !== -1) : [];
+    // Price columns start from index 9 (Column J)
+    const visiblePriceColumns = userPermissions ? userPermissions.slice(2).map((val, index) => (val === '1' ? index + 9 : -1)).filter(val => val !== -1) : [];
 
     itemDetailsContent.innerHTML = renderItemDetailsHTML(item, visiblePriceColumns, dataRows[0]); // Pass header row (dataRows[0])
-    addCarouselFunctionality('#item-detail-view'); // Add carousel logic (now reverted)
+    addCarouselFunctionality('#item-detail-view'); // Add carousel logic
     updateViewClasses('item-detail-view');
     requestAnimationFrame(() => { // Ensure scroll reset happens after render
          if(itemDetailView) itemDetailView.scrollTop = 0;
@@ -560,27 +567,59 @@ function showItemDetailView(itemId, isPopState = false) {
 }
 
 
-// Render Item Details HTML - MODIFIED
+// Render Item Details HTML - MODIFIED to include video
 function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     if (!item || !columnNames) return '<p>Error rendering item details.</p>';
     let html = '';
-    const images = [item[4], item[5], item[6]].filter(Boolean).map(url => url.trim()); // Ensure URLs are trimmed
+    // Images are in columns E, F, G (indices 4, 5, 6)
+    const images = [item[4], item[5], item[6]].filter(Boolean).map(url => url.trim());
+    // Video is in column H (index 7)
+    const videoUrl = item[7]?.trim() || null;
     const placeholder = 'placeholder.png';
     const hasImages = images.length > 0;
+    const hasVideo = !!videoUrl;
+    let slideItems = []; // Array to hold { type: 'image'/'video', src: url }
+
+    // Add images to slide items
+    if (hasImages) {
+        images.forEach(src => slideItems.push({ type: 'image', src: src }));
+    }
+
+    // Add video to slide items (after images)
+    if (hasVideo) {
+        slideItems.push({ type: 'video', src: videoUrl });
+    }
 
     // --- Carousel Section ---
     html += `<div class="carousel-container"><div class="slides-wrapper">`; // Carousel start
-    if (hasImages) {
-        images.forEach((src, index) => {
-            html += `<div class="slide ${index === 0 ? 'active' : ''}" data-src="${src}"><img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-image" onerror="this.onerror=null; this.src='${placeholder}';"></div>`;
+
+    if (slideItems.length > 0) {
+        slideItems.forEach((slideItem, index) => {
+            html += `<div class="slide ${index === 0 ? 'active' : ''}" data-type="${slideItem.type}" data-src="${slideItem.src}">`;
+            if (slideItem.type === 'image') {
+                // Use placeholder initially for images
+                html += `<img src="${placeholder}" alt="${item[2] || 'Product Image'}" class="carousel-media carousel-image" onerror="this.onerror=null; this.src='${placeholder}';">`;
+            } else if (slideItem.type === 'video') {
+                // Add video element
+                html += `<video controls preload="metadata" playsinline class="carousel-media carousel-video">
+                           <source src="${slideItem.src}" type="video/mp4">
+                           Your browser does not support the video tag.
+                         </video>`;
+                // Note: You might need to adjust the type based on your video formats (e.g., "video/webm")
+            }
+            html += `</div>`; // End slide
         });
     } else {
-        html += `<div class="slide active" data-src="${placeholder}"><img src="${placeholder}" alt="Placeholder" class="carousel-image"></div>`;
+        // Fallback if no images or video
+        html += `<div class="slide active" data-type="image" data-src="${placeholder}"><img src="${placeholder}" alt="Placeholder" class="carousel-media carousel-image"></div>`;
+        slideItems.push({ type: 'image', src: placeholder }); // Add placeholder to slideItems for dot generation
     }
     html += `</div>`; // End slides-wrapper
-    if (images.length > 1) {
+
+    // Add dots if more than one slide item
+    if (slideItems.length > 1) {
         html += `<div class="carousel-dots">`;
-        images.forEach((_, i) => {
+        slideItems.forEach((_, i) => {
             html += `<span class="dot ${i === 0 ? 'active' : ''}" data-slide-index="${i}"></span>`;
         });
         html += `</div>`; // End carousel-dots
@@ -590,15 +629,19 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
     // --- Text Details Section (NEW WRAPPER ADDED) ---
     html += `<div class="item-text-details">`; // Start of new wrapper
 
-    html += `<h2>${item[2] || ""}</h2>`; // Name
-    html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`; // ID
-    if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`; // Specs
-    if (item[7]) html += `<p><a href="${item[7]}" target="_blank" rel="noopener noreferrer">${columnNames[7] || "Catalog"}</a></p>`; // Catalog
+    html += `<h2>${item[2] || ""}</h2>`; // Name (Index 2)
+    if (item[1]) html += `<br>${columnNames[1]}: ${item[0]}`; // Item Category
+    html += `<p>${columnNames[0] || "ID"} <br><strong>${item[0] || ""}</strong></p>`; // ID (Index 0)
+    if (item[3]) html += `<p>${columnNames[3] || "Specs"} <br><strong>${item[3]}</strong></p>`; // Specs (Index 3)
+    // Catalog is now in Column I (index 8)
+    if (item[8]) html += `<p><a href="${item[8]}" target="_blank" rel="noopener noreferrer">${columnNames[8] || "Catalog"}</a></p>`; // Catalog
 
-    // --- Price Section (moved inside the new wrapper) ---
+    // --- Price Section ---
+    // Price columns start from index 9 (Column J) onwards
     html += `<div class="price-section">`; // Price section start
     visiblePriceColumnIndices.forEach(index => {
-        if (index < item.length && item[index] != null && String(item[index]).trim() !== '') { // Check for non-empty string
+        // Check if index is within item bounds and value is not null/empty string
+        if (index < item.length && item[index] != null && String(item[index]).trim() !== '') {
             const key = columnNames[index] || `Price ${index + 1}`; const value = item[index];
             html += `<div class="price-item"><span class="price-label">${key}</span><div class="price-value-line"><strong>${value}</strong><img src="Saudi_Riyal_Symbol-2.svg" class="currency-symbol" alt="SAR" onerror="this.style.display='none'"></div></div>`;
         }
@@ -611,7 +654,7 @@ function renderItemDetailsHTML(item, visiblePriceColumnIndices, columnNames) {
 }
 
 
-// Carousel Functionality (REVERTED to Original User-Provided Logic)
+// Carousel Functionality - MODIFIED to handle video
 function addCarouselFunctionality(parentSelector) {
     const container = document.querySelector(parentSelector);
     if (!container) { console.warn("Carousel container not found:", parentSelector); return; }
@@ -621,44 +664,76 @@ function addCarouselFunctionality(parentSelector) {
     const slidesWrapper = container.querySelector('.slides-wrapper');
     if (!slides.length || !slidesWrapper) return;
 
-    // Image Loading
+    // Media Loading (Images and setting video src)
     slides.forEach(slide => {
-        const img = slide.querySelector('img'); const realSrc = slide.dataset.src;
-        if (img && realSrc && realSrc !== 'placeholder.png') {
-            const realImageLoader = new Image();
-            realImageLoader.onload = () => { img.src = realSrc; };
-            realImageLoader.onerror = () => console.warn(`Failed carousel image: ${realSrc}`);
-            realImageLoader.src = realSrc;
-        } else if (img) { img.src = realSrc || 'placeholder.png'; }
+        const mediaElement = slide.querySelector('.carousel-media'); // Selects img or video
+        const realSrc = slide.dataset.src;
+        const type = slide.dataset.type;
+
+        if (mediaElement && realSrc) {
+            if (type === 'image' && realSrc !== 'placeholder.png') {
+                // Load real image, replacing placeholder
+                const realImageLoader = new Image();
+                realImageLoader.onload = () => { if (mediaElement.tagName === 'IMG') mediaElement.src = realSrc; };
+                realImageLoader.onerror = () => console.warn(`Failed carousel image: ${realSrc}`);
+                realImageLoader.src = realSrc;
+            } else if (type === 'image' && mediaElement.tagName === 'IMG') {
+                 // Ensure placeholder is set if it's the only source
+                 mediaElement.src = realSrc;
+            }
+            // Video source is set directly in HTML, no extra loading needed here unless preloading full video
+        }
     });
+
+    // Function to pause all videos (except the current one if specified)
+    function pauseAllVideos(exceptIndex = -1) {
+        slides.forEach((slide, index) => {
+            if (index !== exceptIndex) {
+                const video = slide.querySelector('video');
+                if (video && !video.paused) {
+                    video.pause();
+                    // console.log(`Paused video in slide ${index}`);
+                }
+            }
+        });
+    }
 
     // Inner function to show slide
     function showSlide(index) {
         if (slides.length <= 1) return;
-        index = (index + slides.length) % slides.length;
+        index = (index + slides.length) % slides.length; // Wrap around
+
+        // Pause video in the slide we are navigating away from
+        pauseAllVideos(index); // Pause all videos, the new one will play if needed
+
         // Apply transform based on index (RTL - positive translateX moves right)
-        // Original logic used positive translateX for RTL
-        slidesWrapper.style.transform = `translateX(${index * 100}%)`;
+        slidesWrapper.style.transform = `translateX(${index * 100}%)`; // Original logic seems correct for RTL transform
+
+        // Update active slide class
+        slides.forEach((s, i) => s.classList.toggle('active', i === index));
+        // Update active dot class
         dots.forEach((d, i) => d.classList.toggle('active', i === index));
+
         currentSlide = index;
     }
 
     // Dot navigation
     dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
 
-    // Swipe support for Carousel (REVERTED to user's original logic)
+    // Swipe support for Carousel
     let touchStartX = 0;
     slidesWrapper.addEventListener('touchstart', e => { if (slides.length > 1) touchStartX = e.touches[0].clientX; }, { passive: true });
     slidesWrapper.addEventListener('touchend', e => {
         if (slides.length <= 1 || touchStartX === 0) return;
         const touchEndX = e.changedTouches[0].clientX; const diff = touchEndX - touchStartX;
+
         // Original Logic (assuming this was correct for user):
         // Swipe Left (R->L, negative diff) -> Previous
         // Swipe Right (L->R, positive diff) -> Next
-        if (diff < -50) { // Swipe Left (R->L) -> Previous (User's Original)
+        if (diff < -50) { // Swipe Left (R->L) -> Previous Slide
              console.log("Carousel Swipe Left (R->L) -> Previous");
              showSlide(currentSlide - 1);
-        } else if (diff > 50) { // Swipe Right (L->R) -> Next (User's Original)
+        } else if (diff > 50) { // Swipe Right (L->R) -> Next Slide
              console.log("Carousel Swipe Right (L->R) -> Next");
              showSlide(currentSlide + 1);
         }
@@ -666,7 +741,7 @@ function addCarouselFunctionality(parentSelector) {
     }, { passive: true });
 
     showSlide(0); // Initialize
-    console.log("Carousel functionality (reverted swipe) added.");
+    console.log("Carousel functionality (video support added) added.");
 }
 
 
@@ -809,7 +884,7 @@ function setupProfileMenu() {
                 if (permissionsDataString) {
                     try {
                         const { data: permissionsData } = JSON.parse(permissionsDataString); const userPermissionRow = getUserPermissions(permissionsData, user.email);
-                        if (userPermissionRow?.[1]?.trim()) jobTitle = userPermissionRow[1].trim();
+                        if (userPermissionRow?.[1]?.trim()) jobTitle = userPermissionRow[1].trim(); // Index 1 is Job Title
                     } catch (e) { console.error("Error parsing permissions", e); jobTitle = "Error"; }
                 }
                 userJobTitleDisplay.textContent = jobTitle; userJobTitleDisplay.style.display = 'block'; dropdownSignOutButton.style.display = 'block';
@@ -959,8 +1034,10 @@ function setupSwipeGestures() {
     if (!viewWrapper) { console.error("View wrapper missing."); return; }
 
     viewWrapper.addEventListener('touchstart', (event) => {
-        // Disable view swipe if detail view is active
-        if (document.body.classList.contains('is-detail-active')) { isSwiping = false; return; }
+        // Disable view swipe if detail view is active OR if touching inside the carousel
+        if (document.body.classList.contains('is-detail-active') || event.target.closest('.carousel-container')) {
+             isSwiping = false; return;
+        }
         // Block swipe if starting on specific interactive elements
         const swipeTarget = event.target; let blockSwipe = false;
         // Allow swiping unless target is input, non-item link, non-item button, or carousel dot
@@ -1037,6 +1114,7 @@ function getUserPermissions(permissions, userEmail) {
     if (!permissions || !userEmail) return null; userEmail = userEmail.trim().toLowerCase();
     // Start from index 1 to skip header row in permissions sheet
     for (let i = 1; i < permissions.length; i++) {
+        // Index 0 is Email
         if (permissions[i]?.[0]?.trim().toLowerCase() === userEmail) {
             return permissions[i];
         }
